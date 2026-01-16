@@ -454,7 +454,7 @@ function ChartPage() {
                 {/* Intro Banner */}
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-                    <img src="/astrova_logo.png" alt="Astrova" className="w-6 h-6" />
+                    <Calendar className="w-6 h-6 text-yellow-500" />
                     Birth Chart Analysis
                   </h2>
                   <p className="text-neutral-400">Generate and analyze your birth chart with detailed astrological insights</p>
