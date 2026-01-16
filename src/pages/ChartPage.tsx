@@ -449,17 +449,16 @@ function ChartPage() {
           )}
 
           <div className="space-y-8">
-            {/* Intro Banner */}
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-                <Calendar className="w-6 h-6 text-yellow-500" />
-                Birth Chart Analysis
-              </h2>
-              <p className="text-neutral-400">Generate and analyze your birth chart with detailed astrological insights</p>
-            </div>
-
             {activeView === 'kundali' ? (
               <>
+                {/* Intro Banner */}
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                    <Calendar className="w-6 h-6 text-yellow-500" />
+                    Birth Chart Analysis
+                  </h2>
+                  <p className="text-neutral-400">Generate and analyze your birth chart with detailed astrological insights</p>
+                </div>
                 {currentRequest && (
                   <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
                     {/* Birth Details Section */}
