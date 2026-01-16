@@ -12,6 +12,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ChartSkeleton } from '@/components/common/LoadingSkeleton';
 import { SEOHead } from '@/components/common/SEOHead';
+import { apiRequest } from '../config/api';
 import { useAuth } from '@/contexts/auth';
 import { CHART_CONSTANTS } from '@/constants';
 import type { KundaliRequest, KundaliResponse } from '@/types/kundali';
@@ -101,7 +102,7 @@ function ChartPage() {
   const apiHeaders = useCallback((uid: string) => ({ 'X-User-Id': uid }), []);
 
   const fetchChartsFromDb = useCallback(async (uid: string) => {
-    const resp = await axios.get<SavedChart[]>('/api/charts', { headers: apiHeaders(uid) });
+    const resp = await axios.get<SavedChart[]>(apiRequest('/api/charts'), { headers: apiHeaders(uid) });
     setSavedCharts(resp.data);
     return resp.data;
   }, [apiHeaders]);
@@ -109,7 +110,7 @@ function ChartPage() {
   const deleteChartFromDb = async (chartId: string) => {
     if (!user) return;
     try {
-      await axios.delete(`/api/charts/${encodeURIComponent(chartId)}`, { headers: apiHeaders(user.id) });
+      await axios.delete(apiRequest(`/api/charts/${encodeURIComponent(chartId)}`), { headers: apiHeaders(user.id) });
       await fetchChartsFromDb(user.id);
     } catch (e) {
       const status = (e as { response?: { status?: number; data?: { detail?: string } } }).response?.status;
@@ -199,7 +200,7 @@ function ChartPage() {
     setNameInputError(false);
     setSelectedChartId('');
     try {
-      const response = await axios.post<KundaliResponse>('/api/kundali', request);
+      const response = await axios.post<KundaliResponse>(apiRequest('/api/kundali'), request);
       setKundaliData(response.data);
       setCurrentRequest(request);
     } catch (err) {
@@ -240,7 +241,7 @@ function ChartPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.post<KundaliResponse>('/api/kundali', data);
+        const response = await axios.post<KundaliResponse>(apiRequest('/api/kundali'), data);
         setKundaliData(response.data);
         lastRealtimeSuccessRef.current = dataKey;
       } catch (err) {
@@ -255,7 +256,7 @@ function ChartPage() {
     }
     setError(null);
     try {
-      const response = await axios.post<KundaliResponse>('/api/kundali', data);
+      const response = await axios.post<KundaliResponse>(apiRequest('/api/kundali'), data);
       setKundaliData(response.data);
       lastRealtimeSuccessRef.current = dataKey;
     } catch (err) {
@@ -302,7 +303,7 @@ function ChartPage() {
     
     try {
       await axios.post(
-        '/api/charts',
+        apiRequest('/api/charts'),
         {
           name: payload.name,
           birthData: payload.birthData,
@@ -394,7 +395,7 @@ function ChartPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.post<KundaliResponse>('/api/kundali', restoredRequest);
+        const response = await axios.post<KundaliResponse>(apiRequest('/api/kundali'), restoredRequest);
         setKundaliData(response.data);
       } catch (err) {
         // Fall back to saved data if API fails

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { Calculator, Download, TrendingUp, Clock, Calendar, ExternalLink } from 'lucide-react';
+import { apiRequest } from '../config/api';
 
 interface BalaCalculatorRequest {
   start_year: number;
@@ -76,7 +77,7 @@ export function BalaCalculator({ onOpenKundali }: BalaCalculatorProps) {
     setError(null);
 
     try {
-      const response = await axios.post('/api/bala-calculator', formData);
+      const response = await axios.post(apiRequest('/api/bala-calculator'), formData);
       setResults(response.data);
     } catch (err: unknown) {
       const message =

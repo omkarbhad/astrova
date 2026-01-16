@@ -6,6 +6,7 @@ import { Heart, Star, FolderOpen } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { LoadChartsModal } from './LoadChartsModal';
+import { apiRequest } from '../config/api';
 import type { KundaliRequest, KundaliResponse } from '../types/kundali';
 
 interface MatchedCharts {
@@ -108,7 +109,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
 
     setIsMatching(true);
     try {
-      const resp = await fetch('/api/match', {
+      const resp = await fetch(apiRequest('/api/match'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

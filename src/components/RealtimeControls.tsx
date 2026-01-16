@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Clock, MapPin, Calendar, Sliders, Sparkles, Search, X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
+import { apiRequest } from '../config/api';
 import type { KundaliRequest } from '../types/kundali';
 
 interface RealtimeControlsProps {
@@ -163,7 +164,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
         minute: String(localData.minute),
         second: String(localData.second),
       });
-      const tzRes = await fetch(`/api/timezone?${query.toString()}`);
+      const tzRes = await fetch(apiRequest(`/api/timezone?${query.toString()}`));
       if (tzRes.ok) {
         const tzData: { tz_offset_hours?: number } = await tzRes.json();
         if (typeof tzData.tz_offset_hours === 'number' && Number.isFinite(tzData.tz_offset_hours)) {
