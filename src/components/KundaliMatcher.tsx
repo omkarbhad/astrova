@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Heart, Star, FolderOpen } from 'lucide-react';
+import { Star, FolderOpen } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { LoadChartsModal } from './LoadChartsModal';
 import { apiRequest } from '../config/api';
+import heartLogo from '../assets/heart_logo.png';
 import type { KundaliRequest, KundaliResponse } from '../types/kundali';
 
 interface MatchedCharts {
@@ -203,7 +204,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-          <Heart className="w-6 h-6 text-red-500" />
+          <img src={heartLogo} alt="Heart" className="w-6 h-6" />
           Kundali Matcher
         </h2>
         <p className="text-neutral-400">Compare two birth charts for compatibility analysis</p>
@@ -515,7 +516,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
             className="w-full"
             size="lg"
           >
-            <Heart className="w-4 h-4 mr-2" />
+            <img src={heartLogo} alt="Heart" className="w-4 h-4 mr-2" />
             {isMatching ? 'Analyzing...' : 'Analyze Compatibility'}
           </Button>
         </CardContent>
