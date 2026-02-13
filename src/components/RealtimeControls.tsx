@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Clock, MapPin, Calendar, Sliders, Sparkles, Search, X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
-import { apiRequest } from '../config/api';
+import { estimateTimezone } from '../lib/vedic-engine';
 import type { KundaliRequest } from '../types/kundali';
 
 interface RealtimeControlsProps {
@@ -81,13 +81,16 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
         searchAbortRef.current.abort();
       }
       searchAbortRef.current = new AbortController();
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
-        { signal: searchAbortRef.current.signal }
-      );
+      
+      // Use direct Nominatim API temporarily until backend is deployed
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+      const response = await fetch(url, {
+        signal: searchAbortRef.current?.signal,
+      });
       if (!response.ok) throw new Error('Search failed');
       const data = await response.json();
-      setLocationSearchResults(data);
+      const results = Array.isArray(data) ? data.slice(0, 5) : [];
+      setLocationSearchResults(results);
       setShowLocationResults(true);
     } catch (err) {
       if ((err as { name?: string }).name !== 'AbortError') {
@@ -146,42 +149,19 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
     fireUpdate(newData);
   };
 
-  const handleLocationSearchSelect = async (result: { display_name: string; lat: string; lon: string }) => {
-    const lat = parseFloat(result.lat);
-    const lon = parseFloat(result.lon);
-    onLocationNameChange?.(result.display_name);
+  const handleLocationSearchSelect = (result: any) => {
+    const lat = typeof result.lat === 'string' ? parseFloat(result.lat) : result.lat;
+    const lon = typeof result.lon === 'string' ? parseFloat(result.lon) : result.lon;
+    onLocationNameChange?.(result.display_name || `${lat}, ${lon}`);
+    
+    // Estimate timezone from longitude (client-side)
+    const tz = estimateTimezone(lon);
 
-    // Lookup timezone for the selected coordinates via backend (accurate, supports half-hour offsets)
-    let tz = localData.tz_offset_hours; // fallback to current TZ
-    try {
-      const query = new URLSearchParams({
-        lat: String(lat),
-        lon: String(lon),
-        year: String(localData.year),
-        month: String(localData.month),
-        day: String(localData.day),
-        hour: String(localData.hour),
-        minute: String(localData.minute),
-        second: String(localData.second),
-      });
-      const tzRes = await fetch(apiRequest(`/api/timezone?${query.toString()}`));
-      if (tzRes.ok) {
-        const tzData: { tz_offset_hours?: number } = await tzRes.json();
-        if (typeof tzData.tz_offset_hours === 'number' && Number.isFinite(tzData.tz_offset_hours)) {
-          tz = tzData.tz_offset_hours;
-        }
-      }
-    } catch {
-      // ignore timezone lookup errors
-    }
-
-    const newData = { ...localData, latitude: lat, longitude: lon, tz_offset_hours: tz };
-    // Apply immediately (avoid debounce so Save captures correct coordinates)
-    pendingUpdateRef.current = null;
-    isInternalUpdateRef.current = false;
-    setLocalData(newData);
-    fireUpdate(newData);
-    setLocationSearchQuery(result.display_name.split(',')[0] ?? '');
+    // Update coordinates and timezone
+    const finalData = { ...localData, latitude: lat, longitude: lon, tz_offset_hours: tz };
+    setLocalData(finalData);
+    fireUpdate(finalData);
+    setLocationSearchQuery(result.display_name || `${lat}, ${lon}`);
     setShowLocationResults(false);
     setSelectedResultIndex(-1);
   };
@@ -270,7 +250,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
         </div>
         <div className={compact ? 'grid grid-cols-3 gap-1 mb-0.5' : 'grid grid-cols-3 gap-1.5 mb-1'}>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Year</label>
+            <label className="block text-xs text-neutral-500 mb-1">Year</label>
             <div className="relative">
               <select
                 value={localData.year}
@@ -285,7 +265,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
             </div>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Month</label>
+            <label className="block text-xs text-neutral-500 mb-1">Month</label>
             <div className="relative">
               <select
                 value={localData.month}
@@ -300,7 +280,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
             </div>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Day</label>
+            <label className="block text-xs text-neutral-500 mb-1">Day</label>
             <div className="relative">
               <select
                 value={localData.day}
@@ -320,7 +300,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
           <div className={compact ? 'space-y-1' : 'space-y-2'}>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <span className="text-[10px] text-text-muted">Year</span>
+                <span className="text-[10px] text-neutral-500">Year</span>
                 <input
                   type="range"
                   min="1900"
@@ -335,7 +315,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted">Month</span>
+                <span className="text-[10px] text-neutral-500">Month</span>
                 <input
                   type="range"
                   min="1"
@@ -350,7 +330,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted">Day</span>
+                <span className="text-[10px] text-neutral-500">Day</span>
                 <input
                   type="range"
                   min="1"
@@ -389,7 +369,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
         </div>
         <div className={compact ? 'grid grid-cols-3 gap-1.5 mb-1' : 'grid grid-cols-3 gap-2 mb-2'}>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Hour</label>
+            <label className="block text-xs text-neutral-500 mb-1">Hour</label>
             <div className="relative">
               <select
                 value={localData.hour}
@@ -404,7 +384,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
             </div>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Minute</label>
+            <label className="block text-xs text-neutral-500 mb-1">Minute</label>
             <div className="relative">
               <select
                 value={localData.minute}
@@ -419,7 +399,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
             </div>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">Second</label>
+            <label className="block text-xs text-neutral-500 mb-1">Second</label>
             <div className="relative">
               <select
                 value={localData.second}
@@ -439,7 +419,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
           <div className={compact ? 'space-y-1' : 'space-y-2'}>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <span className="text-[10px] text-text-muted">Hour</span>
+                <span className="text-[10px] text-neutral-500">Hour</span>
                 <input
                   type="range"
                   min="0"
@@ -454,7 +434,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted">Min</span>
+                <span className="text-[10px] text-neutral-500">Min</span>
                 <input
                   type="range"
                   min="0"
@@ -469,7 +449,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 />
               </div>
               <div>
-                <span className="text-[10px] text-text-muted">Sec</span>
+                <span className="text-[10px] text-neutral-500">Sec</span>
                 <input
                   type="range"
                   min="0"
@@ -549,27 +529,36 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
             {showLocationResults && locationSearchResults.length > 0 && (
               <div className="absolute z-[9999] w-full mt-2 bg-neutral-950/95 backdrop-blur-sm border border-neutral-800 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
                 <div className="p-2">
-                  {locationSearchResults.map((result, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onMouseDown={() => handleLocationSearchSelect(result)}
-                      onMouseEnter={() => setSelectedResultIndex(idx)}
-                      className={`w-full text-left px-3 py-3 rounded-lg transition-all ${
-                        idx === selectedResultIndex
-                          ? 'bg-neutral-900/50 text-white'
-                          : 'text-white/80 hover:bg-neutral-900/40'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">{result.display_name.split(',')[0]}</div>
-                          <div className="text-xs text-white/50 truncate mt-1">{result.display_name}</div>
+                  {locationSearchResults.map((result, idx) => {
+                    const lat = typeof result.lat === 'string' ? parseFloat(result.lat) : result.lat;
+                    const lon = typeof result.lon === 'string' ? parseFloat(result.lon) : result.lon;
+                    
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onMouseDown={() => handleLocationSearchSelect(result)}
+                        onMouseEnter={() => setSelectedResultIndex(idx)}
+                        className={`w-full text-left px-3 py-3 rounded-lg transition-all ${
+                          idx === selectedResultIndex
+                            ? 'bg-neutral-900/50 text-white'
+                            : 'text-white/80 hover:bg-neutral-900/40'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm truncate">
+                              {result.display_name ? result.display_name.split(',')[0] : `${lat.toFixed(2)}, ${lon.toFixed(2)}`}
+                            </div>
+                            <div className="text-xs text-white/50 truncate mt-1">
+                              {result.display_name || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0 mt-1" />
                         </div>
-                        <ChevronRight className="w-4 h-4 text-white/30 flex-shrink-0 mt-1" />
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

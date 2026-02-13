@@ -59,7 +59,7 @@ export function Skeleton({
 
 export function ChartSkeleton() {
   return (
-    <div className="bg-surface/30 rounded-2xl border border-neutral-800/50 p-6">
+    <div className="bg-neutral-900/30 rounded-2xl border border-neutral-800/50 p-6">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -91,7 +91,7 @@ export function ChartSkeleton() {
 
 export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
-    <div className="bg-surface/30 rounded-xl border border-neutral-800/50 overflow-hidden">
+    <div className="bg-neutral-900/30 rounded-xl border border-neutral-800/50 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>

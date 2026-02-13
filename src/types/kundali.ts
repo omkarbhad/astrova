@@ -102,6 +102,22 @@ export interface BhavaBalaInfo {
   rating: "Very Strong" | "Strong" | "Medium" | "Weak";
 }
 
+export interface PratyantardashaInfo {
+  planet: string;
+  start_datetime?: string;
+  start_date: string;
+  start_year: number;
+  start_month: number;
+  start_day: number;
+  end_datetime?: string;
+  end_date?: string;
+  end_year?: number;
+  end_month?: number;
+  end_day?: number;
+  years: number;
+  proportion?: number;
+}
+
 export interface AntardashaInfo {
   planet: string;
   start_datetime?: string;
@@ -116,6 +132,7 @@ export interface AntardashaInfo {
   end_day?: number;
   years: number;
   proportion?: number;
+  pratyantardashas?: PratyantardashaInfo[];
 }
 
 export interface DashaPeriodInfo {
@@ -143,6 +160,14 @@ export interface DashaInfo {
   moon_nakshatra_name: string;
   moon_nakshatra_pada: number;
   periods: DashaPeriodInfo[];
+}
+
+export interface YogaInfo {
+  name: string;
+  type: 'benefic' | 'malefic' | 'neutral';
+  description: string;
+  planets: string[];
+  strength: 'strong' | 'moderate' | 'weak';
 }
 
 export interface KundaliResponse {
@@ -173,6 +198,7 @@ export interface KundaliResponse {
   shad_bala: Record<string, ShadBalaInfo>;
   bhava_bala: Record<number, BhavaBalaInfo>;
   dasha: DashaInfo;
+  yogas?: YogaInfo[];
   signs: string[];
   signs_sanskrit: string[];
 }

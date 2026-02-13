@@ -23,9 +23,9 @@ export function AlertDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-surface border border-neutral-800 rounded-xl p-6 max-w-sm mx-4 w-full">
-        <h3 className="text-lg font-semibold mb-2 text-text">{title}</h3>
-        <p className="text-text-muted mb-6">{message}</p>
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 max-w-sm mx-4 w-full">
+        <h3 className="text-lg font-semibold mb-2 text-white">{title}</h3>
+        <p className="text-neutral-500 mb-6">{message}</p>
         <div className="flex gap-3">
           {onCancel && (
             <Button

@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { AuthModal } from './AuthModal';
+import { useUser, RedirectToSignIn } from '@clerk/clerk-react';
 import { Loader2 } from 'lucide-react';
 
 interface AuthGuardProps {
@@ -8,10 +6,9 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(true);
+  const { isSignedIn, isLoaded } = useUser();
 
-  if (loading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -22,14 +19,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-surface to-surface/80">
-        <div className="text-center px-4">
-          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-        </div>
-      </div>
-    );
+  if (!isSignedIn) {
+    return <RedirectToSignIn />;
   }
 
   return <>{children}</>;

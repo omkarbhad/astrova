@@ -60,17 +60,17 @@ export function AdBlock({
       {dismissible && (
         <button
           onClick={() => setIsDismissed(true)}
-          className="absolute top-2 right-2 p-1 rounded-full bg-surface/50 hover:bg-surface/70 transition-colors"
+          className="absolute top-2 right-2 p-1 rounded-full bg-neutral-900/50 hover:bg-neutral-900/70 transition-colors"
           aria-label="Dismiss ad"
         >
-          <X className="w-3 h-3 text-text-muted" />
+          <X className="w-3 h-3 text-neutral-500" />
         </button>
       )}
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-white mb-1">{content.title}</h3>
-          <p className="text-xs text-text-muted">{content.description}</p>
+          <p className="text-xs text-neutral-500">{content.description}</p>
         </div>
         
         <button className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/50 rounded-md text-primary text-xs font-medium transition-colors">
@@ -79,7 +79,7 @@ export function AdBlock({
         </button>
       </div>
       
-      <div className="mt-2 text-[10px] text-text-muted/50 text-center">
+      <div className="mt-2 text-[10px] text-neutral-500/50 text-center">
         Sponsored
       </div>
     </div>

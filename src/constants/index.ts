@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   KUNDALI: '/api/kundali',
   CHARTS: '/api/charts',
   REVERSE_GEOCODE: '/api/reverse-geocode',
+  CHAT: '/api/chat',
 } as const;
 
 // Chart Constants

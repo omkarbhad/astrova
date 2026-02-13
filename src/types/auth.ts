@@ -1,4 +1,5 @@
-import type { User, Session } from '@supabase/supabase-js';
+// Auth types - Clerk handles auth now.
+// These are kept for backward compatibility with any code that imports them.
 
 export interface AuthUser {
   id: string;
@@ -7,15 +8,7 @@ export interface AuthUser {
 }
 
 export interface AuthState {
-  user: User | null;
-  session: Session | null;
+  user: unknown | null;
   loading: boolean;
   isAuthenticated: boolean;
-}
-
-export interface AuthContextType extends AuthState {
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
 }

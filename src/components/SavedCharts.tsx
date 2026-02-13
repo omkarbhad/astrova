@@ -40,12 +40,12 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
   };
 
   return (
-    <div className="bg-surface/30 rounded-2xl p-4 border border-neutral-800/50">
+    <div className="bg-neutral-900/30 rounded-2xl p-4 border border-neutral-800/50">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Saved Charts</h2>
         <button
           onClick={() => setShowList(!showList)}
-          className="text-xs px-2 py-1 bg-surface/50 rounded hover:bg-surface/70 transition-colors"
+          className="text-xs px-2 py-1 bg-neutral-900/50 rounded hover:bg-neutral-900/70 transition-colors"
         >
           {showList ? "Hide" : "Show"} ({savedCharts.length})
         </button>
@@ -54,17 +54,17 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
       {showList && (
         <div className="space-y-2">
           {savedCharts.length === 0 ? (
-            <div className="text-center py-8 text-text-muted">
+            <div className="text-center py-8 text-neutral-500">
               <div className="text-sm">No saved charts yet</div>
               <div className="text-xs mt-1">Generate a chart and save it to see it here</div>
             </div>
           ) : (
             savedCharts.map((chart) => (
-              <div key={chart.id} className="bg-surface/50 rounded-lg p-3 border border-neutral-800/50">
+              <div key={chart.id} className="bg-neutral-900/50 rounded-lg p-3 border border-neutral-800/50">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="font-medium text-text">{chart.name}</div>
-                    <div className="text-xs text-text-muted">
+                    <div className="font-medium text-white">{chart.name}</div>
+                    <div className="text-xs text-neutral-500">
                       Created: {formatDate(chart.createdAt)} at {formatTime(chart.createdAt)}
                     </div>
                   </div>
@@ -86,7 +86,7 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4 text-xs text-text-muted">
+                <div className="flex items-center gap-4 text-xs text-neutral-500">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {chart.birthData.day}/{chart.birthData.month}/{chart.birthData.year}

@@ -708,23 +708,30 @@ function SpiderChart({
     });
   }, [data.length, center, webRadius]);
 
-  const accentColor = '#3b82f6';
-
   return (
     <div className="flex flex-col items-center">
-      <div className="w-full max-w-[720px] mb-4">
+      <div className="w-full max-w-[720px] mb-3">
         <h3 className="text-sm sm:text-base font-semibold text-white truncate text-center">{title}</h3>
+        {subtitle && <p className="text-[10px] sm:text-xs text-neutral-500 text-center mt-0.5">{subtitle}</p>}
       </div>
       
       <div className="relative w-full max-w-[720px]">
         <svg viewBox={`0 0 ${size} ${size}`} preserveAspectRatio="xMidYMid meet" className="w-full h-auto overflow-visible">
           <defs>
             <radialGradient id={`grad_${safeId}`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={accentColor} stopOpacity="0.35" />
-              <stop offset="100%" stopColor={accentColor} stopOpacity="0.08" />
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
             </radialGradient>
             <filter id={`glow_${safeId}`}>
-              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id={`dot_glow_${safeId}`}>
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -738,45 +745,76 @@ function SpiderChart({
               key={i}
               points={ring.points}
               fill="none"
-              stroke={ring.isMain ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)'}
-              strokeWidth={ring.isMain ? 2 : 1}
-              strokeDasharray={ring.isMain ? 'none' : '2,3'}
-              opacity={1}
+              stroke={ring.isMain ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)'}
+              strokeWidth={ring.isMain ? 1.5 : 0.5}
+              strokeDasharray={ring.isMain ? 'none' : '3,4'}
             />
           ))}
 
           {/* Grid lines */}
           {gridLines.map((line, i) => (
-            <line key={i} {...line} stroke="rgba(255,255,255,0.10)" strokeWidth="1" opacity={1} />
+            <line key={i} {...line} stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
           ))}
 
-          {/* Data polygon */}
+          {/* Data polygon fill */}
           <polygon
             points={polygonPoints}
             fill={`url(#grad_${safeId})`}
-            stroke={accentColor}
-            strokeWidth="2.5"
+            stroke="none"
+          />
+
+          {/* Data polygon stroke with glow */}
+          <polygon
+            points={polygonPoints}
+            fill="none"
+            stroke="rgba(139,92,246,0.6)"
+            strokeWidth="2"
             filter={`url(#glow_${safeId})`}
             strokeLinejoin="round"
           />
 
-          {/* Data points with individual colors */}
+          {/* Colored line segments between consecutive points */}
+          {points.map((point, i) => {
+            const next = points[(i + 1) % points.length];
+            return (
+              <line
+                key={`seg-${i}`}
+                x1={point.x}
+                y1={point.y}
+                x2={next.x}
+                y2={next.y}
+                stroke={point.color}
+                strokeWidth="1.5"
+                strokeOpacity="0.4"
+              />
+            );
+          })}
+
+          {/* Data points with glow */}
           {points.map((point, i) => (
             <g key={i}>
               <title>{`${point.label}: ${point.displayPercent.toFixed(0)}% - ${point.description}`}</title>
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={5}
+                r={8}
                 fill={point.color}
-                stroke="#0B0B0D"
-                strokeWidth="2.5"
+                fillOpacity="0.15"
+                filter={`url(#dot_glow_${safeId})`}
               />
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={2}
-                fill="#0B0B0D"
+                r={4.5}
+                fill={point.color}
+                stroke="#0a0a0b"
+                strokeWidth="2"
+              />
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={1.5}
+                fill="#0a0a0b"
               />
             </g>
           ))}
@@ -791,21 +829,26 @@ function SpiderChart({
               <g key={`label-${i}`}>
                 <text
                   x={point.labelX}
-                  y={point.labelY - 10}
+                  y={point.labelY - 8}
                   textAnchor={anchor}
                   dominantBaseline={isTop ? 'auto' : 'hanging'}
-                  className="text-xs sm:text-sm font-medium text-white/70"
+                  fontSize="11"
+                  fontWeight="500"
                   fill={point.color}
+                  opacity="0.9"
                 >
                   {point.icon || ''} {point.shortLabel}
                 </text>
                 <text
                   x={point.labelX}
-                  y={point.labelY + 10}
+                  y={point.labelY + 8}
                   textAnchor={anchor}
                   dominantBaseline={isTop ? 'auto' : 'hanging'}
-                  className="text-xs sm:text-sm font-mono font-semibold text-white"
+                  fontSize="11"
+                  fontWeight="700"
+                  fontFamily="monospace"
                   fill="#ffffff"
+                  opacity="0.85"
                 >
                   {point.displayPercent.toFixed(0)}%
                 </text>
@@ -815,12 +858,6 @@ function SpiderChart({
 
         </svg>
       </div>
-
-      {subtitle && (
-        <div className="w-full max-w-[720px] mt-4 text-center">
-          <p className="text-xs sm:text-sm text-white/50">{subtitle}</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -832,10 +869,11 @@ function InsightCard({ title, value, subtitle, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-lg p-4 text-center hover:border-neutral-600/80 transition-all duration-200">
-      <div className="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1">{title}</div>
+    <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-4 text-center hover:border-neutral-600/80 transition-all duration-200 relative overflow-hidden group">
+      <div className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+      <div className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">{title}</div>
       <div className="text-2xl font-bold mb-1" style={{ color }}>{value}</div>
-      <div className="text-xs text-neutral-400">{subtitle}</div>
+      <div className="text-[10px] text-neutral-400">{subtitle}</div>
     </div>
   );
 }
@@ -921,11 +959,36 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
                   </tr>
                   {expandedPlanet === planet && bala && (
                     <tr className="bg-neutral-800/30">
-                      <td colSpan={5} className="px-3 py-2">
-                        <div className="text-[10px] text-neutral-500 space-y-1">
-                          <div>Total Shashtiamsas: {getTotalBala(bala)}</div>
-                          <div>Description: {config?.description}</div>
-                          <div>Keywords: {config?.keywords?.slice(0, 3).join(', ')}</div>
+                      <td colSpan={5} className="px-3 py-3">
+                        <div className="space-y-2">
+                          <div className="text-[10px] text-neutral-400 mb-2">{config?.description}</div>
+                          {/* Sub-bala breakdown */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[10px]">
+                            {(() => {
+                              const sthana = typeof bala.sthana_bala === 'object' ? (bala.sthana_bala as any).total : (bala.sthana_bala ?? 0);
+                              const kala = typeof bala.kala_bala === 'object' ? (bala.kala_bala as any).total : (bala.kala_bala ?? 0);
+                              const subBalas = [
+                                { name: 'Sthana', value: sthana, max: 180, color: '#f59e0b' },
+                                { name: 'Dig', value: bala.dig_bala ?? 0, max: 60, color: '#3b82f6' },
+                                { name: 'Kala', value: kala, max: 300, color: '#8b5cf6' },
+                                { name: 'Chesta', value: bala.chesta_bala ?? 0, max: 60, color: '#ef4444' },
+                                { name: 'Naisargika', value: bala.naisargika_bala ?? 0, max: 60, color: '#10b981' },
+                                { name: 'Drik', value: bala.drik_bala ?? 0, max: 60, color: '#06b6d4' },
+                              ];
+                              return subBalas.map(sb => (
+                                <div key={sb.name} className="flex items-center gap-2">
+                                  <span className="text-neutral-500 w-16">{sb.name}</span>
+                                  <div className="flex-1 h-1.5 bg-neutral-700/50 rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.max(0, (Number(sb.value) / sb.max) * 100))}%`, background: sb.color }} />
+                                  </div>
+                                  <span className="text-white font-mono w-8 text-right">{Number(sb.value).toFixed(0)}</span>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                          <div className="text-[9px] text-neutral-500 pt-1 border-t border-neutral-700/30">
+                            Total: {getTotalBala(bala)} shashtiamsas = {rupas.toFixed(2)} rupas
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1066,16 +1129,33 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
                     <td className="px-3 py-2">{planet.sign}</td>
                     <td className="px-3 py-2 text-center">{planet.deg}°{planet.min}'</td>
                     <td className="px-3 py-2 text-center">{planet.house_whole_sign}</td>
-                    <td className="px-3 py-2 text-center text-[10px]">-</td>
+                    <td className="px-3 py-2 text-center text-[10px]">
+                      {(() => {
+                        const nakshatraSpan = 360 / 27;
+                        const nakIdx = Math.floor(planet.longitude / nakshatraSpan) % 27;
+                        const NAKS = ['Ash','Bha','Kri','Roh','Mri','Ard','Pun','Pus','Asl','Mag','PPh','UPh','Has','Chi','Swa','Vis','Anu','Jye','Mul','PAs','UAs','Shr','Dha','Sha','PBh','UBh','Rev'];
+                        return NAKS[nakIdx] || '-';
+                      })()}
+                    </td>
                   </tr>
                   {expandedPlanet === planetName && (
                     <tr className="bg-neutral-800/30">
-                      <td colSpan={5} className="px-3 py-2">
-                        <div className="text-[10px] text-neutral-500 space-y-1">
-                          <div>Longitude: {planet.longitude.toFixed(2)}°</div>
-                          <div>Sign: {planet.sign} ({planet.sign_sanskrit})</div>
-                          <div>Retrograde: {planet.retrograde ? 'Yes' : 'No'}</div>
-                          <div>Description: {config?.description}</div>
+                      <td colSpan={5} className="px-3 py-3">
+                        <div className="text-[10px] space-y-1.5">
+                          <div className="text-neutral-400">{config?.description}</div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                            <div><span className="text-neutral-500">Longitude:</span> <span className="text-white font-mono">{planet.longitude.toFixed(4)}°</span></div>
+                            <div><span className="text-neutral-500">Sign:</span> <span className="text-white">{planet.sign} ({planet.sign_sanskrit})</span></div>
+                            <div><span className="text-neutral-500">Navamsa:</span> <span className="text-white">{planet.navamsa_sign || '-'}</span></div>
+                            <div><span className="text-neutral-500">House:</span> <span className="text-white">{planet.house_whole_sign}</span></div>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {planet.retrograde && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[9px]">Retrograde</span>}
+                            {planet.exalted && <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[9px]">Exalted</span>}
+                            {planet.debilitated && <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[9px]">Debilitated</span>}
+                            {planet.vargottama && <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded text-[9px]">Vargottama</span>}
+                            {planet.combust && <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[9px]">Combust</span>}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1120,24 +1200,24 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
   const activePeriod = activeIndex >= 0 ? dashaData.periods[activeIndex] : undefined;
 
   return (
-    <div className="bg-surface/30 rounded-lg border border-neutral-800/30 overflow-hidden">
-      <div className="p-3 bg-surface/50 border-b border-neutral-800/30">
+    <div className="bg-neutral-900/30 rounded-lg border border-neutral-800/30 overflow-hidden">
+      <div className="p-3 bg-neutral-900/50 border-b border-neutral-800/30">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Vimshottari Dasha</h3>
-          <div className="text-[10px] text-text-muted">
+          <div className="text-[10px] text-neutral-500">
             Current: {(activePeriod?.planet ?? dashaData.current_dasha ?? 'Unknown')} Mahadasha
           </div>
         </div>
       </div>
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-surface/50 sticky top-0">
+          <thead className="bg-neutral-900/50 sticky top-0">
             <tr className="border-b border-neutral-800/30">
-              <th className="px-3 py-2 text-left text-text-muted">Planet</th>
-              <th className="px-3 py-2 text-left text-text-muted">Start</th>
-              <th className="px-3 py-2 text-left text-text-muted">End</th>
-              <th className="px-3 py-2 text-center text-text-muted">Years</th>
-              <th className="px-3 py-2 text-center text-text-muted">Status</th>
+              <th className="px-3 py-2 text-left text-neutral-500">Planet</th>
+              <th className="px-3 py-2 text-left text-neutral-500">Start</th>
+              <th className="px-3 py-2 text-left text-neutral-500">End</th>
+              <th className="px-3 py-2 text-center text-neutral-500">Years</th>
+              <th className="px-3 py-2 text-center text-neutral-500">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -1149,7 +1229,7 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
               return (
                 <Fragment key={period.planet}>
                   <tr 
-                    className={`border-b border-neutral-800/20 hover:bg-surface/40 cursor-pointer transition-colors ${
+                    className={`border-b border-neutral-800/20 hover:bg-neutral-900/40 cursor-pointer transition-colors ${
                       isActive ? 'bg-blue-500/10' : ''
                     }`}
                     onClick={() => setExpandedPeriod(expandedPeriod === period.planet ? null : period.planet)}
@@ -1185,14 +1265,63 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                     </td>
                   </tr>
                   {expandedPeriod === period.planet && (
-                    <tr className="bg-neutral-800/30">
-                      <td colSpan={5} className="px-3 py-2">
-                        <div className="text-[10px] text-neutral-400 space-y-1">
-                          <div>Duration: {period.years} years</div>
-                          <div>Start Date: {period.start_datetime || period.start_date}</div>
-                          <div>End Date: {period.end_datetime || period.end_date}</div>
-                          <div>Description: {config?.description}</div>
-                        </div>
+                    <tr className="bg-neutral-800/20">
+                      <td colSpan={5} className="px-3 py-3">
+                        <div className="text-[10px] text-neutral-400 mb-2">{config?.description}</div>
+                        {period.antardashas && period.antardashas.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-semibold text-violet-300 uppercase tracking-wider mb-1">Antardashas</div>
+                            {period.antardashas.map((ad) => {
+                              const adConfig = PLANET_CONFIG[ad.planet];
+                              const now = new Date();
+                              const adStart = new Date(ad.start_datetime || ad.start_date);
+                              const adEnd = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
+                              const isAdActive = now >= adStart && now < adEnd;
+                              return (
+                                <div key={ad.planet} className={`rounded-md border ${isAdActive ? 'border-violet-500/30 bg-violet-500/5' : 'border-neutral-800/30 bg-neutral-900/30'}`}>
+                                  <div
+                                    className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-neutral-800/20 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); setExpandedPeriod(expandedPeriod === `${period.planet}-${ad.planet}` ? period.planet : `${period.planet}-${ad.planet}`); }}
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      <span style={{ color: adConfig?.color }} className="text-[10px]">{adConfig?.icon}</span>
+                                      <span className={`text-[11px] font-medium ${isAdActive ? 'text-violet-300' : 'text-white'}`}>{ad.planet}</span>
+                                      {isAdActive && <span className="text-[8px] px-1 py-0.5 bg-violet-500/20 text-violet-300 rounded">Active</span>}
+                                    </div>
+                                    <div className="flex items-center gap-3 text-[9px] text-neutral-500">
+                                      <span>{ad.start_date}</span>
+                                      <span>→</span>
+                                      <span>{ad.end_date}</span>
+                                      <span className="text-neutral-600">{ad.years?.toFixed(2)}y</span>
+                                    </div>
+                                  </div>
+                                  {expandedPeriod === `${period.planet}-${ad.planet}` && ad.pratyantardashas && (
+                                    <div className="px-2 pb-2 pt-1 border-t border-neutral-800/20">
+                                      <div className="text-[9px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1">Pratyantardashas</div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                                        {ad.pratyantardashas.map((pad) => {
+                                          const padConfig = PLANET_CONFIG[pad.planet];
+                                          const padStart = new Date(pad.start_datetime || pad.start_date);
+                                          const padEnd = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
+                                          const isPadActive = now >= padStart && now < padEnd;
+                                          return (
+                                            <div key={pad.planet} className={`flex items-center justify-between px-1.5 py-1 rounded text-[9px] ${isPadActive ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-neutral-900/30'}`}>
+                                              <div className="flex items-center gap-1">
+                                                <span style={{ color: padConfig?.color }}>{padConfig?.icon}</span>
+                                                <span className={isPadActive ? 'text-purple-300 font-medium' : 'text-neutral-400'}>{pad.planet}</span>
+                                              </div>
+                                              <span className="text-neutral-600">{pad.start_date?.slice(5)}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}
@@ -1362,14 +1491,14 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
   }, [planetData, houseData]);
 
   return (
-    <div className="bg-neutral-900/60 rounded-xl sm:rounded-2xl border border-neutral-700/50 overflow-hidden">
+    <div className="bg-neutral-900/60 rounded-xl sm:rounded-2xl border border-violet-500/20 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 bg-neutral-800/50 border-b border-neutral-700/50">
+      <div className="px-4 py-4 bg-neutral-900/80 border-b border-violet-500/20">
         <div className="flex items-center justify-between gap-3">
           {/* Title */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-neutral-700/50 border border-neutral-600/50 flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4 text-violet-300" />
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-semibold text-white truncate">Strength Analysis</h2>
@@ -1378,7 +1507,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           </div>
 
           {/* Desktop segmented control */}
-          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-neutral-800/60 border border-neutral-700/50">
+          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-neutral-900/60 border border-violet-500/20">
             {(['combined', 'planets', 'houses', 'aspects', 'shad-table', 'bhava-table', 'positions', 'dasha'] as const).map(tab => (
               <button
                 key={tab}
@@ -1705,12 +1834,12 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                               {aspect.nature}
                             </span>
                           </div>
-                          <div className="text-[10px] text-text-muted mt-0.5">{aspect.pairOneLine}</div>
+                          <div className="text-[10px] text-neutral-500 mt-0.5">{aspect.pairOneLine}</div>
                         </div>
                         
                         <div className="text-right">
-                          <div className="text-xs font-medium text-text-muted">{aspect.angle}°</div>
-                          <div className="text-[9px] text-text-muted">orb {aspect.orb}°</div>
+                          <div className="text-xs font-medium text-neutral-500">{aspect.angle}°</div>
+                          <div className="text-[9px] text-neutral-500">orb {aspect.orb}°</div>
                         </div>
                       </div>
                     );
@@ -1718,31 +1847,31 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-text-muted">
+              <div className="text-center py-8 text-neutral-500">
                 <div className="text-sm">{aspects.length > 0 ? 'No aspects match filters' : 'No aspect data available'}</div>
                 <div className="text-xs mt-1">{aspects.length > 0 ? 'Try adjusting your filters' : 'Planet positions needed to calculate aspects'}</div>
               </div>
             )}
 
             {/* Aspect Interpretation Guide */}
-            <div className="bg-surface/30 rounded-lg p-4 border border-neutral-800/30">
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-3">Understanding Aspects</h4>
+            <div className="bg-neutral-900/30 rounded-lg p-4 border border-neutral-800/30">
+              <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">Understanding Aspects</h4>
               <div className="grid sm:grid-cols-2 gap-3 text-[11px]">
                 <div>
                   <span className="text-green-400 font-medium">△ Trines (120°)</span>
-                  <span className="text-text-muted"> - Natural talents, easy flow of energy, gifts that come easily</span>
+                  <span className="text-neutral-500"> - Natural talents, easy flow of energy, gifts that come easily</span>
                 </div>
                 <div>
                   <span className="text-blue-400 font-medium">⚹ Sextiles (60°)</span>
-                  <span className="text-text-muted"> - Opportunities, skills that develop with effort, cooperation</span>
+                  <span className="text-neutral-500"> - Opportunities, skills that develop with effort, cooperation</span>
                 </div>
                 <div>
                   <span className="text-orange-400 font-medium">□ Squares (90°)</span>
-                  <span className="text-text-muted"> - Friction that drives growth, challenges that build character</span>
+                  <span className="text-neutral-500"> - Friction that drives growth, challenges that build character</span>
                 </div>
                 <div>
                   <span className="text-red-400 font-medium">☍ Oppositions (180°)</span>
-                  <span className="text-text-muted"> - Awareness through polarity, balance between opposing forces</span>
+                  <span className="text-neutral-500"> - Awareness through polarity, balance between opposing forces</span>
                 </div>
               </div>
             </div>
@@ -1754,7 +1883,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Shad Bala Details</h3>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[10px] text-neutral-500">
                 Click rows for more details
               </div>
             </div>
@@ -1767,7 +1896,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Bhava Bala Details</h3>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[10px] text-neutral-500">
                 Click rows for more details
               </div>
             </div>
@@ -1780,7 +1909,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Planetary Positions</h3>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[10px] text-neutral-500">
                 Click rows for more details
               </div>
             </div>
@@ -1792,7 +1921,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
         )}
 
         {activeTab === 'positions' && !planets && (
-          <div className="text-center py-8 text-text-muted">
+          <div className="text-center py-8 text-neutral-500">
             <div className="text-sm">No planetary position data available</div>
             <div className="text-xs mt-1">Generate a kundali to view positions</div>
           </div>
@@ -1803,7 +1932,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Vimshottari Dasha</h3>
-              <div className="text-[10px] text-text-muted">
+              <div className="text-[10px] text-neutral-500">
                 Click rows for more details
               </div>
             </div>
@@ -1812,7 +1941,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
         )}
 
         {activeTab === 'dasha' && !dashaData && (
-          <div className="text-center py-8 text-text-muted">
+          <div className="text-center py-8 text-neutral-500">
             <div className="text-sm">No dasha data available</div>
             <div className="text-xs mt-1">Generate a kundali to view Vimshottari Dasha</div>
           </div>
@@ -1823,15 +1952,15 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           <div className="mt-6 pt-4 border-t border-neutral-800/30 flex flex-wrap justify-center gap-4 text-[10px]">
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-              <span className="text-text-muted">Strong ≥120%</span>
+              <span className="text-neutral-500">Strong ≥120%</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-              <span className="text-text-muted">Medium 90-120%</span>
+              <span className="text-neutral-500">Medium 90-120%</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-              <span className="text-text-muted">Weak &lt;90%</span>
+              <span className="text-neutral-500">Weak &lt;90%</span>
             </div>
           </div>
         )}
