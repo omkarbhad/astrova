@@ -1,10 +1,7 @@
-import { Sparkles, Heart, Settings } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Heart, Shield, LayoutGrid } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const ADMIN_EMAILS = ['omkarbhad@gmail.com'];
 
 interface HeaderProps {
   activeView: 'kundali' | 'matcher';
@@ -19,91 +16,67 @@ export function Header({
   onToggleSidebar,
   sidebarOpen,
 }: HeaderProps) {
-  const { user } = useUser();
+  const { astrovaUser } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user && ADMIN_EMAILS.includes(user.primaryEmailAddress?.emailAddress || '');
+  const isAdmin = astrovaUser?.role === 'admin';
+
+  const navItems = [
+    { key: 'kundali' as const, label: 'Charts', icon: LayoutGrid, mobileLabel: 'Charts', activeColor: 'text-amber-400', activeBg: 'bg-amber-500/15 text-amber-300 shadow-sm shadow-amber-500/10' },
+    { key: 'matcher' as const, label: 'Matcher', icon: Heart, mobileLabel: 'Match', activeColor: 'text-pink-400', activeBg: 'bg-pink-500/15 text-pink-300 shadow-sm shadow-pink-500/10' },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-violet-500/15 bg-black/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4">
-        <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
-          {/* Logo/Title */}
-          <div className="flex items-center gap-2">
-            <img 
-              src="/astrova_logo.png" 
-              alt="Astrova Logo" 
-              className="w-8 h-8 sm:w-10 sm:h-10"
-            />
+    <header className="sticky top-0 z-50 w-full bg-[hsl(220,10%,6%)]/95 backdrop-blur-xl border-b border-[hsl(220,8%,16%)]">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6">
+        <div className="flex h-14 items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <img src="/astrova_logo.png" alt="Astrova" className="w-7 h-7 sm:w-8 sm:h-8" />
             <div className="hidden sm:block">
-              <h1 className="text-base sm:text-lg font-bold text-white leading-tight">
-                Astrova
-              </h1>
-              <p className="text-[10px] sm:text-xs text-neutral-400 leading-tight">
-                Vedic Birth Chart Generator
-              </p>
+              <h1 className="text-sm font-semibold text-white leading-none tracking-tight">Astrova</h1>
+              <p className="text-[10px] text-neutral-500 leading-none mt-0.5">Your Modern Astrologer</p>
             </div>
-            <h1 className="sm:hidden text-sm font-bold text-white">Astrova</h1>
+            <h1 className="sm:hidden text-sm font-semibold text-white">Astrova</h1>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Navigation Tabs */}
-            <Tabs
-              value={activeView}
-              onValueChange={(v) => onViewChange(v as 'kundali' | 'matcher')}
-              className="hidden sm:block"
-            >
-              <TabsList>
-                <TabsTrigger value="kundali" className="gap-1.5">
-                  <img 
-                    src="/astrova_logo.png" 
-                    alt="Astrova" 
-                    className="w-4 h-4"
-                  />
-                  Charts
-                </TabsTrigger>
-                <TabsTrigger value="matcher" className="gap-1.5">
-                  <Heart className="w-4 h-4" />
-                  Matcher
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+          {/* Center Nav - Pill style */}
+          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0.5 p-0.5 rounded-full bg-[hsl(220,10%,7%)]/90 border border-[hsl(220,8%,18%)]">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeView === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => onViewChange(item.key)}
+                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                    isActive
+                      ? item.activeBg
+                      : 'text-neutral-500 hover:text-neutral-300'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? item.activeColor : ''}`} />
+                  <span className="hidden sm:inline">{item.label}</span>
+                  <span className="sm:hidden">{item.mobileLabel}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-            {/* Mobile Navigation */}
-            <Tabs
-              value={activeView}
-              onValueChange={(v) => onViewChange(v as 'kundali' | 'matcher')}
-              className="sm:hidden"
-            >
-              <TabsList>
-                <TabsTrigger value="kundali" className="px-2.5 gap-1">
-                  <img 
-                    src="/astrova_logo.png" 
-                    alt="Astrova" 
-                    className="w-4 h-4"
-                  />
-                  <span className="text-xs">Charts</span>
-                </TabsTrigger>
-                <TabsTrigger value="matcher" className="px-2.5 gap-1">
-                  <Heart className="w-4 h-4" />
-                  <span className="text-xs">Match</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
+          {/* Right side actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Astrova AI Toggle */}
             {onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                   sidebarOpen
-                    ? 'bg-violet-500/20 border-violet-500/40 text-violet-300 hover:bg-violet-500/30'
-                    : 'bg-neutral-800/50 border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800 hover:border-neutral-600/50'
+                    ? 'bg-amber-500/20 text-amber-300 shadow-sm shadow-amber-500/10'
+                    : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60'
                 }`}
                 title="Toggle Astrova AI"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Astrova AI</span>
-                <span className="sm:hidden">AI</span>
+                <img src="/star.png" alt="" className={`w-3.5 h-3.5 ${sidebarOpen ? '' : 'opacity-50'}`} />
+                <span className="hidden sm:inline">AI</span>
               </button>
             )}
 
@@ -111,12 +84,15 @@ export function Header({
             {isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
-                className="hidden sm:flex items-center gap-1 px-2 py-1.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs transition-all"
+                className="p-1.5 rounded-full text-neutral-500 hover:text-amber-300 hover:bg-neutral-800/60 transition-all"
                 title="Admin Panel"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
               </button>
             )}
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-[hsl(220,8%,18%)] mx-0.5 hidden sm:block" />
 
             {/* User Menu */}
             <UserMenu />

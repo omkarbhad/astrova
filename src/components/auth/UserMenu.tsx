@@ -1,25 +1,101 @@
-import { UserButton, useUser } from '@clerk/clerk-react';
-import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2, LogOut, User, Coins } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 export function UserMenu() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, astrovaUser, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Reset avatar error when user changes
+  useEffect(() => {
+    if (astrovaUser?.avatar_url) {
+      setAvatarError(false);
+    }
+  }, [astrovaUser?.avatar_url]);
 
   if (!isLoaded) {
     return <Loader2 className="w-5 h-5 animate-spin text-white/40" />;
   }
 
-  if (!isSignedIn) {
-    return null;
+  if (!isSignedIn || !astrovaUser) {
+    return (
+      <button
+        onClick={() => window.location.href = '/login'}
+        className="px-3 py-1.5 rounded-full text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
+      >
+        Sign In
+      </button>
+    );
   }
 
+  const initials = (astrovaUser.display_name?.[0] || astrovaUser.email[0] || '?').toUpperCase();
+
   return (
-    <UserButton
-      appearance={{
-        elements: {
-          avatarBox: 'w-8 h-8',
-          userButtonPopoverCard: 'bg-neutral-900 border border-neutral-700/50',
-        },
-      }}
-    />
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700/60 flex items-center justify-center text-xs font-semibold text-white hover:border-neutral-600 transition-colors overflow-hidden"
+      >
+        {astrovaUser.avatar_url && !avatarError ? (
+          <img 
+            src={astrovaUser.avatar_url} 
+            alt="" 
+            className="w-full h-full object-cover rounded-full"
+            onError={() => setAvatarError(true)}
+          />
+        ) : (
+          <span>{initials}</span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-56 bg-neutral-900 border border-neutral-800/80 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-[100]">
+          <div className="px-3.5 py-3 border-b border-neutral-800/60">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-neutral-800 border border-neutral-700/50 flex items-center justify-center overflow-hidden shrink-0">
+                {astrovaUser.avatar_url && !avatarError ? (
+                  <img 
+                    src={astrovaUser.avatar_url} 
+                    alt="" 
+                    className="w-full h-full object-cover rounded-full"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <User className="w-4 h-4 text-neutral-400" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="text-white text-sm font-medium truncate">{astrovaUser.display_name || 'User'}</div>
+                <div className="text-neutral-500 text-[11px] truncate">{astrovaUser.email}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 px-0.5">
+              <Coins className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-amber-300 text-xs font-semibold">{astrovaUser.credits}</span>
+              <span className="text-neutral-500 text-[10px]">credits</span>
+            </div>
+          </div>
+          <div className="p-1.5">
+            <button
+              onClick={() => { signOut(); setOpen(false); window.location.href = '/'; }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

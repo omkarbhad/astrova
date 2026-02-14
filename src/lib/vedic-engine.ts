@@ -458,6 +458,7 @@ function calcShadBala(
   lagnaSignIndex: number,
   birthDate: Date,
   _latitude: number,
+  ayanamshaValue: number = 24,
 ): Record<string, ShadBalaInfo> {
   const result: Record<string, ShadBalaInfo> = {};
   const mainPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
@@ -468,9 +469,9 @@ function calcShadBala(
     if (!p) continue;
     
     const sthanaBala = calcSthanaBala(planet, p.longitude, p.signIndex, lagnaSignIndex);
-    const digBala = calcDigBala(planet, p.signIndex, lagnaSignIndex);
+    const digBala = calcDigBala(planet, p.longitude, lagnaSignIndex);
     const moonLon = planets['Moon']?.longitude ?? 0;
-    const kalaBala = calcKalaBala(planet, birthDate, p.longitude, sunLon, moonLon);
+    const kalaBala = calcKalaBala(planet, birthDate, p.longitude, sunLon, moonLon, ayanamshaValue);
     const chestaBala = calcChestaBala(planet, p.retrograde, p.longitude, sunLon, moonLon);
     const naisargikaBala = NAISARGIKA_BALA[planet] ?? 0;
     const drikBala = calcDrikBala(planet, p.longitude, planets);
@@ -517,23 +518,41 @@ function calcSthanaBala(planet: string, longitude: number, signIndex: number, la
     uccha = (180 - diff) / 3; // Max 60 shashtiamsas
   }
   
-  // 2. Saptavargaja Bala (based on dignity in 7 divisional charts - simplified)
-  let saptavargaja = 0;
-  // Check own sign
-  if (OWN_SIGNS[planet]?.includes(signIndex)) saptavargaja += 30;
-  // Check moolatrikona
+  // 2. Saptavargaja Bala (dignity in 7 divisional charts)
+  // Each varga gives points: own=30, moola=15, exalted=20, friend=15, enemy=-10
+  // Rasi (D-1) dignity
+  let rasiDignity = 0;
+  if (OWN_SIGNS[planet]?.includes(signIndex)) rasiDignity = 30;
+  else if (EXALTATION[planet]?.sign === signIndex) rasiDignity = 20;
+  else {
+    const signLord = getSignLord(signIndex);
+    if (FRIENDS[planet]?.includes(signLord)) rasiDignity = 15;
+    else if (ENEMIES[planet]?.includes(signLord)) rasiDignity = -10;
+  }
+  // Moolatrikona bonus
   const mt = MOOLATRIKONA[planet];
   if (mt && signIndex === mt.sign) {
     const degInSign = longitude % 30;
-    if (degInSign >= mt.from && degInSign <= mt.to) saptavargaja += 15;
+    if (degInSign >= mt.from && degInSign <= mt.to) rasiDignity = Math.max(rasiDignity, 22.5);
   }
-  // Check exaltation sign
-  if (EXALTATION[planet]?.sign === signIndex) saptavargaja += 20;
-  // Check friendly sign
-  const signLord = getSignLord(signIndex);
-  if (FRIENDS[planet]?.includes(signLord)) saptavargaja += 15;
-  // Check enemy sign
-  if (ENEMIES[planet]?.includes(signLord)) saptavargaja -= 10;
+  
+  // Navamsa (D-9) dignity
+  const navamsaIdx = Math.floor((longitude % 30) / (30 / 9)) % 12;
+  // Adjust navamsa starting sign based on element of rasi sign
+  const navamsaStartSign = (signIndex % 4 === 0) ? 0 : (signIndex % 4 === 1) ? 9 : (signIndex % 4 === 2) ? 6 : 3;
+  const actualNavamsaSign = (navamsaStartSign + navamsaIdx) % 12;
+  let navamsaDignity = 0;
+  if (OWN_SIGNS[planet]?.includes(actualNavamsaSign)) navamsaDignity = 30;
+  else if (EXALTATION[planet]?.sign === actualNavamsaSign) navamsaDignity = 20;
+  else {
+    const navLord = getSignLord(actualNavamsaSign);
+    if (FRIENDS[planet]?.includes(navLord)) navamsaDignity = 15;
+    else if (ENEMIES[planet]?.includes(navLord)) navamsaDignity = -10;
+  }
+  
+  // Average of Rasi + Navamsa dignity (simplified from full 7 vargas)
+  // Scale to max ~45 shashtiamsas
+  let saptavargaja = ((rasiDignity + navamsaDignity) / 2) * 1.5;
   saptavargaja = Math.max(0, Math.min(saptavargaja, 45));
   
   // 3. Ojayugma Bala (odd/even sign strength)
@@ -547,12 +566,12 @@ function calcSthanaBala(planet: string, longitude: number, signIndex: number, la
     ojayugma = 7.5;
   }
   
-  // 4. Kendra Bala (angular house strength)
+  // 4. Kendra Bala (angular house strength) — per Brihat Parashara
   const houseFromLagna = ((signIndex - lagnaSignIndex + 12) % 12) + 1;
   let kendra = 0;
-  if ([1, 4, 7, 10].includes(houseFromLagna)) kendra = 60;
-  else if ([2, 5, 8, 11].includes(houseFromLagna)) kendra = 30;
-  else kendra = 15;
+  if ([1, 4, 7, 10].includes(houseFromLagna)) kendra = 30;       // Kendra
+  else if ([2, 5, 8, 11].includes(houseFromLagna)) kendra = 15;  // Panaphara
+  else kendra = 7.5;                                               // Apoklima
   
   // 5. Drekkana Bala
   const degInSign = longitude % 30;
@@ -573,17 +592,19 @@ function calcSthanaBala(planet: string, longitude: number, signIndex: number, la
   };
 }
 
-function calcDigBala(planet: string, signIndex: number, lagnaSignIndex: number): number {
+function calcDigBala(planet: string, longitude: number, lagnaSignIndex: number): number {
+  const signIndex = Math.floor(longitude / 30) % 12;
   const house = ((signIndex - lagnaSignIndex + 12) % 12) + 1;
   const maxHouse = DIG_BALA_HOUSE[planet] ?? 1;
-  // Distance from max house (in houses)
+  // Distance from max house (in houses, 0-6 range)
   let dist = Math.abs(house - maxHouse);
   if (dist > 6) dist = 12 - dist;
-  // Max 60 shashtiamsas at own direction, 0 at opposite
-  return Math.round((60 - dist * 10) * 100) / 100;
+  // Cosine-based curve: max 60 at own direction, 0 at opposite (smoother than linear)
+  const bala = 30 + 30 * Math.cos((dist / 6) * Math.PI);
+  return Math.round(bala * 100) / 100;
 }
 
-function calcKalaBala(planet: string, birthDate: Date, longitude: number, sunLon: number, moonLon?: number): KalaBalaInfo {
+function calcKalaBala(planet: string, birthDate: Date, longitude: number, sunLon: number, moonLon?: number, ayanamshaValue: number = 24): KalaBalaInfo {
   const hour = birthDate.getHours() + birthDate.getMinutes() / 60;
   const isDaytime = hour >= 6 && hour < 18;
   const dayOfWeek = birthDate.getDay(); // 0=Sun, 1=Mon...
@@ -647,9 +668,9 @@ function calcKalaBala(planet: string, birthDate: Date, longitude: number, sunLon
   const abda = planet === dayLords[birthDate.getFullYear() % 7] ? 15 : 0;
   const masa = planet === dayLords[birthDate.getMonth() % 7] ? 30 : 0;
   
-  // 7. Ayana Bala (based on declination estimate from ecliptic longitude)
-  // Planets with northern declination get more ayana bala
-  const tropLon = longitude; // approximate
+  // 7. Ayana Bala (based on declination from TROPICAL ecliptic longitude)
+  // Must convert sidereal back to tropical by adding ayanamsha
+  const tropLon = (longitude + ayanamshaValue) % 360;
   const obliquity = 23.44;
   const decl = Math.asin(Math.sin(obliquity * Math.PI / 180) * Math.sin(tropLon * Math.PI / 180)) * 180 / Math.PI;
   // Benefics strong with north declination, malefics with south
@@ -791,7 +812,18 @@ function calcBhavaBala(
       if (pBala) planetContribution += (pBala.total_shashtiamsas ?? 0) * 0.15;
     }
     
-    const totalShashtiamsas = bhavadhipatiBala * 0.3 + bhavaDigbala + bhavaDrishtiBala + planetContribution;
+    // Lord placement strength — lord in kendra/trikona from own house is strong
+    let lordPlacementBala = 0;
+    if (lordHouse > 0) {
+      const lordDistFromHouse = ((lordHouse - house + 12) % 12);
+      if ([0, 3, 6, 9].includes(lordDistFromHouse)) lordPlacementBala = 20; // kendra from house
+      else if ([4, 8].includes(lordDistFromHouse)) lordPlacementBala = 15;  // trikona from house
+      else if ([5, 7, 11].includes(lordDistFromHouse)) lordPlacementBala = 5; // neutral
+      else lordPlacementBala = -5; // 6th, 8th, 12th from own house
+    }
+    
+    const bhavadhipatiContrib = bhavadhipatiBala * 0.35;
+    const totalShashtiamsas = bhavadhipatiContrib + bhavaDigbala + bhavaDrishtiBala + planetContribution + lordPlacementBala;
     const totalRupas = totalShashtiamsas / 60;
     
     const isStrong = totalRupas >= 1.0;
@@ -809,7 +841,7 @@ function calcBhavaBala(
       lord_house: lordHouse,
       lord_sign: lordData ? SIGNS_EN[lordData.signIndex] : undefined,
       planets_in_house: planetsInHouse,
-      bhavadhipati_bala: Math.round(bhavadhipatiBala * 0.3 * 100) / 100,
+      bhavadhipati_bala: Math.round(bhavadhipatiContrib * 100) / 100,
       bhava_digbala: bhavaDigbala,
       bhava_drishti_bala: Math.round(bhavaDrishtiBala * 100) / 100,
       planet_contribution: Math.round(planetContribution * 100) / 100,
@@ -1031,6 +1063,7 @@ export function calculateKundali(request: KundaliRequest): KundaliResponse {
     const isVargottama = signIdx === navamsaIdx;
     const combusted = isCombust(siderealLon, sunSiderealLon, name);
     
+    const nak = getNakshatra(siderealLon);
     planetsInfo[name] = {
       longitude: Math.round(siderealLon * 10000) / 10000,
       sign: SIGNS_EN[signIdx],
@@ -1049,6 +1082,9 @@ export function calculateKundali(request: KundaliRequest): KundaliResponse {
       debilitated: isDebilitated,
       vargottama: isVargottama,
       combust: combusted,
+      nakshatra: nak.name,
+      nakshatra_pada: nak.pada,
+      nakshatra_lord: NAKSHATRA_LORDS[nak.index],
     };
   }
   
@@ -1065,6 +1101,7 @@ export function calculateKundali(request: KundaliRequest): KundaliResponse {
     
     planetsRaw[name] = { longitude: lon, signIndex: signIdx, retrograde: true, tropicalLon: 0 };
     
+    const nakRK = getNakshatra(lon);
     planetsInfo[name] = {
       longitude: Math.round(lon * 10000) / 10000,
       sign: SIGNS_EN[signIdx],
@@ -1083,6 +1120,9 @@ export function calculateKundali(request: KundaliRequest): KundaliResponse {
       debilitated: false,
       vargottama: signIdx === navamsaIdx,
       combust: false,
+      nakshatra: nakRK.name,
+      nakshatra_pada: nakRK.pada,
+      nakshatra_lord: NAKSHATRA_LORDS[nakRK.index],
     };
   }
   
@@ -1091,7 +1131,7 @@ export function calculateKundali(request: KundaliRequest): KundaliResponse {
   const navamsaChart = buildNavamsaChart(planetsRaw);
   
   // Calculate Shadbala
-  const shadBala = calcShadBala(planetsRaw, lagnaSignIndex, birthDate, latitude);
+  const shadBala = calcShadBala(planetsRaw, lagnaSignIndex, birthDate, latitude, ayanamshaValue);
   
   // Calculate Bhava Bala
   const bhavaBala = calcBhavaBala(lagnaSignIndex, planetsRaw, shadBala);

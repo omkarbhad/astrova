@@ -19,7 +19,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-neutral-900 border-neutral-800 text-white">
+      <DialogContent className="sm:max-w-md bg-[hsl(220,10%,8%)] border-[hsl(220,8%,18%)] text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Coins className="w-5 h-5 text-amber-400" />

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Heart, Star, FolderOpen, Search, X, ChevronRight, MapPin } from 'lucide-react';
+import { Heart, Star, FolderOpen, Search, X, ChevronRight, MapPin, Crown, Handshake, Sparkles, PawPrint, Globe2, Users, Orbit, Dna, Save } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { LoadChartsModal } from './LoadChartsModal';
@@ -44,9 +44,11 @@ type SavedChart = {
 interface KundaliMatcherProps {
   savedCharts: SavedChart[];
   onDeleteChart?: (chartId: string) => void | Promise<void>;
+  onMatchComplete?: (data: { chart1Name: string; chart2Name: string; scores: MatchScore[]; chart1: KundaliResponse; chart2: KundaliResponse }) => void;
+  onSaveChart?: (name: string, birthData: KundaliRequest, locationName?: string) => void | Promise<void>;
 }
 
-export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherProps) {
+export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, onSaveChart }: KundaliMatcherProps) {
   const [selectedChart1, setSelectedChart1] = useState<string>('');
   const [selectedChart2, setSelectedChart2] = useState<string>('');
   const [matchedCharts, setMatchedCharts] = useState<MatchedCharts | null>(null);
@@ -56,12 +58,13 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [loadingForPerson, setLoadingForPerson] = useState<1 | 2>(1);
   const hasAutoLoadedRef = useRef(false);
+  const locationSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Location search states
   const [locationSearch1, setLocationSearch1] = useState('');
   const [locationSearch2, setLocationSearch2] = useState('');
-  const [locationSuggestions1, setLocationSuggestions1] = useState<any[]>([]);
-  const [locationSuggestions2, setLocationSuggestions2] = useState<any[]>([]);
+  const [locationSuggestions1, setLocationSuggestions1] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [locationSuggestions2, setLocationSuggestions2] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
   const [isSearching1, setIsSearching1] = useState(false);
   const [isSearching2, setIsSearching2] = useState(false);
   const [showLocationDropdown1, setShowLocationDropdown1] = useState(false);
@@ -117,8 +120,14 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
     setMatchedCharts(null);
     setMatchScores([]);
 
-    if (!formData1 || !formData2) return;
-    if (selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2) return;
+    if (!formData1 || !formData2) {
+      setMatchError('Please enter birth details for both persons.');
+      return;
+    }
+    if (selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2) {
+      setMatchError('Please select different charts for each person.');
+      return;
+    }
 
     setIsMatching(true);
     try {
@@ -146,6 +155,15 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
         color: getScoreColor(matchResult.total, matchResult.maxTotal),
       });
       setMatchScores(scores);
+
+      // Notify parent (for AI sidebar)
+      onMatchComplete?.({
+        chart1Name: name1,
+        chart2Name: name2,
+        scores,
+        chart1,
+        chart2,
+      });
     } catch (e) {
       setMatchError(e instanceof Error ? e.message : 'Unable to match charts');
     } finally {
@@ -184,6 +202,11 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
   const handleLoadChart = (chartId: string) => {
     applySavedChart(chartId, loadingForPerson);
     setShowLoadModal(false);
+    // Clear previous match results when person data changes
+    if (matchedCharts) {
+      setMatchedCharts(null);
+      setMatchScores([]);
+    }
   };
 
   const openLoadModal = (personNumber: 1 | 2) => {
@@ -291,170 +314,101 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
   const compatibilityLevel = overallScore ? getCompatibilityLevel(overallScore.score, overallScore.maxScore) : null;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 to-pink-500/30 border border-red-500/40 flex items-center justify-center">
-            <Heart className="w-5 h-5 text-red-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white">Kundali Matching</h2>
+    <div className="space-y-3 max-w-4xl mx-auto">
+      <div className="text-center space-y-1">
+        <div className="flex items-center justify-center gap-2">
+          <Heart className="w-4 h-4 text-pink-400" />
+          <h2 className="text-lg font-bold text-white">Kundali Matching</h2>
         </div>
-        <p className="text-neutral-400 text-sm">Ashtakoot Guna Milan • 36 Points Compatibility Analysis</p>
+        <p className="text-neutral-500 text-xs">Ashtakoot Guna Milan • 36 Points Compatibility</p>
       </div>
 
       {/* Birth Data Forms */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Person 1 Form */}
-        <Card className="bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-2xl border-blue-500/20 hover:border-blue-500/40 transition-all duration-300">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/30 to-cyan-500/30 border border-blue-500/40 flex items-center justify-center">
-                <span className="text-blue-300 font-bold text-lg">♂</span>
+        <Card className="bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-xl border-[hsl(220,8%,18%)] hover:border-amber-500/30 transition-all duration-300">
+          <CardHeader className="px-3 py-2 pb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/25 to-yellow-500/25 border border-amber-500/30 flex items-center justify-center">
+                <span className="text-amber-300 font-bold text-sm">♂</span>
               </div>
-              <div>
-                <CardTitle className="text-white text-base">{name1 || 'Person 1'}</CardTitle>
-                <p className="text-xs text-neutral-400 mt-0.5">Enter birth details</p>
-              </div>
+              <CardTitle className="text-white text-sm">{name1 || 'Person 1'}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-end gap-3">
+          <CardContent className="px-3 pb-3 space-y-2">
+            <div className="flex items-end gap-2">
               <div className="flex-1">
-                <Label htmlFor="name1" className="text-sm font-medium text-neutral-300 mb-2 block">Name</Label>
                 <Input
                   id="name1"
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
-                  className="bg-neutral-800/50 border-neutral-700/50 text-white h-11 rounded-lg focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
-                  placeholder="Enter name"
-                  readOnly
+                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all"
+                  placeholder="Name"
                 />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openLoadModal(1)}
-                className="gap-1 bg-neutral-200/10 border border-neutral-600/50 text-white hover:bg-neutral-200/20 hover:border-neutral-500/70 transition-all duration-200 h-8 w-8 p-0 justify-center sm:w-auto sm:px-2 whitespace-nowrap"
-              >
-                <FolderOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Open Chart</span>
+              <Button variant="outline" size="sm" onClick={() => openLoadModal(1)} className="gap-1 bg-neutral-200/10 border border-neutral-600/50 text-white hover:bg-neutral-200/20 h-9 w-9 p-0 justify-center" title="Load saved chart">
+                <FolderOpen className="w-3.5 h-3.5" />
               </Button>
+              {onSaveChart && (
+                <Button variant="outline" size="sm" onClick={() => onSaveChart(name1, formData1, locationSearch1 || undefined)} className="gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
+                  <Save className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Date</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="day1" className="text-xs text-neutral-400 mb-1 block">Day</Label>
-                    <select
-                      id="day1"
-                      value={formData1.day}
-                      onChange={(e) => setFormData1({...formData1, day: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {days.map(d => (
-                        <option key={d} value={d}>{d.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="month1" className="text-xs text-neutral-400 mb-1 block">Month</Label>
-                    <select
-                      id="month1"
-                      value={formData1.month}
-                      onChange={(e) => setFormData1({...formData1, month: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {months.map(m => (
-                        <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="year1" className="text-xs text-neutral-400 mb-1 block">Year</Label>
-                    <select
-                      id="year1"
-                      value={formData1.year}
-                      onChange={(e) => setFormData1({...formData1, year: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  </div>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={formData1.day} onChange={(e) => setFormData1({...formData1, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData1.month} onChange={(e) => setFormData1({...formData1, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {months.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData1.year} onChange={(e) => setFormData1({...formData1, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {years.map(y => (<option key={y} value={y}>{y}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={formData1.hour} onChange={(e) => setFormData1({...formData1, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData1.minute} onChange={(e) => setFormData1({...formData1, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData1.second} onChange={(e) => setFormData1({...formData1, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                    {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
+                  </select>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Time</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="hour1" className="text-xs text-neutral-400 mb-1 block">Hour</Label>
-                    <select
-                      id="hour1"
-                      value={formData1.hour}
-                      onChange={(e) => setFormData1({...formData1, hour: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {hours.map(h => (
-                        <option key={h} value={h}>{h.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="minute1" className="text-xs text-neutral-400 mb-1 block">Minute</Label>
-                    <select
-                      id="minute1"
-                      value={formData1.minute}
-                      onChange={(e) => setFormData1({...formData1, minute: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {minutes.map(m => (
-                        <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="second1" className="text-xs text-neutral-400 mb-1 block">Second</Label>
-                    <select
-                      id="second1"
-                      value={formData1.second}
-                      onChange={(e) => setFormData1({...formData1, second: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-neutral-700/50 rounded-lg px-3 text-sm text-white focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {seconds.map(s => (
-                        <option key={s} value={s}>{s.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Location</Label>
-                <div className="space-y-3">
-                  {/* Location Search */}
-                  <div className="relative mt-3">
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Location</Label>
+                <div>
+                  <div className="relative">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 pointer-events-none" />
                       <input
                         type="text"
                         value={locationSearch1}
                         onChange={(e) => {
                           setLocationSearch1(e.target.value);
-                          searchLocation(e.target.value, 1);
+                          if (locationSearchTimerRef.current) clearTimeout(locationSearchTimerRef.current);
+                          locationSearchTimerRef.current = setTimeout(() => searchLocation(e.target.value, 1), 400);
                         }}
                         onFocus={() => setShowLocationDropdown1(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown1(false), 200)}
-                        className="w-full bg-neutral-900/40 border border-violet-500/20 rounded-lg pl-10 pr-10 py-2 text-sm text-white placeholder-white/40 focus:outline-none focus:border-violet-500/40 transition-colors"
-                        placeholder="Search city or place..."
+                        className="w-full bg-neutral-900/40 border border-amber-500/20 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-amber-500/40 transition-colors"
+                        placeholder="Search city..."
                       />
                       
                       {isSearching1 && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-300 rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-amber-500/30 border-t-amber-300 rounded-full animate-spin"></div>
                         </div>
                       )}
                       
@@ -471,7 +425,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
                     </div>
 
                     {showLocationDropdown1 && locationSuggestions1.length > 0 && (
-                      <div className="absolute z-[9999] w-full mt-2 bg-neutral-950/95 backdrop-blur-sm border border-violet-500/20 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                      <div className="absolute z-[9999] w-full mt-2 bg-neutral-950/95 backdrop-blur-sm border border-amber-500/20 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                         <div className="p-2">
                           {locationSuggestions1.map((location, index) => {
                             const lat = typeof location.lat === 'string' ? parseFloat(location.lat) : location.lat;
@@ -510,8 +464,8 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
                     {locationSearch1 && Number.isFinite(formData1.latitude) && Number.isFinite(formData1.longitude) && (
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-blue-500/20 border border-blue-500/40 rounded flex items-center justify-center">
-                            <MapPin className="w-3 h-3 text-blue-300" />
+                          <div className="w-6 h-6 bg-amber-500/20 border border-amber-500/40 rounded flex items-center justify-center">
+                            <MapPin className="w-3 h-3 text-amber-300" />
                           </div>
                           <div className="text-xs text-white/60 font-mono">
                             {formData1.latitude.toFixed(4)}°, {formData1.longitude.toFixed(4)}° • TZ {formData1.tz_offset_hours > 0 ? '+' : ''}{formData1.tz_offset_hours}
@@ -528,156 +482,89 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
         </Card>
 
         {/* Person 2 Form */}
-        <Card className="bg-gradient-to-br from-pink-500/5 to-rose-500/5 rounded-2xl border-pink-500/20 hover:border-pink-500/40 transition-all duration-300">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/30 to-rose-500/30 border border-pink-500/40 flex items-center justify-center">
-                <span className="text-pink-300 font-bold text-lg">♀</span>
+        <Card className="bg-gradient-to-br from-pink-500/5 to-rose-500/5 rounded-xl border-[hsl(220,8%,18%)] hover:border-pink-500/30 transition-all duration-300">
+          <CardHeader className="px-3 py-2 pb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500/30 to-rose-500/30 border border-pink-500/40 flex items-center justify-center">
+                <span className="text-pink-300 font-bold text-sm">♀</span>
               </div>
-              <div>
-                <CardTitle className="text-white text-base">{name2 || 'Person 2'}</CardTitle>
-                <p className="text-xs text-neutral-400 mt-0.5">Enter birth details</p>
-              </div>
+              <CardTitle className="text-white text-sm">{name2 || 'Person 2'}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-end gap-3">
+          <CardContent className="px-3 pb-3 space-y-2">
+            <div className="flex items-end gap-2">
               <div className="flex-1">
-                <Label htmlFor="name2" className="text-sm font-medium text-neutral-300 mb-2 block">Name</Label>
                 <Input
                   id="name2"
                   value={name2}
                   onChange={(e) => setName2(e.target.value)}
-                  className="bg-neutral-800/50 border-violet-500/20 text-white h-11 rounded-lg focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all"
-                  placeholder="Enter name"
-                  readOnly
+                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-9 text-sm rounded-lg focus:border-pink-500/50 transition-all"
+                  placeholder="Name"
                 />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openLoadModal(2)}
-                className="gap-1 bg-neutral-200/10 border border-neutral-600/50 text-white hover:bg-neutral-200/20 hover:border-neutral-500/70 transition-all duration-200 h-8 w-8 p-0 justify-center sm:w-auto sm:px-2 whitespace-nowrap"
-              >
-                <FolderOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Open Chart</span>
+              <Button variant="outline" size="sm" onClick={() => openLoadModal(2)} className="gap-1 bg-neutral-200/10 border border-neutral-600/50 text-white hover:bg-neutral-200/20 h-9 w-9 p-0 justify-center" title="Load saved chart">
+                <FolderOpen className="w-3.5 h-3.5" />
               </Button>
+              {onSaveChart && (
+                <Button variant="outline" size="sm" onClick={() => onSaveChart(name2, formData2, locationSearch2 || undefined)} className="gap-1 bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:bg-pink-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
+                  <Save className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Date</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="day2" className="text-xs text-neutral-400 mb-1 block">Day</Label>
-                    <select
-                      id="day2"
-                      value={formData2.day}
-                      onChange={(e) => setFormData2({...formData2, day: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {days.map(d => (
-                        <option key={d} value={d}>{d.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="month2" className="text-xs text-neutral-400 mb-1 block">Month</Label>
-                    <select
-                      id="month2"
-                      value={formData2.month}
-                      onChange={(e) => setFormData2({...formData2, month: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {months.map(m => (
-                        <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="year2" className="text-xs text-neutral-400 mb-1 block">Year</Label>
-                    <select
-                      id="year2"
-                      value={formData2.year}
-                      onChange={(e) => setFormData2({...formData2, year: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {years.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  </div>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={formData2.day} onChange={(e) => setFormData2({...formData2, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData2.month} onChange={(e) => setFormData2({...formData2, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {months.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData2.year} onChange={(e) => setFormData2({...formData2, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {years.map(y => (<option key={y} value={y}>{y}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select value={formData2.hour} onChange={(e) => setFormData2({...formData2, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData2.minute} onChange={(e) => setFormData2({...formData2, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                  </select>
+                  <select value={formData2.second} onChange={(e) => setFormData2({...formData2, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                    {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
+                  </select>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Time</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="hour2" className="text-xs text-neutral-400 mb-1 block">Hour</Label>
-                    <select
-                      id="hour2"
-                      value={formData2.hour}
-                      onChange={(e) => setFormData2({...formData2, hour: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {hours.map(h => (
-                        <option key={h} value={h}>{h.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="minute2" className="text-xs text-neutral-400 mb-1 block">Minute</Label>
-                    <select
-                      id="minute2"
-                      value={formData2.minute}
-                      onChange={(e) => setFormData2({...formData2, minute: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {minutes.map(m => (
-                        <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="second2" className="text-xs text-neutral-400 mb-1 block">Second</Label>
-                    <select
-                      id="second2"
-                      value={formData2.second}
-                      onChange={(e) => setFormData2({...formData2, second: parseInt(e.target.value)})}
-                      className="w-full h-10 bg-neutral-800/50 border border-violet-500/20 rounded-lg px-3 text-sm text-white focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all appearance-none cursor-pointer"
-                    >
-                      {seconds.map(s => (
-                        <option key={s} value={s}>{s.toString().padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-neutral-300 mb-3 block">Birth Location</Label>
-                <div className="space-y-3">
-                  {/* Location Search */}
-                  <div className="relative mt-3">
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Location</Label>
+                <div>
+                  <div className="relative">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 pointer-events-none" />
                       <input
                         type="text"
                         value={locationSearch2}
                         onChange={(e) => {
                           setLocationSearch2(e.target.value);
-                          searchLocation(e.target.value, 2);
+                          if (locationSearchTimerRef.current) clearTimeout(locationSearchTimerRef.current);
+                          locationSearchTimerRef.current = setTimeout(() => searchLocation(e.target.value, 2), 400);
                         }}
                         onFocus={() => setShowLocationDropdown2(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown2(false), 200)}
-                        className="w-full bg-neutral-900/40 border border-violet-500/20 rounded-lg pl-10 pr-10 py-2 text-sm text-white placeholder-white/40 focus:outline-none focus:border-violet-500/40 transition-colors"
-                        placeholder="Search city or place..."
+                        className="w-full bg-neutral-900/40 border border-amber-500/20 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-amber-500/40 transition-colors"
+                        placeholder="Search city..."
                       />
                       
                       {isSearching2 && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-300 rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-amber-500/30 border-t-amber-300 rounded-full animate-spin"></div>
                         </div>
                       )}
                       
@@ -694,7 +581,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
                     </div>
 
                     {showLocationDropdown2 && locationSuggestions2.length > 0 && (
-                      <div className="absolute z-[9999] w-full mt-2 bg-neutral-950/95 backdrop-blur-sm border border-violet-500/20 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                      <div className="absolute z-[9999] w-full mt-2 bg-neutral-950/95 backdrop-blur-sm border border-amber-500/20 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                         <div className="p-2">
                           {locationSuggestions2.map((location, index) => {
                             const lat = typeof location.lat === 'string' ? parseFloat(location.lat) : location.lat;
@@ -753,13 +640,13 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
 
       {/* Match Button */}
       <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-pink-500/20 to-red-500/20 rounded-2xl blur-lg opacity-60" />
-        <Card className="relative bg-neutral-900/60 rounded-2xl border-neutral-700/50">
+        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-2xl blur-lg opacity-60" />
+        <Card className="relative bg-[hsl(220,10%,8%)]/60 rounded-2xl border-[hsl(220,8%,18%)]">
           <CardContent className="p-4">
             <Button
               onClick={handleMatch}
               disabled={isMatching || !!(selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2)}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 border-0 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.01] active:scale-[0.99]"
               size="lg"
             >
               {isMatching ? (
@@ -783,8 +670,11 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
 
       {matchError && (
         <Card className="bg-red-500/10 border border-red-500/30 rounded-2xl">
-          <CardContent className="p-4 text-red-300 text-sm text-center">
-            {matchError}
+          <CardContent className="p-4 text-red-300 text-sm flex items-center justify-between">
+            <span>{matchError}</span>
+            <button onClick={() => setMatchError(null)} className="text-red-400 hover:text-red-200 transition-colors shrink-0 ml-2">
+              <X className="w-4 h-4" />
+            </button>
           </CardContent>
         </Card>
       )}
@@ -834,7 +724,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
           )}
 
           {/* Ashtakoota Score Breakdown */}
-          <div className="bg-neutral-900/40 rounded-2xl border border-neutral-700/40 p-5">
+          <div className="bg-[hsl(220,10%,8%)]/40 rounded-2xl border border-[hsl(220,8%,18%)] p-5">
             <div className="flex items-center gap-2 mb-5">
               <Star className="w-4 h-4 text-amber-400" />
               <h3 className="text-white font-semibold text-base">Ashtakoota Guna Milan</h3>
@@ -843,29 +733,38 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
             <div className="space-y-3">
               {matchScores.filter(s => s.category !== 'Overall Compatibility').map((score, index) => {
                 const pct = score.maxScore > 0 ? (score.score / score.maxScore) * 100 : 0;
-                const kootIcons: Record<string, string> = {
-                  'Varna': '🕉️', 'Vashya': '🤝', 'Tara': '⭐', 'Yoni': '🐾',
-                  'Graha Maitri': '🪐', 'Gana': '👤', 'Bhakoot': '💫', 'Nadi': '🧬',
+                const kootIconMap: Record<string, { icon: React.ElementType; color: string }> = {
+                  'Varna': { icon: Crown, color: 'text-amber-400' },
+                  'Vashya': { icon: Handshake, color: 'text-blue-400' },
+                  'Tara': { icon: Sparkles, color: 'text-yellow-400' },
+                  'Yoni': { icon: PawPrint, color: 'text-green-400' },
+                  'Graha Maitri': { icon: Globe2, color: 'text-purple-400' },
+                  'Gana': { icon: Users, color: 'text-cyan-400' },
+                  'Bhakoot': { icon: Orbit, color: 'text-pink-400' },
+                  'Nadi': { icon: Dna, color: 'text-emerald-400' },
                 };
+                const kootInfo = kootIconMap[score.category];
+                const KootIcon = kootInfo?.icon || Star;
+                const kootColor = kootInfo?.color || 'text-neutral-400';
                 return (
                   <div key={index} className="group">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm w-5 text-center">{kootIcons[score.category] || '•'}</span>
+                      <KootIcon className={`w-4 h-4 ${kootColor} shrink-0`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-white">{score.category}</span>
-                            <span className="text-[10px] text-neutral-500 hidden sm:inline">{score.description}</span>
+                            <span className="text-[10px] text-neutral-500 hidden md:inline">{score.description}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold tabular-nums" style={{ color: score.color }}>{score.score}</span>
                             <span className="text-[10px] text-neutral-600">/ {score.maxScore}</span>
                           </div>
                         </div>
-                        <div className="w-full bg-neutral-800/60 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-[hsl(220,10%,12%)] rounded-full h-2 overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{ width: `${pct}%`, backgroundColor: score.color }}
+                            style={{ width: `${pct}%`, backgroundColor: score.color, transitionDelay: `${index * 100}ms` }}
                           />
                         </div>
                       </div>
@@ -884,7 +783,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
                     <span className="text-sm text-neutral-500">/ {overallScore.maxScore}</span>
                   </div>
                 </div>
-                <div className="w-full bg-neutral-800/60 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-[hsl(220,10%,12%)] rounded-full h-3 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${(overallScore.score / overallScore.maxScore) * 100}%`, backgroundColor: overallScore.color }}
@@ -897,10 +796,10 @@ export function KundaliMatcher({ savedCharts, onDeleteChart }: KundaliMatcherPro
           {/* Chart Comparison - Side by Side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Person 1 */}
-            <div className="rounded-xl border border-blue-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.05), transparent)' }}>
+            <div className="rounded-xl border border-amber-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)' }}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                  <span className="text-blue-300 font-bold text-sm">♂</span>
+                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                  <span className="text-amber-300 font-bold text-sm">♂</span>
                 </div>
                 <span className="text-white font-semibold text-sm">{matchedCharts.chart1Name}</span>
               </div>
@@ -976,8 +875,8 @@ function getCompatibilityLevel(score: number, maxScore: number) {
     return {
       label: 'Good Match',
       description: 'Compatible with good potential for harmony',
-      gradient: 'from-blue-600/20 to-cyan-600/20',
-      badgeColor: 'bg-blue-600'
+      gradient: 'from-amber-600/20 to-yellow-600/20',
+      badgeColor: 'bg-amber-600'
     };
   } else if (percentage >= 40) {
     return {

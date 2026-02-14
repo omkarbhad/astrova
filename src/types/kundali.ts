@@ -30,6 +30,9 @@ export interface PlanetInfo {
   debilitated: boolean;
   vargottama: boolean;
   combust: boolean;
+  nakshatra?: string;
+  nakshatra_pada?: number;
+  nakshatra_lord?: string;
 }
 
 export interface LagnaInfo {

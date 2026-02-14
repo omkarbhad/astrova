@@ -21,8 +21,8 @@ export function AdBlock({
       title: "Premium Kundali Features",
       description: "Unlock detailed predictions, remedies, and personalized consultations",
       cta: "Upgrade Now",
-      bgColor: "bg-gradient-to-r from-purple-600/20 to-blue-600/20",
-      borderColor: "border-purple-500/30"
+      bgColor: "bg-gradient-to-r from-amber-600/20 to-yellow-600/20",
+      borderColor: "border-amber-500/30"
     },
     sidebar: {
       title: "Astrology Consultation",

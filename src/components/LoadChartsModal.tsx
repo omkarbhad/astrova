@@ -94,7 +94,7 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="bg-neutral-900 border border-neutral-700/50 rounded-xl max-w-2xl mx-4 w-full max-h-[80vh] overflow-hidden shadow-2xl">
+        <div className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl max-w-2xl mx-4 w-full max-h-[80vh] overflow-hidden shadow-2xl">
           <div className="sticky top-0 z-10 bg-neutral-800/60 backdrop-blur-md border-b border-neutral-700/50 px-6 py-4">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -156,8 +156,12 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
           <div className="p-6 overflow-y-auto max-h-[calc(80vh-96px)] scrollbar-thin">
           
           {charts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-neutral-400">No charts saved</p>
+            <div className="text-center py-12 space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-neutral-800/60 border border-neutral-700/40 flex items-center justify-center mx-auto">
+                <FolderOpen className="w-7 h-7 text-neutral-600" />
+              </div>
+              <p className="text-neutral-400 text-sm">No charts saved yet</p>
+              <p className="text-neutral-500 text-xs">Generate a kundali and save it to see it here</p>
             </div>
           ) : filteredCharts.length === 0 ? (
             <div className="text-center py-10">

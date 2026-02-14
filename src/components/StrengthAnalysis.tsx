@@ -1,4 +1,4 @@
-import { useState, useMemo, useId, Fragment } from 'react';
+import { useState, useMemo, useId, Fragment, useRef, useEffect } from 'react';
 import { Zap, ChevronDown } from 'lucide-react';
 import type { PlanetInfo, ShadBalaInfo, BhavaBalaInfo, DashaInfo, LagnaInfo } from '../types/kundali';
 
@@ -35,6 +35,15 @@ interface StrengthAnalysisProps {
   upagrahas?: Record<string, PlanetInfo>;
   lagna?: LagnaInfo;
   dashaData?: DashaInfo;
+}
+
+function formatYears(y: number | undefined): string {
+  if (y === undefined || y === null) return '—';
+  const fullYears = Math.floor(y);
+  const months = Math.round((y - fullYears) * 12);
+  if (fullYears === 0) return `${months}m`;
+  if (months === 0) return `${fullYears}y`;
+  return `${fullYears}y ${months}m`;
 }
 
 const REQUIRED_RUPAS: Record<string, number> = {
@@ -719,9 +728,9 @@ function SpiderChart({
         <svg viewBox={`0 0 ${size} ${size}`} preserveAspectRatio="xMidYMid meet" className="w-full h-auto overflow-visible">
           <defs>
             <radialGradient id={`grad_${safeId}`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25" />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.12" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
+              <stop offset="50%" stopColor="#d97706" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0.06" />
             </radialGradient>
             <filter id={`glow_${safeId}`}>
               <feGaussianBlur stdDeviation="3" result="blur" />
@@ -767,7 +776,7 @@ function SpiderChart({
           <polygon
             points={polygonPoints}
             fill="none"
-            stroke="rgba(139,92,246,0.6)"
+            stroke="rgba(245,158,11,0.85)"
             strokeWidth="2"
             filter={`url(#glow_${safeId})`}
             strokeLinejoin="round"
@@ -785,7 +794,7 @@ function SpiderChart({
                 y2={next.y}
                 stroke={point.color}
                 strokeWidth="1.5"
-                strokeOpacity="0.4"
+                strokeOpacity="0.7"
               />
             );
           })}
@@ -799,7 +808,7 @@ function SpiderChart({
                 cy={point.y}
                 r={8}
                 fill={point.color}
-                fillOpacity="0.15"
+                fillOpacity="0.25"
                 filter={`url(#dot_glow_${safeId})`}
               />
               <circle
@@ -835,7 +844,7 @@ function SpiderChart({
                   fontSize="11"
                   fontWeight="500"
                   fill={point.color}
-                  opacity="0.9"
+                  opacity="1"
                 >
                   {point.icon || ''} {point.shortLabel}
                 </text>
@@ -848,7 +857,7 @@ function SpiderChart({
                   fontWeight="700"
                   fontFamily="monospace"
                   fill="#ffffff"
-                  opacity="0.85"
+                  opacity="1"
                 >
                   {point.displayPercent.toFixed(0)}%
                 </text>
@@ -869,7 +878,7 @@ function InsightCard({ title, value, subtitle, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-xl p-4 text-center hover:border-neutral-600/80 transition-all duration-200 relative overflow-hidden group">
+    <div className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl p-4 text-center hover:border-amber-500/20 transition-all duration-200 relative overflow-hidden group">
       <div className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
       <div className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">{title}</div>
       <div className="text-2xl font-bold mb-1" style={{ color }}>{value}</div>
@@ -904,20 +913,52 @@ const getBhavaRupas = (bala: Partial<BhavaBalaInfo> | undefined): number => {
 
 // Compact Shad Bala Table Component
 function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<ShadBalaInfo>> }) {
-  const planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+  const basePlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
+  const [sortCol, setSortCol] = useState<'planet' | 'rupas' | 'required' | 'percent' | 'strength'>('planet');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (col: typeof sortCol) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('desc'); }
+  };
+
+  const getSortValue = (planet: string, col: typeof sortCol) => {
+    const bala = shadBala[planet];
+    const rupas = getRupas(bala);
+    const required = bala?.required_rupas ?? (planet === 'Moon' ? 6 : planet === 'Jupiter' ? 6.5 : planet === 'Venus' ? 5.5 : planet === 'Mercury' ? 7 : 5);
+    const percent = (rupas / required) * 100;
+    if (col === 'planet') return basePlanets.indexOf(planet);
+    if (col === 'rupas') return rupas;
+    if (col === 'required') return required;
+    if (col === 'percent') return percent;
+    if (col === 'strength') return percent;
+    return 0;
+  };
+
+  const planets = [...basePlanets].sort((a, b) => {
+    const va = getSortValue(a, sortCol);
+    const vb = getSortValue(b, sortCol);
+    return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const SortIcon = ({ col }: { col: typeof sortCol }) => (
+    <span className={`ml-0.5 text-[8px] ${sortCol === col ? 'text-amber-400' : 'text-neutral-600'}`}>
+      {sortCol === col ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+    </span>
+  );
 
   return (
-    <div className="bg-neutral-900/60 rounded-lg border border-neutral-700/50 overflow-hidden">
+    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-neutral-800/60 sticky top-0">
-            <tr className="border-b border-neutral-700/50">
-              <th className="px-3 py-2 text-left text-neutral-400">Planet</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Rupas</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Required</th>
-              <th className="px-3 py-2 text-center text-neutral-400">%</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Strength</th>
+          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
+            <tr className="border-b border-[hsl(220,8%,18%)]">
+              <th className="px-3 py-2 text-left text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('planet')}>Planet<SortIcon col="planet" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('rupas')}>Rupas<SortIcon col="rupas" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('required')}>Required<SortIcon col="required" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('percent')}>%<SortIcon col="percent" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('strength')}>Strength<SortIcon col="strength" /></th>
             </tr>
           </thead>
           <tbody>
@@ -933,7 +974,7 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
               return (
                 <Fragment key={planet}>
                   <tr 
-                    className="border-b border-neutral-700/30 hover:bg-neutral-800/40 cursor-pointer transition-colors"
+                    className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors"
                     onClick={() => setExpandedPlanet(expandedPlanet === planet ? null : planet)}
                   >
                     <td className="px-3 py-2">
@@ -958,7 +999,7 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
                     </td>
                   </tr>
                   {expandedPlanet === planet && bala && (
-                    <tr className="bg-neutral-800/30">
+                    <tr className="bg-[hsl(220,10%,9%)]">
                       <td colSpan={5} className="px-3 py-3">
                         <div className="space-y-2">
                           <div className="text-[10px] text-neutral-400 mb-2">{config?.description}</div>
@@ -1005,20 +1046,52 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
 
 // Compact Bhava Bala Table Component
 function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partial<BhavaBalaInfo>> | undefined }) {
-  const houses = Array.from({ length: 12 }, (_, i) => i + 1);
+  const baseHouses = Array.from({ length: 12 }, (_, i) => i + 1);
   const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
+  const [sortCol, setSortCol] = useState<'house' | 'rupas' | 'max' | 'percent' | 'strength'>('house');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (col: typeof sortCol) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('desc'); }
+  };
+
+  const getSortValue = (house: number, col: typeof sortCol) => {
+    const bala = bhavaBala?.[house];
+    const rupas = getBhavaRupas(bala);
+    const maxRupas = 4.5;
+    const percent = (rupas / maxRupas) * 100;
+    if (col === 'house') return house;
+    if (col === 'rupas') return rupas;
+    if (col === 'max') return maxRupas;
+    if (col === 'percent') return percent;
+    if (col === 'strength') return percent;
+    return 0;
+  };
+
+  const houses = [...baseHouses].sort((a, b) => {
+    const va = getSortValue(a, sortCol);
+    const vb = getSortValue(b, sortCol);
+    return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const SortIcon = ({ col }: { col: typeof sortCol }) => (
+    <span className={`ml-0.5 text-[8px] ${sortCol === col ? 'text-amber-400' : 'text-neutral-600'}`}>
+      {sortCol === col ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+    </span>
+  );
 
   return (
-    <div className="bg-neutral-900/60 rounded-lg border border-neutral-700/50 overflow-hidden">
+    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-neutral-800/60 sticky top-0">
-            <tr className="border-b border-neutral-700/50">
-              <th className="px-3 py-2 text-left text-neutral-400">House</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Rupas</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Max</th>
-              <th className="px-3 py-2 text-center text-neutral-400">%</th>
-              <th className="px-3 py-2 text-center text-neutral-400">Strength</th>
+          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
+            <tr className="border-b border-[hsl(220,8%,18%)]">
+              <th className="px-3 py-2 text-left text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('house')}>House<SortIcon col="house" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('rupas')}>Rupas<SortIcon col="rupas" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('max')}>Max<SortIcon col="max" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('percent')}>%<SortIcon col="percent" /></th>
+              <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('strength')}>Strength<SortIcon col="strength" /></th>
             </tr>
           </thead>
           <tbody>
@@ -1034,7 +1107,7 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
               return (
                 <Fragment key={house}>
                   <tr 
-                    className="border-b border-neutral-700/30 hover:bg-neutral-800/40 cursor-pointer transition-colors"
+                    className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors"
                     onClick={() => setExpandedHouse(expandedHouse === house ? null : house)}
                   >
                     <td className="px-3 py-2">
@@ -1059,7 +1132,7 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
                     </td>
                   </tr>
                   {expandedHouse === house && (
-                    <tr className="bg-neutral-800/30">
+                    <tr className="bg-[hsl(220,10%,9%)]">
                       <td colSpan={5} className="px-3 py-2">
                         <div className="text-[10px] text-neutral-500 space-y-1">
                           <div>Description: {config?.description}</div>
@@ -1088,8 +1161,8 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
 
   return (
-    <div className="bg-neutral-900/60 rounded-lg border border-neutral-700/50 overflow-hidden">
-      <div className="p-3 bg-neutral-800/60 border-b border-neutral-700/50">
+    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
+      <div className="p-3 bg-[hsl(220,10%,10%)] border-b border-[hsl(220,8%,18%)]">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Planetary Positions</h3>
           <div className="text-[10px] text-neutral-500">
@@ -1099,8 +1172,8 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
       </div>
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-neutral-800/60 sticky top-0">
-            <tr className="border-b border-neutral-700/50">
+          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
+            <tr className="border-b border-[hsl(220,8%,18%)]">
               <th className="px-3 py-2 text-left text-neutral-400">Planet</th>
               <th className="px-3 py-2 text-left text-neutral-400">Sign</th>
               <th className="px-3 py-2 text-center text-neutral-400">Degree</th>
@@ -1117,7 +1190,7 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
               return (
                 <Fragment key={planetName}>
                   <tr 
-                    className="border-b border-neutral-700/30 hover:bg-neutral-800/40 cursor-pointer transition-colors"
+                    className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors"
                     onClick={() => setExpandedPlanet(expandedPlanet === planetName ? null : planetName)}
                   >
                     <td className="px-3 py-2">
@@ -1130,16 +1203,11 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
                     <td className="px-3 py-2 text-center">{planet.deg}°{planet.min}'</td>
                     <td className="px-3 py-2 text-center">{planet.house_whole_sign}</td>
                     <td className="px-3 py-2 text-center text-[10px]">
-                      {(() => {
-                        const nakshatraSpan = 360 / 27;
-                        const nakIdx = Math.floor(planet.longitude / nakshatraSpan) % 27;
-                        const NAKS = ['Ash','Bha','Kri','Roh','Mri','Ard','Pun','Pus','Asl','Mag','PPh','UPh','Has','Chi','Swa','Vis','Anu','Jye','Mul','PAs','UAs','Shr','Dha','Sha','PBh','UBh','Rev'];
-                        return NAKS[nakIdx] || '-';
-                      })()}
+                      {planet.nakshatra ? `${planet.nakshatra} P${planet.nakshatra_pada}` : '-'}
                     </td>
                   </tr>
                   {expandedPlanet === planetName && (
-                    <tr className="bg-neutral-800/30">
+                    <tr className="bg-[hsl(220,10%,9%)]">
                       <td colSpan={5} className="px-3 py-3">
                         <div className="text-[10px] space-y-1.5">
                           <div className="text-neutral-400">{config?.description}</div>
@@ -1148,12 +1216,14 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
                             <div><span className="text-neutral-500">Sign:</span> <span className="text-white">{planet.sign} ({planet.sign_sanskrit})</span></div>
                             <div><span className="text-neutral-500">Navamsa:</span> <span className="text-white">{planet.navamsa_sign || '-'}</span></div>
                             <div><span className="text-neutral-500">House:</span> <span className="text-white">{planet.house_whole_sign}</span></div>
+                            {planet.nakshatra && <div><span className="text-neutral-500">Nakshatra:</span> <span className="text-amber-300">{planet.nakshatra} Pada {planet.nakshatra_pada}</span></div>}
+                            {planet.nakshatra_lord && <div><span className="text-neutral-500">Nak. Lord:</span> <span className="text-white">{planet.nakshatra_lord}</span></div>}
                           </div>
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             {planet.retrograde && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[9px]">Retrograde</span>}
                             {planet.exalted && <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded text-[9px]">Exalted</span>}
                             {planet.debilitated && <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[9px]">Debilitated</span>}
-                            {planet.vargottama && <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded text-[9px]">Vargottama</span>}
+                            {planet.vargottama && <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded text-[9px]">Vargottama</span>}
                             {planet.combust && <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[9px]">Combust</span>}
                           </div>
                         </div>
@@ -1200,8 +1270,8 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
   const activePeriod = activeIndex >= 0 ? dashaData.periods[activeIndex] : undefined;
 
   return (
-    <div className="bg-neutral-900/30 rounded-lg border border-neutral-800/30 overflow-hidden">
-      <div className="p-3 bg-neutral-900/50 border-b border-neutral-800/30">
+    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
+      <div className="p-3 bg-[hsl(220,10%,10%)] border-b border-[hsl(220,8%,18%)]">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Vimshottari Dasha</h3>
           <div className="text-[10px] text-neutral-500">
@@ -1211,8 +1281,8 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
       </div>
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-neutral-900/50 sticky top-0">
-            <tr className="border-b border-neutral-800/30">
+          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
+            <tr className="border-b border-[hsl(220,8%,18%)]">
               <th className="px-3 py-2 text-left text-neutral-500">Planet</th>
               <th className="px-3 py-2 text-left text-neutral-500">Start</th>
               <th className="px-3 py-2 text-left text-neutral-500">End</th>
@@ -1229,8 +1299,8 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
               return (
                 <Fragment key={period.planet}>
                   <tr 
-                    className={`border-b border-neutral-800/20 hover:bg-neutral-900/40 cursor-pointer transition-colors ${
-                      isActive ? 'bg-blue-500/10' : ''
+                    className={`border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors ${
+                      isActive ? 'bg-amber-500/10' : ''
                     }`}
                     onClick={() => setExpandedPeriod(expandedPeriod === period.planet ? null : period.planet)}
                   >
@@ -1238,7 +1308,7 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                       <div className="flex items-center gap-2">
                         <span style={{ color: config?.color }}>{config?.icon}</span>
                         <span className={`font-medium ${
-                          isActive ? 'text-blue-400' : 'text-white'
+                          isActive ? 'text-amber-400' : 'text-white'
                         }`}>{period.planet}</span>
                       </div>
                     </td>
@@ -1253,24 +1323,24 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                         ? new Date(period.end_datetime).toLocaleDateString()
                         : (period.end_date ?? '—')}
                     </td>
-                    <td className="px-3 py-2 text-center">{period.years}</td>
+                    <td className="px-3 py-2 text-center">{formatYears(period.years)}</td>
                     <td className="px-3 py-2 text-center">
                       <span className={`px-2 py-1 rounded text-[9px] font-medium ${
-                        isActive ? 'bg-blue-500/20 text-blue-400' :
+                        isActive ? 'bg-amber-500/20 text-amber-400' :
                         isPast ? 'bg-gray-500/20 text-gray-400' :
-                        'bg-purple-500/20 text-purple-400'
+                        'bg-yellow-500/20 text-yellow-400'
                       }`}>
                         {isActive ? 'Active' : isPast ? 'Past' : 'Future'}
                       </span>
                     </td>
                   </tr>
                   {expandedPeriod === period.planet && (
-                    <tr className="bg-neutral-800/20">
+                    <tr className="bg-[hsl(220,10%,9%)]">
                       <td colSpan={5} className="px-3 py-3">
                         <div className="text-[10px] text-neutral-400 mb-2">{config?.description}</div>
                         {period.antardashas && period.antardashas.length > 0 && (
                           <div className="space-y-1">
-                            <div className="text-[10px] font-semibold text-violet-300 uppercase tracking-wider mb-1">Antardashas</div>
+                            <div className="text-[10px] font-semibold text-amber-300 uppercase tracking-wider mb-1">Antardashas</div>
                             {period.antardashas.map((ad) => {
                               const adConfig = PLANET_CONFIG[ad.planet];
                               const now = new Date();
@@ -1278,26 +1348,26 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                               const adEnd = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
                               const isAdActive = now >= adStart && now < adEnd;
                               return (
-                                <div key={ad.planet} className={`rounded-md border ${isAdActive ? 'border-violet-500/30 bg-violet-500/5' : 'border-neutral-800/30 bg-neutral-900/30'}`}>
+                                <div key={ad.planet} className={`rounded-md border ${isAdActive ? 'border-amber-500/30 bg-amber-500/5' : 'border-neutral-800/30 bg-neutral-900/30'}`}>
                                   <div
                                     className="flex items-center justify-between px-2 py-1.5 cursor-pointer hover:bg-neutral-800/20 transition-colors"
                                     onClick={(e) => { e.stopPropagation(); setExpandedPeriod(expandedPeriod === `${period.planet}-${ad.planet}` ? period.planet : `${period.planet}-${ad.planet}`); }}
                                   >
                                     <div className="flex items-center gap-1.5">
                                       <span style={{ color: adConfig?.color }} className="text-[10px]">{adConfig?.icon}</span>
-                                      <span className={`text-[11px] font-medium ${isAdActive ? 'text-violet-300' : 'text-white'}`}>{ad.planet}</span>
-                                      {isAdActive && <span className="text-[8px] px-1 py-0.5 bg-violet-500/20 text-violet-300 rounded">Active</span>}
+                                      <span className={`text-[11px] font-medium ${isAdActive ? 'text-amber-300' : 'text-white'}`}>{ad.planet}</span>
+                                      {isAdActive && <span className="text-[8px] px-1 py-0.5 bg-amber-500/20 text-amber-300 rounded">Active</span>}
                                     </div>
                                     <div className="flex items-center gap-3 text-[9px] text-neutral-500">
                                       <span>{ad.start_date}</span>
                                       <span>→</span>
                                       <span>{ad.end_date}</span>
-                                      <span className="text-neutral-600">{ad.years?.toFixed(2)}y</span>
+                                      <span className="text-neutral-600">{formatYears(ad.years)}</span>
                                     </div>
                                   </div>
                                   {expandedPeriod === `${period.planet}-${ad.planet}` && ad.pratyantardashas && (
                                     <div className="px-2 pb-2 pt-1 border-t border-neutral-800/20">
-                                      <div className="text-[9px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1">Pratyantardashas</div>
+                                      <div className="text-[9px] font-semibold text-yellow-300/70 uppercase tracking-wider mb-1">Pratyantardashas</div>
                                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
                                         {ad.pratyantardashas.map((pad) => {
                                           const padConfig = PLANET_CONFIG[pad.planet];
@@ -1305,10 +1375,10 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                                           const padEnd = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
                                           const isPadActive = now >= padStart && now < padEnd;
                                           return (
-                                            <div key={pad.planet} className={`flex items-center justify-between px-1.5 py-1 rounded text-[9px] ${isPadActive ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-neutral-900/30'}`}>
+                                            <div key={pad.planet} className={`flex items-center justify-between px-1.5 py-1 rounded text-[9px] ${isPadActive ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-neutral-900/30'}`}>
                                               <div className="flex items-center gap-1">
                                                 <span style={{ color: padConfig?.color }}>{padConfig?.icon}</span>
-                                                <span className={isPadActive ? 'text-purple-300 font-medium' : 'text-neutral-400'}>{pad.planet}</span>
+                                                <span className={isPadActive ? 'text-yellow-300 font-medium' : 'text-neutral-400'}>{pad.planet}</span>
                                               </div>
                                               <span className="text-neutral-600">{pad.start_date?.slice(5)}</span>
                                             </div>
@@ -1338,6 +1408,18 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
 export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagna, dashaData }: StrengthAnalysisProps) {
   const [activeTab, setActiveTab] = useState<'combined' | 'planets' | 'houses' | 'aspects' | 'shad-table' | 'bhava-table' | 'positions' | 'dasha'>('combined');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
   
   // Filter state for aspects
   const [aspectFilters, setAspectFilters] = useState({
@@ -1491,14 +1573,14 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
   }, [planetData, houseData]);
 
   return (
-    <div className="bg-neutral-900/60 rounded-xl sm:rounded-2xl border border-violet-500/20 overflow-hidden">
+    <div className="bg-[hsl(220,10%,8%)] rounded-xl sm:rounded-2xl border border-[hsl(220,8%,18%)] overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 bg-neutral-900/80 border-b border-violet-500/20">
+      <div className="px-4 py-4 bg-[hsl(220,10%,7%)] border-b border-[hsl(220,8%,18%)]">
         <div className="flex items-center justify-between gap-3">
           {/* Title */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4 text-violet-300" />
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4 text-amber-300" />
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-semibold text-white truncate">Strength Analysis</h2>
@@ -1507,15 +1589,15 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           </div>
 
           {/* Desktop segmented control */}
-          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-neutral-900/60 border border-violet-500/20">
+          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] overflow-x-auto scrollbar-none">
             {(['combined', 'planets', 'houses', 'aspects', 'shad-table', 'bhava-table', 'positions', 'dasha'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-white text-black'
-                    : 'text-white/70 hover:text-white hover:bg-neutral-900/50'
+                    : 'text-white/70 hover:text-white hover:bg-[hsl(220,10%,14%)]'
                 }`}
               >
                 {tab === 'combined' ? 'Overview' :
@@ -1531,11 +1613,11 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
           </div>
 
           {/* Mobile dropdown */}
-          <div className="sm:hidden relative shrink-0">
+          <div ref={dropdownRef} className="sm:hidden relative shrink-0">
             <button
               type="button"
               onClick={() => setDropdownOpen((v) => !v)}
-              className="px-3 py-2 rounded-lg bg-neutral-800/60 border border-neutral-700/50 text-white text-xs font-medium flex items-center gap-2"
+              className="px-3 py-2 rounded-lg bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] text-white text-xs font-medium flex items-center gap-2"
             >
               <span>
                 {activeTab === 'combined' ? 'Overview' :
@@ -1551,7 +1633,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-lg bg-neutral-900 border border-neutral-700/50 shadow-xl overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-48 rounded-lg bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] shadow-xl overflow-hidden z-50">
                 {(['combined', 'planets', 'houses', 'aspects', 'shad-table', 'bhava-table', 'positions', 'dasha'] as const).map(tab => (
                   <button
                     key={tab}
@@ -1563,7 +1645,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                     className={`w-full px-3 py-2 text-left text-xs font-medium transition-colors ${
                       activeTab === tab
                         ? 'bg-white text-black'
-                        : 'text-neutral-300 hover:text-white hover:bg-neutral-800/60'
+                        : 'text-neutral-300 hover:text-white hover:bg-[hsl(220,10%,12%)]'
                     }`}
                   >
                     {tab === 'combined' ? 'Overview' :
@@ -1586,30 +1668,44 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
         {/* Combined View */}
         {activeTab === 'combined' && (
           <div className="space-y-8">
+            {/* Expressive Summary */}
+            <div className="bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5 border border-amber-500/10 rounded-xl p-4 mb-2">
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                {insights.planetAvg >= 1.0 
+                  ? <>Your chart shows <span className="text-white font-semibold">strong planetary energy</span> overall. {insights.strongPlanets} out of 7 planets exceed their required strength, giving you a solid foundation.</>
+                  : insights.planetAvg >= 0.8
+                  ? <>Your chart has <span className="text-white font-semibold">moderate planetary strength</span>. {insights.strongPlanets} planets are strong while others need attention through focused effort.</>
+                  : <>Your chart indicates areas that <span className="text-white font-semibold">need conscious development</span>. Focus on strengthening {insights.weakest?.shortLabel || 'weaker'} areas through practical action.</>
+                }
+                {insights.strongest && <> Your strongest asset is <span className="font-semibold" style={{ color: insights.strongest.color }}>{insights.strongest.shortLabel}</span> ({insights.strongest.icon}) — lean into this energy.</>}
+                {insights.weakest && <> Work on <span className="font-semibold" style={{ color: insights.weakest.color }}>{insights.weakest.shortLabel}</span> ({insights.weakest.icon}) for balanced growth.</>}
+              </p>
+            </div>
+
             {/* Insight Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <InsightCard 
                 title="Planet Power" 
                 value={`${(insights.planetAvg * 100).toFixed(0)}%`}
-                subtitle={`${insights.strongPlanets}/7 strong`}
-                color="#ffffff"
+                subtitle={insights.planetAvg >= 1.0 ? 'Excellent overall' : insights.planetAvg >= 0.8 ? 'Good foundation' : 'Room to grow'}
+                color={insights.planetAvg >= 1.0 ? '#4ade80' : insights.planetAvg >= 0.8 ? '#fbbf24' : '#f87171'}
               />
               <InsightCard 
                 title="House Power" 
                 value={houseData.length > 0 ? `${(insights.houseAvg * 100).toFixed(0)}%` : 'N/A'}
-                subtitle={houseData.length > 0 ? `${insights.strongHouses}/12 strong` : 'No data'}
-                color="#ffffff"
+                subtitle={houseData.length > 0 ? `${insights.strongHouses}/12 houses strong` : 'No data'}
+                color={houseData.length > 0 ? (insights.houseAvg >= 1.0 ? '#4ade80' : insights.houseAvg >= 0.8 ? '#fbbf24' : '#f87171') : '#666'}
               />
               <InsightCard 
                 title="Strongest" 
                 value={insights.strongest?.icon || '—'}
-                subtitle={insights.strongest?.shortLabel || ''}
+                subtitle={insights.strongest ? `${insights.strongest.shortLabel} — your superpower` : ''}
                 color={insights.strongest?.color || '#fff'}
               />
               <InsightCard 
                 title="Needs Focus" 
                 value={insights.weakest?.icon || '—'}
-                subtitle={insights.weakest?.shortLabel || ''}
+                subtitle={insights.weakest ? `${insights.weakest.shortLabel} — work on this` : ''}
                 color={insights.weakest?.color || '#fff'}
               />
             </div>
@@ -1639,14 +1735,14 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
             </div>
 
             {/* Planet Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'].map(planet => {
                 const config = PLANET_CONFIG[planet];
                 const pd = planetData.find(p => p.icon === config.icon);
                 const percent = pd ? (pd.value / pd.maxValue) * 100 : 0;
                 
                 return (
-                  <div key={planet} className="bg-neutral-800/40 rounded-lg p-3 border border-neutral-700/50 hover:border-neutral-600/80 transition-colors">
+                  <div key={planet} className="bg-[hsl(220,10%,10%)] rounded-lg p-3 border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xl" style={{ color: config.color }}>{config.icon}</span>
@@ -1698,7 +1794,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
               {[1, 4, 7, 10].map(h => {
                 const config = HOUSE_CONFIG[h];
                 return (
-                  <div key={h} className="bg-neutral-800/40 rounded-lg p-3 border border-neutral-700/50 hover:border-neutral-600/80 transition-colors">
+                  <div key={h} className="bg-[hsl(220,10%,10%)] rounded-lg p-3 border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-bold" style={{ color: config.color }}>H{h}</span>
                       <span className="text-xs text-neutral-400">{config.label}</span>
@@ -1731,21 +1827,21 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                 <div className="text-[10px] text-orange-400/80 uppercase">Challenging</div>
                 <div className="text-[9px] text-neutral-400 mt-1">Squares & Oppositions</div>
               </div>
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-purple-400">{aspects.filter(a => a.nature === 'neutral').length}</div>
-                <div className="text-[10px] text-purple-400/80 uppercase">Conjunctions</div>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-yellow-400">{aspects.filter(a => a.nature === 'neutral').length}</div>
+                <div className="text-[10px] text-yellow-400/80 uppercase">Conjunctions</div>
                 <div className="text-[9px] text-neutral-400 mt-1">Energy Fusion</div>
               </div>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-3 p-3 bg-neutral-800/30 rounded-lg border border-neutral-700/50">
+            <div className="flex flex-wrap gap-3 p-3 bg-[hsl(220,10%,10%)] rounded-lg border border-[hsl(220,8%,18%)]">
               <div className="flex items-center gap-2">
                 <label className="text-[10px] text-neutral-400 uppercase">Planet:</label>
                 <select
                   value={aspectFilters.planet}
                   onChange={(e) => setAspectFilters(f => ({ ...f, planet: e.target.value }))}
-                  className="bg-neutral-800 border border-neutral-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-neutral-600"
+                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
                 >
                   <option value="all">All</option>
                   {aspectPlanets.map(p => (
@@ -1758,7 +1854,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                 <select
                   value={aspectFilters.type}
                   onChange={(e) => setAspectFilters(f => ({ ...f, type: e.target.value }))}
-                  className="bg-neutral-800 border border-neutral-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-neutral-600"
+                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
                 >
                   <option value="all">All</option>
                   {ASPECT_DEFS.map(a => (
@@ -1771,7 +1867,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                 <select
                   value={aspectFilters.nature}
                   onChange={(e) => setAspectFilters(f => ({ ...f, nature: e.target.value }))}
-                  className="bg-neutral-800 border border-neutral-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-neutral-600"
+                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
                 >
                   <option value="all">All</option>
                   <option value="harmonious">Harmonious</option>
@@ -1815,7 +1911,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                     return (
                       <div 
                         key={i} 
-                        className="flex items-center gap-3 p-3 bg-neutral-800/40 rounded-lg border border-neutral-700/50 hover:border-neutral-600/80 transition-colors"
+                        className="flex items-center gap-3 p-3 bg-[hsl(220,10%,10%)] rounded-lg border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-[100px]">
                           <span style={{ color: p1Config?.color ?? '#888' }} className="text-lg">{p1Config?.icon ?? aspect.planet1.slice(0,2)}</span>
@@ -1829,7 +1925,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
                               aspect.nature === 'harmonious' ? 'bg-green-500/20 text-green-400' :
                               aspect.nature === 'tense' ? 'bg-orange-500/20 text-orange-400' :
-                              'bg-purple-500/20 text-purple-400'
+                              'bg-yellow-500/20 text-yellow-400'
                             }`}>
                               {aspect.nature}
                             </span>
@@ -1854,7 +1950,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
             )}
 
             {/* Aspect Interpretation Guide */}
-            <div className="bg-neutral-900/30 rounded-lg p-4 border border-neutral-800/30">
+            <div className="bg-[hsl(220,10%,9%)] rounded-lg p-4 border border-[hsl(220,8%,16%)]">
               <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">Understanding Aspects</h4>
               <div className="grid sm:grid-cols-2 gap-3 text-[11px]">
                 <div>
@@ -1862,7 +1958,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
                   <span className="text-neutral-500"> - Natural talents, easy flow of energy, gifts that come easily</span>
                 </div>
                 <div>
-                  <span className="text-blue-400 font-medium">⚹ Sextiles (60°)</span>
+                  <span className="text-cyan-400 font-medium">⚹ Sextiles (60°)</span>
                   <span className="text-neutral-500"> - Opportunities, skills that develop with effort, cooperation</span>
                 </div>
                 <div>
@@ -1949,7 +2045,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
 
         {/* Legend - show only for non-aspects and non-table tabs */}
         {activeTab !== 'aspects' && activeTab !== 'shad-table' && activeTab !== 'bhava-table' && activeTab !== 'positions' && activeTab !== 'dasha' && (
-          <div className="mt-6 pt-4 border-t border-neutral-800/30 flex flex-wrap justify-center gap-4 text-[10px]">
+          <div className="mt-6 pt-4 border-t border-[hsl(220,8%,16%)] flex flex-wrap justify-center gap-4 text-[10px]">
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
               <span className="text-neutral-500">Strong ≥120%</span>

@@ -137,8 +137,8 @@ export function AstrologerChat({ kundaliData, chartName }: AstrologerChatProps) 
       {/* Chat Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-neutral-900/60 border border-neutral-700/50 rounded-t-2xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/30 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-violet-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/15 border border-amber-500/30 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-amber-400" />
           </div>
           <div>
             <h3 className="text-white font-semibold text-sm">Vedic Astrologer</h3>
@@ -178,8 +178,8 @@ export function AstrologerChat({ kundaliData, chartName }: AstrologerChatProps) 
       >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-blue-500/10 border border-neutral-700/50 flex items-center justify-center mb-4">
-              <Sparkles className="w-8 h-8 text-violet-400/60" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 to-blue-500/10 border border-neutral-700/50 flex items-center justify-center mb-4">
+              <Sparkles className="w-8 h-8 text-amber-400/60" />
             </div>
             <h3 className="text-white font-semibold text-lg mb-1">Vedic Astrologer</h3>
             <p className="text-neutral-400 text-sm mb-6 max-w-sm">
@@ -210,8 +210,8 @@ export function AstrologerChat({ kundaliData, chartName }: AstrologerChatProps) 
                 className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-4 h-4 text-violet-400" />
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-600/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bot className="w-4 h-4 text-amber-400" />
                   </div>
                 )}
                 <div
@@ -240,12 +240,12 @@ export function AstrologerChat({ kundaliData, chartName }: AstrologerChatProps) 
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-violet-400" />
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-600/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4 text-amber-400" />
                 </div>
                 <div className="bg-neutral-900/60 border border-neutral-700/50 rounded-2xl px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                     <span className="text-neutral-400 text-sm">Analyzing your chart...</span>
                   </div>
                 </div>
@@ -306,7 +306,7 @@ export function AstrologerChat({ kundaliData, chartName }: AstrologerChatProps) 
         <Button
           type="submit"
           disabled={isLoading || !input.trim() || !kundaliData}
-          className="h-10 w-10 p-0 rounded-xl bg-violet-600 hover:bg-violet-500 border-0 disabled:opacity-30 disabled:cursor-not-allowed shrink-0 transition-all"
+          className="h-10 w-10 p-0 rounded-xl bg-amber-600 hover:bg-amber-500 border-0 disabled:opacity-30 disabled:cursor-not-allowed shrink-0 transition-all"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />

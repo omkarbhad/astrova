@@ -21,93 +21,93 @@ export const perks = [
 export const features = [
     {
         icon: Icons.bolt,
-        title: "Accurate Calculations",
-        info: "Get precise planetary positions and birth chart calculations based on Vedic astrology principles.",
+        title: "Precise Vedic Calculations",
+        info: "Accurate planetary positions, Nakshatras, Shadbala & Bhava Bala strength analysis powered by modern astronomy.",
     },
     {
         icon: Icons.palette,
-        title: "Beautiful Charts",
-        info: "View stunning visual representations of your kundali with North and South Indian chart styles.",
+        title: "North Indian Charts",
+        info: "Beautiful Rasi (D1) and Navamsa (D9) charts with real-time updates as you adjust birth details.",
     },
     {
         icon: Icons.seo,
-        title: "Detailed Analysis",
-        info: "Comprehensive insights into planetary aspects, doshas, and astrological remedies.",
+        title: "Astrova AI Astrologer",
+        info: "Chat with an AI that reads your chart like a pro — modern remedies, Nadi techniques, no sugarcoating.",
     },
     {
         icon: Icons.monitor,
-        title: "Mobile Friendly",
-        info: "Access your kundali and astrological insights on any device, anywhere, anytime.",
+        title: "Vimshottari Dasha",
+        info: "Full Mahadasha, Antardasha & Pratyantardasha periods with proper date formatting and current period tracking.",
     },
     {
         icon: Icons.shop,
-        title: "Kundali Matching",
-        info: "Compare birth charts for compatibility analysis and relationship insights.",
+        title: "Ashtakoot Matching",
+        info: "8-fold compatibility analysis with detailed scores — Varna, Vashya, Tara, Yoni, Maitri, Gana, Bhakoot, Nadi.",
     },
     {
         icon: Icons.server,
-        title: "Secure & Private",
-        info: "Your birth data and astrological information are kept completely secure and private.",
+        title: "Cloud Synced Charts",
+        info: "Save unlimited charts to your account. Access them from any device — synced securely via Supabase.",
     },
 ];
 
 export const pricingCards = [
     {
-        title: "Basic",
-        description: "Perfect for personal astrology exploration",
+        title: "Free",
+        description: "Start exploring Vedic astrology",
         price: "Free",
         duration: "",
-        highlight: "Basic features",
+        highlight: "20 Dakshina gems included",
         buttonText: "Get Started",
-        features: ["Generate kundali", "Basic chart analysis", "1 saved chart"],
+        features: ["20 free Dakshina gems", "Unlimited chart generation", "Astrova AI astrologer", "Ashtakoot matching", "Shadbala & Bhava Bala", "Cloud synced charts"],
         priceId: "",
     },
     {
         title: "Premium",
-        description: "For astrology enthusiasts and practitioners",
-        price: "$29",
-        duration: "month",
-        highlight: "Advanced features",
-        buttonText: "Upgrade to Premium",
-        features: ["Unlimited kundalis", "Detailed predictions", "Kundali matching", "Priority support"],
-        priceId: "price_1OYxkqFj9oKEERu1KfJGWxgN",
+        description: "For serious astrology enthusiasts",
+        price: "₹199",
+        duration: "50 gems",
+        highlight: "Most popular",
+        buttonText: "Buy Gems",
+        features: ["50 Dakshina gems", "All free features", "Priority AI models", "Detailed Nadi readings", "Pratyantardasha tracking", "Export chart reports"],
+        priceId: "",
     },
     {
-        title: "Professional",
+        title: "Astrologer",
         description: "For professional astrologers",
-        price: "$99",
-        duration: "month",
-        highlight: "Everything in Premium, plus",
-        buttonText: "Go Professional",
-        features: ["Client management", "Custom reports", "Consultation tools", "24/7 support"],
-        priceId: "price_1OYxkqFj9oKEERu1NbKUxXxN",
+        price: "₹799",
+        duration: "300 gems",
+        highlight: "Best value",
+        buttonText: "Buy Gems",
+        features: ["300 Dakshina gems", "All premium features", "Client management", "Custom AI knowledge base", "Branded reports", "API access"],
+        priceId: "",
     },
 ];
 
 export const bentoCards = [
     {
-        title: 'Start with Inspiration',
-        info: 'Browse our vast library of pre-designed templates or upload your own images.',
-        imgSrc: '/assets/bento-1.svg', // Lightbulb or Inspiration icon
-        alt: 'Inspiration for website creation'
+        title: 'Enter Your Birth Details',
+        info: 'Provide your date, time, and place of birth for precise Vedic calculations.',
+        imgSrc: '/assets/bento-1.svg',
+        alt: 'Birth details input'
     },
     {
-        title: 'AI Assists Your Vision',
-        info: 'Our intelligent AI tailors suggestions and functionalities based on your goals.',
-        imgSrc: '/assets/bento1.svg', // AI Assistant icon
-        alt: 'AI website building assistant'
+        title: 'AI-Powered Readings',
+        info: 'Astrova AI analyzes your chart using Vedic techniques and gives personalized insights.',
+        imgSrc: '/assets/bento1.svg',
+        alt: 'AI astrology readings'
     },
     {
-        title: 'Drag & Drop Customization',
-        info: 'Effortlessly personalize your website with our intuitive drag-and-drop editor.',
-        imgSrc: '/assets/bento1.svg', // Drag and Drop icon or hand editing a website
-        alt: 'Website customization with drag and drop'
+        title: 'Dasha & Transit Analysis',
+        info: 'Track your Vimshottari Dasha periods and planetary transits for timing predictions.',
+        imgSrc: '/assets/bento1.svg',
+        alt: 'Dasha and transit analysis'
     },
     {
-        title: 'Launch & Shine Online',
-        info: 'Publish your website with a single click and take your brand to the world.',
-        imgSrc: '/assets/bento1.svg', // Rocket launching or website going live
-        alt: 'Website launch and publication'
+        title: 'Kundali Matching',
+        info: 'Compare two charts with Ashtakoot matching for compatibility and relationship insights.',
+        imgSrc: '/assets/bento1.svg',
+        alt: 'Kundali matching and compatibility'
     },
 ];
 
@@ -141,5 +141,35 @@ export const reviews = [
         name: "Ananya",
         username: "@ananya_destiny",
         body: "The interface is beautiful and the insights are profound. Astrova is my daily guide!",
+    },
+    {
+        name: "Deepak",
+        username: "@deepak_jyotish",
+        body: "The Shadbala and Bhava Bala calculations are spot-on. Finally a tool that gets Vedic astrology right.",
+    },
+    {
+        name: "Meera",
+        username: "@meera_nakshatra",
+        body: "The AI astrologer gave me insights about my Rahu Mahadasha that no human astrologer had mentioned before.",
+    },
+    {
+        name: "Karthik",
+        username: "@karthik_graha",
+        body: "I use Astrova daily to check transits and dasha periods. The Pratyantardasha tracking is incredibly useful.",
+    },
+    {
+        name: "Divya",
+        username: "@divya_vedic",
+        body: "Love how the remedies are practical and modern instead of the usual gemstone recommendations. Refreshing approach!",
+    },
+    {
+        name: "Arjun",
+        username: "@arjun_charts",
+        body: "Generated charts for my entire family. The North Indian chart style is beautifully rendered.",
+    },
+    {
+        name: "Lakshmi",
+        username: "@lakshmi_astro",
+        body: "The Ashtakoot matching feature is so detailed. Helped us understand our compatibility on a deeper level.",
     },
 ];

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { deductUserCredits } from '@/lib/supabase';
 
 interface CreditsContextType {
   credits: number;
@@ -14,6 +16,7 @@ const CREDITS_STORAGE_KEY = 'astrova_dakshina_credits';
 const INITIAL_CREDITS = 20;
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
+  const { astrovaUser } = useAuth();
   const [credits, setCredits] = useState<number>(() => {
     try {
       const stored = localStorage.getItem(CREDITS_STORAGE_KEY);
@@ -23,6 +26,14 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     }
   });
   const [showBuyModal, setShowBuyModal] = useState(false);
+
+  // Sync credits from Supabase user on login
+  useEffect(() => {
+    if (astrovaUser) {
+      setCredits(astrovaUser.credits);
+      localStorage.setItem(CREDITS_STORAGE_KEY, astrovaUser.credits.toString());
+    }
+  }, [astrovaUser?.id, astrovaUser?.credits]);
 
   useEffect(() => {
     localStorage.setItem(CREDITS_STORAGE_KEY, credits.toString());
@@ -34,8 +45,12 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     setCredits(prev => prev - amount);
+    // Deduct in Supabase async (fire-and-forget)
+    if (astrovaUser?.id) {
+      deductUserCredits(astrovaUser.id, amount, 'ai_message').catch(() => {});
+    }
     return true;
-  }, [credits]);
+  }, [credits, astrovaUser?.id]);
 
   const addCredits = useCallback((amount: number) => {
     setCredits(prev => prev + amount);
@@ -67,6 +82,8 @@ export const CREDIT_PACKAGES = [
 // Credit cost per action
 export const CREDIT_COSTS = {
   AI_MESSAGE: 1,
+  CHART_GENERATION: 0,
+  MATCHING: 0,
   CHART_ANALYSIS: 2,
   DETAILED_READING: 5,
 };

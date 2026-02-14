@@ -1,4 +1,5 @@
-import { useUser, RedirectToSignIn } from '@clerk/clerk-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 interface AuthGuardProps {
@@ -6,21 +7,21 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useAuth();
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(220,10%,6%)]">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-white/60">Loading...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto mb-4" />
+          <p className="text-neutral-500 text-sm">Loading Astrova...</p>
         </div>
       </div>
     );
   }
 
   if (!isSignedIn) {
-    return <RedirectToSignIn />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

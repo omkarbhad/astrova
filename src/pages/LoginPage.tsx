@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { useSignIn } from '@clerk/clerk-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { StarsBackground, CosmicOrbs } from '@/components/landing/ui/stars-background';
 
@@ -15,8 +15,14 @@ const LoginPage = () => {
   const [focusedInput, setFocusedInput] = useState<'email' | 'password' | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { signIn, isLoaded, setActive } = useSignIn();
+  const { signIn, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already signed in
+  if (isLoaded && isSignedIn) {
+    navigate('/chart', { replace: true });
+    return null;
+  }
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -36,7 +42,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded || !signIn) return;
+    if (!isLoaded) return;
     setError(null);
 
     if (password.length < 6) {
@@ -46,57 +52,50 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === 'complete' && setActive) {
-        await setActive({ session: result.createdSessionId });
-        navigate('/chart');
+      const result = await signIn(email, password);
+      if (result.error) {
+        setError(result.error);
       } else {
-        setError('Sign-in incomplete. Please try again.');
+        navigate('/chart');
       }
-    } catch (err: unknown) {
-      const clerkErr = err as { errors?: { message: string }[] };
-      setError(clerkErr.errors?.[0]?.message || 'Sign-in failed. Please check your credentials.');
+    } catch {
+      setError('Sign-in failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    if (!isLoaded || !signIn) return;
+    if (!isLoaded) return;
     setError(null);
     setLoading(true);
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/chart',
-        redirectUrlComplete: '/chart',
-      });
-    } catch (err: unknown) {
-      const clerkErr = err as { errors?: { message: string }[] };
-      setError(clerkErr.errors?.[0]?.message || 'Google sign-in failed.');
+      const result = await signInWithGoogle();
+      if (result.error) {
+        setError(result.error);
+        setLoading(false);
+      }
+    } catch {
+      setError('Google sign-in failed.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-black relative overflow-hidden flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen w-full bg-[hsl(220,10%,6%)] relative overflow-hidden flex items-center justify-center px-4 py-10">
       <StarsBackground />
       <CosmicOrbs />
       
       {/* Main gradient overlay - Same as homepage */}
-      <div className="fixed inset-0 bg-black -z-20" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(168,85,247,0.15),transparent)] -z-10" />
+      <div className="fixed inset-0 bg-[hsl(220,10%,6%)] -z-20" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(234,179,8,0.12),transparent)] -z-10" />
       
       {/* Subtle cosmic glow orbs - Same as homepage */}
       <div className="fixed inset-0 pointer-events-none -z-30">
         <div className="absolute top-[40%] left-1/2 gradient w-3/4 -translate-x-1/2 h-1/4 md:h-1/3 inset-0 blur-[5rem] animate-image-glow" />
-        <div className="absolute top-[30%] left-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute top-[50%] right-1/4 w-72 h-72 bg-blue-600/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute top-[70%] left-1/3 w-80 h-80 bg-purple-600/8 rounded-full blur-[110px] animate-pulse" />
+        <div className="absolute top-[30%] left-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-[50%] right-1/4 w-72 h-72 bg-amber-600/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute top-[70%] left-1/3 w-80 h-80 bg-yellow-600/8 rounded-full blur-[110px] animate-pulse" />
       </div>
 
       <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors">
@@ -171,7 +170,7 @@ const LoginPage = () => {
 
             <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-white/3 via-white/7 to-white/3 opacity-60" />
 
-            <div className="relative bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/[0.06] shadow-2xl overflow-hidden">
+            <div className="relative bg-[hsl(220,10%,6%)]/40 backdrop-blur-xl rounded-2xl p-6 border border-white/[0.06] shadow-2xl overflow-hidden">
               <div className="absolute inset-0 opacity-[0.03]" style={{
                 backgroundImage:
                   'linear-gradient(135deg, white 0.5px, transparent 0.5px), linear-gradient(45deg, white 0.5px, transparent 0.5px)',
@@ -293,7 +292,7 @@ const LoginPage = () => {
                 </motion.div>
 
                 <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-1">
                     <div className="relative">
                       <input
                         id="remember-me"
@@ -319,6 +318,20 @@ const LoginPage = () => {
                       Remember me
                     </label>
                   </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email.trim()) { setError('Enter your email first, then click Forgot Password'); return; }
+                      const { supabase } = await import('@/lib/supabase');
+                      if (!supabase) return;
+                      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login` });
+                      if (resetErr) setError(resetErr.message);
+                      else setError('Password reset link sent! Check your email.');
+                    }}
+                    className="text-[10px] text-white/40 hover:text-white/70 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
 
                 <motion.button

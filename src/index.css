@@ -47,81 +47,83 @@
 :root {
   --radius: 0.5rem;
   
-  /* Vercel Dark Theme - Pure Black Background */
-  --background: 0 0% 0%;
-  --foreground: 0 0% 98%;
+  /* Dark Grey Theme - Sophisticated dark with warmth */
+  --background: 220 10% 6%;
+  --foreground: 210 20% 96%;
 
   /* Muted - for secondary text */
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 60%;
+  --muted: 220 10% 12%;
+  --muted-foreground: 215 12% 55%;
 
   /* Popover - slightly elevated */
-  --popover: 0 0% 6%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 220 10% 8%;
+  --popover-foreground: 210 20% 96%;
 
   /* Card - elevated surface */
-  --card: 0 0% 8%;
-  --card-foreground: 0 0% 98%;
+  --card: 220 10% 10%;
+  --card-foreground: 210 20% 96%;
 
-  /* Border - subtle but visible */
-  --border: 0 0% 18%;
-  --input: 0 0% 12%;
+  /* Border - subtle warm grey */
+  --border: 220 8% 18%;
+  --input: 220 10% 14%;
 
-  /* Primary - Violet accent */
-  --primary: 263 70% 55%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary - Warm Amber Gold */
+  --primary: 36 95% 50%;
+  --primary-foreground: 220 10% 6%;
+  --primary-hover: 36 95% 44%;
+  --primary-active: 36 95% 38%;
 
-  /* Secondary - Neutral dark */
-  --secondary: 0 0% 12%;
-  --secondary-foreground: 0 0% 90%;
+  /* Secondary - Warm dark */
+  --secondary: 220 10% 14%;
+  --secondary-foreground: 210 15% 85%;
 
-  /* Accent - Blue for highlights */
-  --accent: 221 83% 53%;
-  --accent-foreground: 0 0% 100%;
+  /* Accent - Warm amber instead of blue */
+  --accent: 28 90% 52%;
+  --accent-foreground: 210 20% 98%;
 
   /* Destructive - Red */
   --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: 210 20% 98%;
 
   /* Ring - Focus indicator */
-  --ring: 263 70% 55%;
+  --ring: 36 95% 50%;
 
   /* Chart colors - vibrant for data viz */
-  --chart-1: 263 70% 55%;
-  --chart-2: 221 83% 53%;
-  --chart-3: 142 76% 45%;
-  --chart-4: 38 92% 55%;
-  --chart-5: 0 84% 60%;
+  --chart-1: 36 95% 55%;
+  --chart-2: 160 84% 39%;
+  --chart-3: 340 75% 55%;
+  --chart-4: 28 90% 52%;
+  --chart-5: 262 83% 58%;
 
   /* Surface hierarchy - for layered UI */
-  --surface: 0 0% 6%;
-  --surface-light: 0 0% 10%;
-  --surface-elevated: 0 0% 12%;
+  --surface: 220 10% 8%;
+  --surface-light: 220 10% 12%;
+  --surface-elevated: 220 10% 15%;
   
   /* Text hierarchy */
-  --text: 0 0% 98%;
-  --text-muted: 0 0% 60%;
-  --text-subtle: 0 0% 45%;
+  --text: 210 20% 96%;
+  --text-muted: 215 12% 55%;
+  --text-subtle: 215 10% 40%;
   
   /* Status colors */
-  --success: 142 76% 45%;
-  --warning: 38 92% 55%;
+  --success: 152 76% 42%;
+  --warning: 36 95% 50%;
   --error: 0 84% 60%;
 
   /* Cosmic accent colors */
-  --cosmic-purple: 263 70% 55%;
-  --cosmic-blue: 221 83% 53%;
-  --cosmic-indigo: 239 84% 67%;
-  --cosmic-violet: 280 73% 60%;
-  --cosmic-cyan: 192 91% 50%;
+  --cosmic-gold: 43 96% 56%;
+  --cosmic-amber: 36 95% 50%;
+  --cosmic-yellow: 48 96% 53%;
+  --cosmic-orange: 25 95% 53%;
+  --cosmic-warm: 35 91% 50%;
 
   /* Chart page specific colors */
-  --color-primary-dark: #000000;
-  --color-surface: #0f0f0f;
-  --color-surface-light: #1a1a1a;
-  --color-surface-elevated: #1f1f1f;
-  --color-text: #FAFAFA;
-  --color-text-muted: #737373;
+  --color-primary-dark: hsl(220, 10%, 6%);
+  --color-surface: hsl(220, 10%, 8%);
+  --color-surface-light: hsl(220, 10%, 12%);
+  --color-surface-elevated: hsl(220, 10%, 15%);
+  --color-text: #F0F2F5;
+  --color-text-muted: #6B7280;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
@@ -207,7 +209,7 @@ body {
 
 /* Landing page specific styles */
 .dotPattern {
-  background-image: radial-gradient(rgb(35, 40, 68) 1px, transparent 1px);
+  background-image: radial-gradient(hsl(220, 10%, 18%) 1px, transparent 1px);
   background-size: 25px 25px;
 }
 
@@ -216,11 +218,11 @@ body {
 }
 
 .card-mask {
-  background: radial-gradient(ellipse at center, rgba(0, 75, 224, 0.15), transparent);
+  background: radial-gradient(ellipse at center, rgba(245, 158, 11, 0.08), transparent);
 }
 
 .gradient {
-  background: conic-gradient(from 230.29deg at 51.63% 52.16%, rgb(36, 0, 255) 0deg, rgb(0, 135, 255) 67.5deg, rgb(108, 39, 157) 198.75deg, rgb(24, 38, 163) 251.25deg, rgb(54, 103, 196) 301.88deg, rgb(105, 30, 255) 360deg);
+  background: conic-gradient(from 230.29deg at 51.63% 52.16%, hsl(36, 95%, 50%) 0deg, hsl(43, 96%, 56%) 67.5deg, hsl(28, 90%, 52%) 198.75deg, hsl(36, 95%, 44%) 251.25deg, hsl(43, 96%, 50%) 301.88deg, hsl(36, 95%, 50%) 360deg);
 }
 
 .lamp {
@@ -257,8 +259,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4); }
+  0%, 100% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(234, 179, 8, 0.6), 0 0 60px rgba(245, 158, 11, 0.4); }
 }
 
 .star {
@@ -274,17 +276,17 @@ body {
 
 .cosmic-gradient {
   background: linear-gradient(135deg, 
-    hsl(263, 70%, 50%) 0%, 
-    hsl(221, 83%, 53%) 50%, 
-    hsl(280, 73%, 60%) 100%
+    hsl(43, 96%, 50%) 0%, 
+    hsl(38, 92%, 50%) 50%, 
+    hsl(25, 95%, 53%) 100%
   );
 }
 
 .cosmic-gradient-text {
   background: linear-gradient(135deg, 
-    hsl(263, 70%, 60%) 0%, 
-    hsl(221, 83%, 63%) 50%, 
-    hsl(192, 91%, 60%) 100%
+    hsl(48, 96%, 60%) 0%, 
+    hsl(43, 96%, 56%) 50%, 
+    hsl(38, 92%, 55%) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -293,15 +295,15 @@ body {
 
 .cosmic-glow {
   box-shadow: 
-    0 0 20px rgba(139, 92, 246, 0.3),
-    0 0 40px rgba(59, 130, 246, 0.2),
-    0 0 60px rgba(139, 92, 246, 0.1);
+    0 0 20px rgba(234, 179, 8, 0.3),
+    0 0 40px rgba(245, 158, 11, 0.2),
+    0 0 60px rgba(234, 179, 8, 0.1);
 }
 
 .cosmic-border {
   border: 1px solid transparent;
-  background: linear-gradient(hsl(222, 47%, 8%), hsl(222, 47%, 8%)) padding-box,
-              linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.3)) border-box;
+  background: linear-gradient(hsl(220, 10%, 8%), hsl(220, 10%, 8%)) padding-box,
+              linear-gradient(135deg, rgba(234, 179, 8, 0.5), rgba(245, 158, 11, 0.5), rgba(234, 179, 8, 0.3)) border-box;
 }
 
 .stars-bg {
@@ -421,3 +423,51 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:horizontal {
   border-width: 2px 2px;
 }
+
+/* Amber slider thumb */
+.slider-amber::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: hsl(32.1 94.6% 43.7%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid hsl(32.1 94.6% 53.7%);
+  box-shadow: 0 0 8px hsl(32.1 94.6% 43.7% / 0.5);
+}
+
+.slider-amber::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: hsl(32.1 94.6% 43.7%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid hsl(32.1 94.6% 53.7%);
+  box-shadow: 0 0 8px hsl(32.1 94.6% 43.7% / 0.5);
+}
+
+.slider-amber::-webkit-slider-thumb:hover {
+  background: hsl(32.1 94.6% 53.7%);
+  box-shadow: 0 0 12px hsl(32.1 94.6% 43.7% / 0.7);
+}
+
+.slider-amber::-moz-range-thumb:hover {
+  background: hsl(32.1 94.6% 53.7%);
+  box-shadow: 0 0 12px hsl(32.1 94.6% 43.7% / 0.7);
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes thinking-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.thinking-dot-1 { animation: thinking-dot 1.4s ease-in-out infinite; }
+.thinking-dot-2 { animation: thinking-dot 1.4s ease-in-out 0.2s infinite; }
+.thinking-dot-3 { animation: thinking-dot 1.4s ease-in-out 0.4s infinite; }
