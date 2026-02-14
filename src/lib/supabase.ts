@@ -247,11 +247,12 @@ export interface EnabledModel {
 }
 
 export async function getEnabledModels(): Promise<EnabledModel[]> {
-  if (!supabase) return [];
-  const { data } = await supabase
+  if (!supabase) { console.error('[Astrova] Supabase not initialized'); return []; }
+  const { data, error } = await supabase
     .from('enabled_models')
     .select('id, model_id, display_name, provider, is_enabled, sort_order')
     .order('sort_order', { ascending: true });
+  if (error) console.error('[Astrova] getEnabledModels error:', error.message, error.details);
   return (data as EnabledModel[]) ?? [];
 }
 
@@ -261,20 +262,23 @@ export async function toggleModel(id: string, enabled: boolean): Promise<boolean
     .from('enabled_models')
     .update({ is_enabled: enabled })
     .eq('id', id);
+  if (error) console.error('[Astrova] toggleModel error:', error.message, error.details);
   return !error;
 }
 
 export async function addModelFromOpenRouter(modelId: string, modelName: string): Promise<boolean> {
-  if (!supabase) return false;
+  if (!supabase) { console.error('[Astrova] Supabase not initialized'); return false; }
+  const provider = modelId.includes('/') ? modelId.split('/')[0] : 'openrouter';
   const { error } = await supabase
     .from('enabled_models')
     .upsert({
       model_id: modelId,
       display_name: modelName,
-      provider: 'openrouter',
+      provider,
       is_enabled: false,
       sort_order: 99,
     }, { onConflict: 'model_id' });
+  if (error) console.error('[Astrova] addModel error:', error.message, error.details);
   return !error;
 }
 
@@ -284,6 +288,7 @@ export async function deleteModel(id: string): Promise<boolean> {
     .from('enabled_models')
     .delete()
     .eq('id', id);
+  if (error) console.error('[Astrova] deleteModel error:', error.message, error.details);
   return !error;
 }
 
@@ -386,12 +391,13 @@ export async function deleteChatSession(id: string): Promise<boolean> {
 
 // Get enabled models for user selection (only enabled ones)
 export async function getUserEnabledModels(): Promise<EnabledModel[]> {
-  if (!supabase) return [];
-  const { data } = await supabase
+  if (!supabase) { console.error('[Astrova] Supabase not initialized'); return []; }
+  const { data, error } = await supabase
     .from('enabled_models')
     .select('id, model_id, display_name, provider, is_enabled, sort_order')
     .eq('is_enabled', true)
     .order('sort_order', { ascending: true });
+  if (error) console.error('[Astrova] getUserEnabledModels error:', error.message, error.details);
   return (data as EnabledModel[]) ?? [];
 }
 

@@ -901,7 +901,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
             Insufficient credits. Purchase more to continue.
           </div>
         )}
-        <div className="relative bg-[hsl(220,10%,11%)] border border-[hsl(220,8%,20%)] rounded-2xl focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all flex items-center">
+        <div className="relative bg-[hsl(220,10%,11%)] border border-[hsl(220,8%,20%)] rounded-full focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all flex items-center">
           <textarea
             ref={inputRef}
             value={input}
@@ -910,25 +910,25 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
             placeholder={kundaliData ? 'Ask Astrova anything...' : 'Ask about Vedic astrology...'}
             disabled={isLoading}
             rows={1}
-            className="flex-1 bg-transparent px-4 py-0 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed h-[44px] text-left leading-[44px]"
+            className="flex-1 bg-transparent px-6 py-0 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed h-[48px] text-left leading-[48px] md:h-[52px] md:leading-[52px]"
           />
-          <div className="absolute bottom-1.5 right-2 flex items-center">
+          <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center">
             {isLoading ? (
               <Button
                 type="button"
                 onClick={stopGeneration}
-                className="h-7 w-7 p-0 rounded-lg bg-red-600/80 hover:bg-red-600 border-0 shrink-0 transition-all"
+                className="h-9 w-9 p-0 rounded-full bg-red-600/80 hover:bg-red-600 border-0 shrink-0 transition-all"
                 title="Stop generating"
               >
-                <Square className="w-3 h-3 fill-current" />
+                <Square className="w-4 h-4 fill-current" />
               </Button>
             ) : (
               <Button
                 type="submit"
                 disabled={!input.trim() || credits < creditCosts.AI_MESSAGE}
-                className="h-7 w-7 p-0 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-0 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 transition-all"
+                className="h-9 w-9 p-0 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-0 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 transition-all"
               >
-                <ArrowUp className="w-3.5 h-3.5" />
+                <ArrowUp className="w-4 h-4" />
               </Button>
             )}
           </div>

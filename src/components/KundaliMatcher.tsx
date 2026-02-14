@@ -362,31 +362,49 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             
             <div className="space-y-2">
               <div>
-                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date</Label>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date of Birth</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={formData1.day} onChange={(e) => setFormData1({...formData1, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData1.month} onChange={(e) => setFormData1({...formData1, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
-                  </select>
-                  <select value={formData1.year} onChange={(e) => setFormData1({...formData1, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {years.map(y => (<option key={y} value={y}>{y}</option>))}
-                  </select>
+                  <div>
+                    <select value={formData1.day} onChange={(e) => setFormData1({...formData1, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Day</span>
+                  </div>
+                  <div>
+                    <select value={formData1.month} onChange={(e) => setFormData1({...formData1, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Month</span>
+                  </div>
+                  <div>
+                    <select value={formData1.year} onChange={(e) => setFormData1({...formData1, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {years.map(y => (<option key={y} value={y}>{y}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Year</span>
+                  </div>
                 </div>
               </div>
               <div>
-                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time</Label>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time of Birth</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={formData1.hour} onChange={(e) => setFormData1({...formData1, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData1.minute} onChange={(e) => setFormData1({...formData1, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData1.second} onChange={(e) => setFormData1({...formData1, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
-                  </select>
+                  <div>
+                    <select value={formData1.hour} onChange={(e) => setFormData1({...formData1, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Hour</span>
+                  </div>
+                  <div>
+                    <select value={formData1.minute} onChange={(e) => setFormData1({...formData1, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Min</span>
+                  </div>
+                  <div>
+                    <select value={formData1.second} onChange={(e) => setFormData1({...formData1, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
+                      {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Sec</span>
+                  </div>
                 </div>
               </div>
               
@@ -518,31 +536,49 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             
             <div className="space-y-2">
               <div>
-                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date</Label>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Date of Birth</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={formData2.day} onChange={(e) => setFormData2({...formData2, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData2.month} onChange={(e) => setFormData2({...formData2, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
-                  </select>
-                  <select value={formData2.year} onChange={(e) => setFormData2({...formData2, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {years.map(y => (<option key={y} value={y}>{y}</option>))}
-                  </select>
+                  <div>
+                    <select value={formData2.day} onChange={(e) => setFormData2({...formData2, day: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Day</span>
+                  </div>
+                  <div>
+                    <select value={formData2.month} onChange={(e) => setFormData2({...formData2, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Month</span>
+                  </div>
+                  <div>
+                    <select value={formData2.year} onChange={(e) => setFormData2({...formData2, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {years.map(y => (<option key={y} value={y}>{y}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Year</span>
+                  </div>
                 </div>
               </div>
               <div>
-                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time</Label>
+                <Label className="text-xs font-medium text-neutral-400 mb-1 block">Time of Birth</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <select value={formData2.hour} onChange={(e) => setFormData2({...formData2, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData2.minute} onChange={(e) => setFormData2({...formData2, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
-                  </select>
-                  <select value={formData2.second} onChange={(e) => setFormData2({...formData2, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
-                  </select>
+                  <div>
+                    <select value={formData2.hour} onChange={(e) => setFormData2({...formData2, hour: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {hours.map(h => (<option key={h} value={h}>{h.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Hour</span>
+                  </div>
+                  <div>
+                    <select value={formData2.minute} onChange={(e) => setFormData2({...formData2, minute: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {minutes.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Min</span>
+                  </div>
+                  <div>
+                    <select value={formData2.second} onChange={(e) => setFormData2({...formData2, second: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
+                      {seconds.map(s => (<option key={s} value={s}>{s.toString().padStart(2, '0')}</option>))}
+                    </select>
+                    <span className="text-[9px] text-neutral-600 mt-0.5 block text-center">Sec</span>
+                  </div>
                 </div>
               </div>
               
@@ -799,44 +835,64 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
 
           {/* Chart Comparison - Side by Side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Person 1 */}
-            <div className="rounded-xl border border-amber-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)' }}>
+            {/* Person 1 Chart */}
+            <div className="rounded-xl border border-amber-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.05), transparent)' }}>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
                   <span className="text-amber-300 font-bold text-sm">♂</span>
                 </div>
                 <span className="text-white font-semibold text-sm">{matchedCharts.chart1Name}</span>
+                <span className="text-[10px] text-neutral-500 ml-auto">{matchedCharts.chart1.birth.date} • {matchedCharts.chart1.birth.time}</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div><span className="text-neutral-500">Lagna:</span> <span className="text-white font-medium">{matchedCharts.chart1.lagna.sign}</span></div>
-                <div><span className="text-neutral-500">Moon:</span> <span className="text-white font-medium">{matchedCharts.chart1.planets.Moon?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Sun:</span> <span className="text-white font-medium">{matchedCharts.chart1.planets.Sun?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Venus:</span> <span className="text-white font-medium">{matchedCharts.chart1.planets.Venus?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Mars:</span> <span className="text-white font-medium">{matchedCharts.chart1.planets.Mars?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Jupiter:</span> <span className="text-white font-medium">{matchedCharts.chart1.planets.Jupiter?.sign || '?'}</span></div>
-                <div className="col-span-2 pt-1 border-t border-neutral-800/40 text-[10px] text-neutral-500">
-                  {matchedCharts.chart1.birth.date} • {matchedCharts.chart1.birth.time}
+              <div className="space-y-0 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-neutral-800/30">
+                  <span className="text-neutral-500">Lagna</span>
+                  <span className="text-white font-medium">{matchedCharts.chart1.lagna.sign}</span>
                 </div>
+                {['Moon', 'Sun', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'].map(planet => {
+                  const p = matchedCharts.chart1.planets[planet];
+                  if (!p) return null;
+                  return (
+                    <div key={planet} className="flex items-center justify-between py-1.5 border-b border-neutral-800/20">
+                      <span className="text-neutral-500">{planet}</span>
+                      <div className="text-right flex items-center gap-1.5">
+                        <span className="text-white font-medium">{p.sign}</span>
+                        {p.nakshatra && <span className="text-neutral-600 text-[10px]">{p.nakshatra}</span>}
+                        {p.retrograde && <span className="text-red-400 text-[10px] font-medium">R</span>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            {/* Person 2 */}
+            {/* Person 2 Chart */}
             <div className="rounded-xl border border-pink-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.05), transparent)' }}>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
                   <span className="text-pink-300 font-bold text-sm">♀</span>
                 </div>
                 <span className="text-white font-semibold text-sm">{matchedCharts.chart2Name}</span>
+                <span className="text-[10px] text-neutral-500 ml-auto">{matchedCharts.chart2.birth.date} • {matchedCharts.chart2.birth.time}</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div><span className="text-neutral-500">Lagna:</span> <span className="text-white font-medium">{matchedCharts.chart2.lagna.sign}</span></div>
-                <div><span className="text-neutral-500">Moon:</span> <span className="text-white font-medium">{matchedCharts.chart2.planets.Moon?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Sun:</span> <span className="text-white font-medium">{matchedCharts.chart2.planets.Sun?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Venus:</span> <span className="text-white font-medium">{matchedCharts.chart2.planets.Venus?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Mars:</span> <span className="text-white font-medium">{matchedCharts.chart2.planets.Mars?.sign || '?'}</span></div>
-                <div><span className="text-neutral-500">Jupiter:</span> <span className="text-white font-medium">{matchedCharts.chart2.planets.Jupiter?.sign || '?'}</span></div>
-                <div className="col-span-2 pt-1 border-t border-neutral-800/40 text-[10px] text-neutral-500">
-                  {matchedCharts.chart2.birth.date} • {matchedCharts.chart2.birth.time}
+              <div className="space-y-0 text-xs">
+                <div className="flex items-center justify-between py-1.5 border-b border-neutral-800/30">
+                  <span className="text-neutral-500">Lagna</span>
+                  <span className="text-white font-medium">{matchedCharts.chart2.lagna.sign}</span>
                 </div>
+                {['Moon', 'Sun', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'].map(planet => {
+                  const p = matchedCharts.chart2.planets[planet];
+                  if (!p) return null;
+                  return (
+                    <div key={planet} className="flex items-center justify-between py-1.5 border-b border-neutral-800/20">
+                      <span className="text-neutral-500">{planet}</span>
+                      <div className="text-right flex items-center gap-1.5">
+                        <span className="text-white font-medium">{p.sign}</span>
+                        {p.nakshatra && <span className="text-neutral-600 text-[10px]">{p.nakshatra}</span>}
+                        {p.retrograde && <span className="text-red-400 text-[10px] font-medium">R</span>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
