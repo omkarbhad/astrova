@@ -82,6 +82,10 @@ const PLANET_ICONS: Record<string, { icon: string; color: string }> = {
   Parivesha: { icon: "Pv", color: "#DAA520" },
   Indrachapa: { icon: "Ic", color: "#6B8E23" },
   Upaketu: { icon: "Uk", color: "#A0522D" },
+  Kaala: { icon: "Ka", color: "#8B5CF6" },
+  Mrityu: { icon: "Mr", color: "#DC2626" },
+  ArthaPrahara: { icon: "Ap", color: "#14B8A6" },
+  YamaGhantaka: { icon: "Yg", color: "#0EA5E9" },
 };
 
 function clampSignIndex(n: unknown): number {

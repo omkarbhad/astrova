@@ -133,6 +133,69 @@ const PLANET_CONFIG: Record<string, {
     keywords: ['Poison', 'Death', 'Transform', 'Hidden', 'Intense'],
     bodyParts: 'Toxins, Poisons', day: 'Saturday'
   },
+  Dhuma: {
+    icon: 'Dh', label: 'Smoke', color: '#f59e0b',
+    description: 'Fiery obscuration point derived from Sun, linked with heat and agitation',
+    element: 'Fire', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Smoke', 'Heat', 'Obstruction', 'Irritation', 'Confusion'],
+    bodyParts: 'Eyes, Head', day: 'Sunday'
+  },
+  Vyatipata: {
+    icon: 'Vy', label: 'Upheaval', color: '#ef4444',
+    description: 'Disruptive solar upagraha opposite Dhuma, linked with reversals',
+    element: 'Air', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Reversal', 'Shock', 'Disruption', 'Instability', 'Suddenness'],
+    bodyParts: 'Nervous System', day: 'Sunday'
+  },
+  Parivesha: {
+    icon: 'Pv', label: 'Halo', color: '#f97316',
+    description: 'Encircling malefic upagraha opposite Vyatipata, linked with mental pressure',
+    element: 'Fire', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Pressure', 'Enclosure', 'Stress', 'Fog', 'Strain'],
+    bodyParts: 'Head, Aura', day: 'Sunday'
+  },
+  Indrachapa: {
+    icon: 'Ic', label: 'Bow', color: '#84cc16',
+    description: 'Kodanda point opposite Parivesha, indicates karmic turning points',
+    element: 'Air', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Karmic Trigger', 'Turns', 'Tension', 'Transition', 'Bow'],
+    bodyParts: 'Nerves', day: 'Sunday'
+  },
+  Upaketu: {
+    icon: 'Uk', label: 'Sub-Ketu', color: '#fb923c',
+    description: 'Solar upagraha near Ketu nature, linked with detachment and cutting events',
+    element: 'Fire', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Detachment', 'Separation', 'Karmic Cut', 'Ascetic', 'Sharp'],
+    bodyParts: 'Spine, Skin', day: 'Tuesday'
+  },
+  Kaala: {
+    icon: 'Ka', label: 'Time Strike', color: '#a855f7',
+    description: 'Kalavela upagraha mapped to Sun segment, linked with harsh timing effects',
+    element: 'Fire', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Timing', 'Harshness', 'Burn', 'Pressure', 'Deadline'],
+    bodyParts: 'Vitality', day: 'Sunday'
+  },
+  Mrityu: {
+    icon: 'Mr', label: 'Mrityu', color: '#dc2626',
+    description: 'Kalavela upagraha mapped to Mars segment, linked with danger and crises',
+    element: 'Fire', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Crisis', 'Danger', 'Injury', 'Cut', 'Fatal Tendencies'],
+    bodyParts: 'Blood, Injuries', day: 'Tuesday'
+  },
+  ArthaPrahara: {
+    icon: 'Ap', label: 'Artha Prahara', color: '#14b8a6',
+    description: 'Kalavela upagraha mapped to Mercury segment, linked with pressure on resources',
+    element: 'Earth', nature: 'Mixed', gender: 'Neutral', rules: 'None',
+    keywords: ['Resources', 'Commerce Stress', 'Practical Strain', 'Debt', 'Logistics'],
+    bodyParts: 'Nervous System', day: 'Wednesday'
+  },
+  YamaGhantaka: {
+    icon: 'Yg', label: 'Yama Ghantaka', color: '#0ea5e9',
+    description: 'Kalavela upagraha mapped to Jupiter segment, linked with karmic tests and restraint',
+    element: 'Air', nature: 'Malefic', gender: 'Neutral', rules: 'None',
+    keywords: ['Karmic Test', 'Restraint', 'Accountability', 'Judgment', 'Limits'],
+    bodyParts: 'Thighs, Nerves', day: 'Thursday'
+  },
 };
 
 const HOUSE_CONFIG: Record<number, { 
@@ -589,6 +652,8 @@ const LIFE_AREAS = [
   { key: 'wealth', label: 'Wealth', planets: ['Jupiter', 'Venus'], houses: [2, 11], color: '#14b8a6', description: 'Financial prosperity and gains' },
 ];
 
+const UPAGRAHA_ORDER = ['Dhuma', 'Vyatipata', 'Parivesha', 'Indrachapa', 'Upaketu', 'Kaala', 'Mrityu', 'ArthaPrahara', 'YamaGhantaka', 'Gulika', 'Mandi'];
+
 function calculateAspects(
   planets: Record<string, PlanetInfo>, 
   upagrahas?: Record<string, PlanetInfo>
@@ -596,7 +661,6 @@ function calculateAspects(
   const aspects: Aspect[] = [];
   const mainPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
   const nodes = ['Rahu', 'Ketu'];
-  const upagrahaNames = ['Mandi', 'Gulika'];
   
   // Combine all bodies with their positions
   const allBodies: Record<string, PlanetInfo> = { ...planets };
@@ -608,7 +672,7 @@ function calculateAspects(
   const allNames = [
     ...mainPlanets,
     ...nodes.filter(n => allBodies[n]),
-    ...upagrahaNames.filter(n => allBodies[n]),
+    ...UPAGRAHA_ORDER.filter(n => allBodies[n]),
   ];
   
   for (let i = 0; i < allNames.length; i++) {
@@ -1153,12 +1217,15 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
 }
 
 // Compact Planetary Positions Table Component
-function CompactPlanetPositionsTable({ planets, lagna }: { 
+function CompactPlanetPositionsTable({ planets, upagrahas, lagna }: { 
   planets: Record<string, PlanetInfo>; 
+  upagrahas?: Record<string, PlanetInfo>;
   lagna: { sign: string; deg: number; min: number };
 }) {
   const PLANET_ORDER = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
+  const allBodies = useMemo(() => ({ ...planets, ...(upagrahas ?? {}) }), [planets, upagrahas]);
+  const BODY_ORDER = [...PLANET_ORDER, ...UPAGRAHA_ORDER];
 
   return (
     <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
@@ -1182,10 +1249,11 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
             </tr>
           </thead>
           <tbody>
-            {PLANET_ORDER.map(planetName => {
-              const planet = planets[planetName];
+            {BODY_ORDER.map(planetName => {
+              const planet = allBodies[planetName];
               if (!planet) return null;
               const config = PLANET_CONFIG[planetName];
+              const isUpagraha = UPAGRAHA_ORDER.includes(planetName);
 
               return (
                 <Fragment key={planetName}>
@@ -1197,6 +1265,9 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
                       <div className="flex items-center gap-2">
                         <span style={{ color: config?.color }}>{config?.icon}</span>
                         <span className="text-white font-medium">{planetName}</span>
+                        {isUpagraha && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/20 text-purple-300">Upagraha</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-2">{planet.sign}</td>
@@ -1214,6 +1285,7 @@ function CompactPlanetPositionsTable({ planets, lagna }: {
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                             <div><span className="text-neutral-500">Longitude:</span> <span className="text-white font-mono">{planet.longitude.toFixed(4)}°</span></div>
                             <div><span className="text-neutral-500">Sign:</span> <span className="text-white">{planet.sign} ({planet.sign_sanskrit})</span></div>
+                            <div><span className="text-neutral-500">Type:</span> <span className="text-white">{isUpagraha ? 'Upagraha' : 'Graha'}</span></div>
                             <div><span className="text-neutral-500">Navamsa:</span> <span className="text-white">{planet.navamsa_sign || '-'}</span></div>
                             <div><span className="text-neutral-500">House:</span> <span className="text-white">{planet.house_whole_sign}</span></div>
                             {planet.nakshatra && <div><span className="text-neutral-500">Nakshatra:</span> <span className="text-amber-300">{planet.nakshatra} Pada {planet.nakshatra_pada}</span></div>}
@@ -1268,14 +1340,29 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
   })();
 
   const activePeriod = activeIndex >= 0 ? dashaData.periods[activeIndex] : undefined;
+  const now = new Date();
+  const currentAntardasha = activePeriod?.antardashas?.find((ad) => {
+    const adStart = safeGetDate(ad.start_datetime, ad.start_date);
+    const adEnd = safeGetDate(ad.end_datetime, ad.end_date);
+    if (!adStart) return false;
+    return now >= adStart && (!adEnd || now < adEnd);
+  });
+  const currentPratyantardasha = currentAntardasha?.pratyantardashas?.find((pad) => {
+    const padStart = safeGetDate(pad.start_datetime, pad.start_date);
+    const padEnd = safeGetDate(pad.end_datetime, pad.end_date);
+    if (!padStart) return false;
+    return now >= padStart && (!padEnd || now < padEnd);
+  });
 
   return (
     <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
       <div className="p-3 bg-[hsl(220,10%,10%)] border-b border-[hsl(220,8%,18%)]">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Vimshottari Dasha</h3>
-          <div className="text-[10px] text-neutral-500">
-            Current: {(activePeriod?.planet ?? dashaData.current_dasha ?? 'Unknown')} Mahadasha
+          <div className="text-[10px] text-neutral-500 text-right">
+            <div>Current: {(activePeriod?.planet ?? dashaData.current_dasha ?? 'Unknown')} Mahadasha</div>
+            {currentAntardasha && <div>AD: {currentAntardasha.planet}</div>}
+            {currentPratyantardasha && <div>PAD: {currentPratyantardasha.planet}</div>}
           </div>
         </div>
       </div>
@@ -1313,15 +1400,10 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                       </div>
                     </td>
                     <td className="px-3 py-2 text-[10px]">
-                      {period.start_datetime ? 
-                        new Date(period.start_datetime).toLocaleDateString() : 
-                        period.start_date
-                      }
+                      {period.start_date}
                     </td>
                     <td className="px-3 py-2 text-[10px]">
-                      {period.end_datetime
-                        ? new Date(period.end_datetime).toLocaleDateString()
-                        : (period.end_date ?? '—')}
+                      {period.end_date ?? '—'}
                     </td>
                     <td className="px-3 py-2 text-center">{formatYears(period.years)}</td>
                     <td className="px-3 py-2 text-center">
@@ -2011,6 +2093,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, planets, upagrahas, lagn
             </div>
             <CompactPlanetPositionsTable 
               planets={planets} 
+              upagrahas={upagrahas}
               lagna={lagna ? { sign: lagna.sign, deg: lagna.deg, min: lagna.min } : { sign: 'Unknown', deg: 0, min: 0 }}
             />
           </div>

@@ -1,4 +1,4 @@
-import { Heart, Shield, LayoutGrid, Sparkles } from 'lucide-react';
+import { Heart, Shield, LayoutGrid, Sparkles, Info } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ interface HeaderProps {
   onViewChange: (view: 'kundali' | 'matcher') => void;
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  onOpenModelInfo?: () => void;
 }
 
 export function Header({
@@ -15,6 +16,7 @@ export function Header({
   onViewChange,
   onToggleSidebar,
   sidebarOpen,
+  onOpenModelInfo,
 }: HeaderProps) {
   const { astrovaUser } = useAuth();
   const navigate = useNavigate();
@@ -60,6 +62,17 @@ export function Header({
                 </button>
               );
             })}
+
+            {isAdmin && onOpenModelInfo && (
+              <button
+                onClick={onOpenModelInfo}
+                className="flex items-center gap-1.5 px-3 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all duration-200 text-neutral-500 hover:text-cyan-300"
+                title="Model Context Info"
+              >
+                <Info className="w-4 h-4" />
+                <span className="hidden sm:inline">Info</span>
+              </button>
+            )}
           </nav>
 
           {/* Right side actions */}

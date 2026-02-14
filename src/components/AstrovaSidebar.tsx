@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { useCredits, CreditsDisplay } from '@/contexts/CreditsContext';
 import { BuyCreditsModal } from './BuyCreditsModal';
 import type { KundaliResponse } from '../types/kundali';
-import { searchKnowledgeBase, getAdminConfig, getUserEnabledModels } from '../lib/supabase';
+import { getAdminConfig, getUserEnabledModels } from '../lib/supabase';
 
 interface ChatMessage {
   id: string;
@@ -27,6 +27,228 @@ interface MatchDataRef {
   chart1?: KundaliResponse;
   chart2?: KundaliResponse;
   scores: { category: string; score: number; maxScore: number; description: string }[];
+}
+
+function formatCoordinate(value: number, positiveHemisphere: string, negativeHemisphere: string): string {
+  const hemisphere = value >= 0 ? positiveHemisphere : negativeHemisphere;
+  return `${Math.abs(value).toFixed(4)}°${hemisphere}`;
+}
+
+type DashaPeriod = KundaliResponse['dasha']['periods'][number];
+type Antardasha = NonNullable<DashaPeriod['antardashas']>[number];
+type Pratyantardasha = NonNullable<Antardasha['pratyantardashas']>[number];
+
+function getCurrentDashaContext(chart: KundaliResponse): {
+  currentPeriod?: DashaPeriod;
+  currentAntardasha?: Antardasha;
+  currentPratyantardasha?: Pratyantardasha;
+  nextAntardasha?: Antardasha;
+  nextPratyantardasha?: Pratyantardasha;
+} {
+  const dasha = chart.dasha;
+  const currentPeriod = dasha.periods.find(p => p.is_current);
+  if (!currentPeriod?.antardashas) {
+    return { currentPeriod };
+  }
+
+  const now = new Date();
+  const currentAntardasha = currentPeriod.antardashas.find(ad => {
+    const s = new Date(ad.start_datetime || ad.start_date);
+    const e = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
+    return now >= s && now < e;
+  });
+
+  const nextAntardasha = currentPeriod.antardashas.find(ad => {
+    const s = new Date(ad.start_datetime || ad.start_date);
+    return s > now;
+  });
+
+  const currentPratyantardasha = currentAntardasha?.pratyantardashas?.find(pad => {
+    const s = new Date(pad.start_datetime || pad.start_date);
+    const e = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
+    return now >= s && now < e;
+  });
+
+  const nextPratyantardasha = currentAntardasha?.pratyantardashas?.find(pad => {
+    const s = new Date(pad.start_datetime || pad.start_date);
+    return s > now;
+  });
+
+  return { currentPeriod, currentAntardasha, currentPratyantardasha, nextAntardasha, nextPratyantardasha };
+}
+
+export function buildMatchContextPrompt(matchData?: MatchDataRef | null): string {
+  if (!matchData) return '';
+
+  const getChartSnapshot = (label: string, chart?: KundaliResponse): string => {
+    if (!chart) return '';
+
+    const strongPlanets = chart.shad_bala
+      ? Object.entries(chart.shad_bala)
+          .sort((a, b) => (b[1].total_rupas ?? 0) - (a[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([name, b]) => `${name} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const weakPlanets = chart.shad_bala
+      ? Object.entries(chart.shad_bala)
+          .sort((a, b) => (a[1].total_rupas ?? 0) - (b[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([name, b]) => `${name} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const strongHouses = chart.bhava_bala
+      ? Object.entries(chart.bhava_bala)
+          .sort((a, b) => (b[1].total_rupas ?? 0) - (a[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([house, b]) => `H${house} ${b.sign} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const weakHouses = chart.bhava_bala
+      ? Object.entries(chart.bhava_bala)
+          .sort((a, b) => (a[1].total_rupas ?? 0) - (b[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([house, b]) => `H${house} ${b.sign} (${b.total_rupas ?? 0}r)`)
+      : [];
+
+    const { currentPeriod, currentAntardasha, currentPratyantardasha, nextAntardasha } = getCurrentDashaContext(chart);
+
+    let text = `\n\n--- ${label.toUpperCase()}'s SNAPSHOT ---`;
+    text += `\nBirth: ${chart.birth.date} ${chart.birth.time} (UTC${chart.birth.tz_offset_hours >= 0 ? '+' : ''}${chart.birth.tz_offset_hours}, Adjusted UTC${chart.birth.adjusted_tz_offset_hours >= 0 ? '+' : ''}${chart.birth.adjusted_tz_offset_hours}${chart.birth.dst_applied ? ', DST applied' : ''})`;
+    text += `\nLocation: ${formatCoordinate(chart.birth.latitude, 'N', 'S')}, ${formatCoordinate(chart.birth.longitude, 'E', 'W')}`;
+    text += `\nAyanamsha: ${chart.meta.ayanamsha} (${chart.meta.ayanamsha_deg.toFixed(4)}°)`;
+    text += `\nLagna: ${chart.lagna.sign} (${chart.lagna.sign_sanskrit}) ${chart.lagna.deg}°${chart.lagna.min}'${chart.lagna.sec}"`;
+    if (chart.planets.Moon) text += `\nMoon: ${chart.planets.Moon.sign} H${chart.planets.Moon.house_whole_sign}${chart.planets.Moon.nakshatra ? ` Nak:${chart.planets.Moon.nakshatra} P${chart.planets.Moon.nakshatra_pada}` : ''}`;
+    if (chart.planets.Venus) text += `\nVenus: ${chart.planets.Venus.sign} H${chart.planets.Venus.house_whole_sign}`;
+    if (chart.planets.Mars) text += `\nMars: ${chart.planets.Mars.sign} H${chart.planets.Mars.house_whole_sign}`;
+    if (chart.planets.Jupiter) text += `\nJupiter: ${chart.planets.Jupiter.sign} H${chart.planets.Jupiter.house_whole_sign}`;
+    if (chart.planets.Saturn) text += `\nSaturn: ${chart.planets.Saturn.sign} H${chart.planets.Saturn.house_whole_sign}`;
+
+    if (chart.dasha) {
+      text += `\nCurrent Mahadasha: ${chart.dasha.current_dasha}`;
+      if (currentPeriod) text += `\nCurrent Mahadasha Window: ${currentPeriod.start_date} to ${currentPeriod.end_date}`;
+      if (currentAntardasha) text += `\nCurrent Antardasha: ${currentAntardasha.planet} (${currentAntardasha.start_date} to ${currentAntardasha.end_date})`;
+      if (currentPratyantardasha) text += `\nCurrent Pratyantardasha: ${currentPratyantardasha.planet} (${currentPratyantardasha.start_date} to ${currentPratyantardasha.end_date})`;
+      if (nextAntardasha) text += `\nNext Antardasha: ${nextAntardasha.planet} (${nextAntardasha.start_date} to ${nextAntardasha.end_date})`;
+    }
+
+    if (strongPlanets.length) text += `\nStrong Planets: ${strongPlanets.join(', ')}`;
+    if (weakPlanets.length) text += `\nWeak Planets: ${weakPlanets.join(', ')}`;
+    if (strongHouses.length) text += `\nStrong Houses: ${strongHouses.join(', ')}`;
+    if (weakHouses.length) text += `\nWeak Houses: ${weakHouses.join(', ')}`;
+
+    text += `\n\nCore Planetary Positions:`;
+    for (const [name, p] of Object.entries(chart.planets)) {
+      const flags = [];
+      if (p.retrograde) flags.push('R');
+      if (p.exalted) flags.push('Exalted');
+      if (p.debilitated) flags.push('Debilitated');
+      if (p.vargottama) flags.push('Vargottama');
+      if (p.combust) flags.push('Combust');
+      text += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}${p.nakshatra_pada ? ` P${p.nakshatra_pada}` : ''}${p.nakshatra_lord ? ` (Lord:${p.nakshatra_lord})` : ''}` : ''}${p.navamsa_sign ? ` Navamsa:${p.navamsa_sign}` : ''}${flags.length ? ` [${flags.join(', ')}]` : ''}`;
+    }
+
+    // Include Upagrahas if present
+    if (chart.upagrahas && Object.keys(chart.upagrahas).length > 0) {
+      text += `\n\nUpagrahas:`;
+      for (const [name, u] of Object.entries(chart.upagrahas)) {
+        text += `\n${name}: ${u.sign} H${u.house_whole_sign}${u.nakshatra ? ` Nak:${u.nakshatra}` : ''}`;
+      }
+    }
+
+    // Include full dasha timeline
+    if (chart.dasha) {
+      text += `\n\nAll Mahadashas:`;
+      for (const md of chart.dasha.periods) {
+        text += `\n- ${md.planet}: ${md.start_date} to ${md.end_date}${md.is_current ? ' (CURRENT)' : ''}`;
+      }
+      const currentPeriod = chart.dasha.periods.find(p => p.is_current);
+      if (currentPeriod?.antardashas) {
+        text += `\nAll Antardashas in Current Mahadasha (${currentPeriod.planet}):`;
+        const now = new Date();
+        const currentAD = currentPeriod.antardashas.find(ad => {
+          const s = new Date(ad.start_datetime || ad.start_date);
+          const e = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
+          return now >= s && now < e;
+        });
+        for (const ad of currentPeriod.antardashas) {
+          const isCurrentAD = currentAD && ad.planet === currentAD.planet && ad.start_date === currentAD.start_date;
+          text += `\n- ${ad.planet}: ${ad.start_date} to ${ad.end_date}${isCurrentAD ? ' (CURRENT)' : ''}`;
+        }
+        if (currentAD?.pratyantardashas && currentAD.pratyantardashas.length > 0) {
+          text += `\nAll Pratyantardashas in Current Antardasha:`;
+          for (const pad of currentAD.pratyantardashas) {
+            text += `\n- ${pad.planet}: ${pad.start_date} to ${pad.end_date}`;
+          }
+        }
+      }
+    }
+
+    // Include Shadbala and Bhava Bala summaries
+    if (chart.shad_bala) {
+      text += `\n\nShadbala Summary:`;
+      for (const [name, bala] of Object.entries(chart.shad_bala)) {
+        const sthana = typeof bala.sthana_bala === 'number' ? bala.sthana_bala : bala.sthana_bala.total;
+        const kala = typeof bala.kala_bala === 'number' ? bala.kala_bala : bala.kala_bala.total;
+        text += `\n${name}: ${bala.total_rupas ?? 0}r - ${bala.strength} (Sthana:${sthana ?? 0}, Dig:${bala.dig_bala ?? 0}, Kala:${kala ?? 0}, Chesta:${bala.chesta_bala ?? 0}, Naisargika:${bala.naisargika_bala ?? 0}, Drik:${bala.drik_bala ?? 0})`;
+      }
+    }
+    if (chart.bhava_bala) {
+      text += `\n\nBhava Bala Summary:`;
+      for (const [house, bala] of Object.entries(chart.bhava_bala)) {
+        text += `\nHouse ${house} (${bala.sign}): ${bala.total_rupas ?? 0}r - ${bala.rating} (Lord:${bala.lord}, Bhavadhipati:${bala.bhavadhipati_bala ?? 0}, Dig:${bala.bhava_digbala ?? 0}, Drishti:${bala.bhava_drishti_bala ?? 0})`;
+      }
+    }
+
+    // Include Yogas if any
+    if (chart.yogas && chart.yogas.length > 0) {
+      text += `\n\nYogas:`;
+      for (const yoga of chart.yogas) {
+        text += `\n${yoga.name} [${yoga.type}/${yoga.strength}]: ${yoga.description}`;
+      }
+    }
+
+    return text;
+  };
+
+  const baseScores = matchData.scores.filter(s => s.category !== 'Overall Compatibility');
+  const totalScore = baseScores.reduce((sum, s) => sum + s.score, 0);
+  const maxTotalScore = baseScores.reduce((sum, s) => sum + s.maxScore, 0) || 36;
+  const percentage = Math.round((totalScore / maxTotalScore) * 100);
+  const compatibilityBand = percentage >= 75 ? 'High' : percentage >= 55 ? 'Moderate' : 'Challenging';
+
+  let prompt = `\n\n--- COMPATIBILITY ANALYSIS ---`;
+  prompt += `\n${matchData.chart1Name} ❤ ${matchData.chart2Name}`;
+  prompt += `\nTotal Score: ${totalScore}/${maxTotalScore} (${percentage}%)`;
+  prompt += `\nCompatibility Band: ${compatibilityBand}`;
+  prompt += `\n\nAshtakoota Scores:`;
+  matchData.scores.forEach(s => {
+    prompt += `\n  ${s.category}: ${s.score}/${s.maxScore} — ${s.description}`;
+  });
+
+  const topScores = [...matchData.scores]
+    .filter(s => s.maxScore > 0)
+    .sort((a, b) => (b.score / b.maxScore) - (a.score / a.maxScore))
+    .slice(0, 3)
+    .map(s => `${s.category} (${s.score}/${s.maxScore})`);
+  const lowScores = [...matchData.scores]
+    .filter(s => s.maxScore > 0)
+    .sort((a, b) => (a.score / a.maxScore) - (b.score / b.maxScore))
+    .slice(0, 3)
+    .map(s => `${s.category} (${s.score}/${s.maxScore})`);
+
+  if (topScores.length) prompt += `\nTop Compatibility Areas: ${topScores.join(', ')}`;
+  if (lowScores.length) prompt += `\nFriction Areas: ${lowScores.join(', ')}`;
+
+  prompt += getChartSnapshot(matchData.chart1Name, matchData.chart1);
+  prompt += getChartSnapshot(matchData.chart2Name, matchData.chart2);
+
+  prompt += `\n\nCOMPATIBILITY RESPONSE STYLE:`;
+  prompt += `\n- Start with a direct verdict in 1 line.`;
+  prompt += `\n- Then give 2-4 concise bullets: chemistry, communication, conflict pattern, long-term stability.`;
+  prompt += `\n- Prioritize lowest-score factors (especially Nadi, Gana, Bhakoot, Yoni) with practical guidance.`;
+  prompt += `\n- Mention current dasha overlap only if it changes near-term relationship dynamics.`;
+  prompt += `\n- Be honest but constructive; avoid fear language.`;
+
+  prompt += `\n\nIMPORTANT: Always refer to the couple by their names (${matchData.chart1Name} and ${matchData.chart2Name}). Compare both charts before conclusions.`;
+  return prompt;
 }
 
 interface AstrovaSidebarProps {
@@ -56,7 +278,7 @@ const GENERAL_PROMPTS = [
   { label: 'Doshas', prompt: 'What are common doshas like Mangal Dosha and Sade Sati?', icon: HeartPulse, color: 'text-pink-400' },
 ];
 
-export function buildSystemPrompt(kundaliData: KundaliResponse | null, chartName?: string, kbContext?: string): string {
+export function buildSystemPrompt(kundaliData: KundaliResponse | null, chartName?: string, skipSingleChartSections?: boolean): string {
   let prompt = `You are Astrova — a sharp, modern Vedic astrologer. You read charts like a pro and talk like a trusted friend.
 
 RULES:
@@ -71,18 +293,54 @@ RULES:
 - Non-astrology questions: answer normally, connect to chart briefly if loaded.
 - No chart loaded: give general astrology knowledge, don't make up placements.
 - Use emojis where appropriate.
+- Treat currently loaded chart/match as active context until user provides a new chart.
+- Start with 1-line verdict, then 2-4 concise supporting points.
+- Prioritize what is most actionable right now (current dasha + strongest/weakest factors).
+- If data conflicts, mention both sides briefly and give balanced takeaway.
 `;
 
-  if (kundaliData) {
+  if (kundaliData && !skipSingleChartSections) {
     prompt += `\n\n--- BIRTH CHART DATA ---`;
     if (chartName) prompt += `\nChart Name: ${chartName}`;
     prompt += `\nBirth Date: ${kundaliData.birth.date}`;
     prompt += `\nBirth Time: ${kundaliData.birth.time}`;
     prompt += `\nTimezone: UTC${kundaliData.birth.tz_offset_hours >= 0 ? '+' : ''}${kundaliData.birth.tz_offset_hours}`;
-    prompt += `\nLocation: ${kundaliData.birth.latitude.toFixed(4)}°N, ${kundaliData.birth.longitude.toFixed(4)}°E`;
+    prompt += `\nAdjusted Timezone: UTC${kundaliData.birth.adjusted_tz_offset_hours >= 0 ? '+' : ''}${kundaliData.birth.adjusted_tz_offset_hours}${kundaliData.birth.dst_applied ? ` (DST +${kundaliData.birth.dst_adjustment_hours}h applied)` : ''}`;
+    prompt += `\nLocation: ${formatCoordinate(kundaliData.birth.latitude, 'N', 'S')}, ${formatCoordinate(kundaliData.birth.longitude, 'E', 'W')}`;
     prompt += `\nAyanamsha: ${kundaliData.meta.ayanamsha} (${kundaliData.meta.ayanamsha_deg.toFixed(4)}°)`;
     
     prompt += `\n\nLagna (Ascendant): ${kundaliData.lagna.sign} (${kundaliData.lagna.sign_sanskrit}) at ${kundaliData.lagna.deg}°${kundaliData.lagna.min}'${kundaliData.lagna.sec}"`;
+
+    const strongPlanets = kundaliData.shad_bala
+      ? Object.entries(kundaliData.shad_bala)
+          .sort((a, b) => (b[1].total_rupas ?? 0) - (a[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([name, b]) => `${name} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const weakPlanets = kundaliData.shad_bala
+      ? Object.entries(kundaliData.shad_bala)
+          .sort((a, b) => (a[1].total_rupas ?? 0) - (b[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([name, b]) => `${name} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const strongHouses = kundaliData.bhava_bala
+      ? Object.entries(kundaliData.bhava_bala)
+          .sort((a, b) => (b[1].total_rupas ?? 0) - (a[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([house, b]) => `H${house} ${b.sign} (${b.total_rupas ?? 0}r)`)
+      : [];
+    const weakHouses = kundaliData.bhava_bala
+      ? Object.entries(kundaliData.bhava_bala)
+          .sort((a, b) => (a[1].total_rupas ?? 0) - (b[1].total_rupas ?? 0))
+          .slice(0, 3)
+          .map(([house, b]) => `H${house} ${b.sign} (${b.total_rupas ?? 0}r)`)
+      : [];
+
+    prompt += `\n\n--- QUICK CONTEXT SNAPSHOT ---`;
+    if (strongPlanets.length) prompt += `\nStrong Planets: ${strongPlanets.join(', ')}`;
+    if (weakPlanets.length) prompt += `\nWeak Planets: ${weakPlanets.join(', ')}`;
+    if (strongHouses.length) prompt += `\nStrong Houses: ${strongHouses.join(', ')}`;
+    if (weakHouses.length) prompt += `\nWeak Houses: ${weakHouses.join(', ')}`;
     
     prompt += `\n\n--- PLANETARY POSITIONS ---`;
     for (const [name, p] of Object.entries(kundaliData.planets)) {
@@ -95,6 +353,13 @@ RULES:
       prompt += `\n${name}: ${p.sign} (${p.sign_sanskrit}) ${p.deg}°${p.min}'${p.sec}" House-${p.house_whole_sign} ${flags.length ? `[${flags.join(', ')}]` : ''}`;
       if (p.nakshatra) prompt += ` Nakshatra: ${p.nakshatra} Pada-${p.nakshatra_pada} (Lord: ${p.nakshatra_lord})`;
       if (p.navamsa_sign) prompt += ` Navamsa: ${p.navamsa_sign}`;
+    }
+
+    if (kundaliData.upagrahas && Object.keys(kundaliData.upagrahas).length > 0) {
+      prompt += `\n\n--- UPAGRAHAS ---`;
+      for (const [name, u] of Object.entries(kundaliData.upagrahas)) {
+        prompt += `\n${name}: ${u.sign} (${u.sign_sanskrit}) ${u.deg}°${u.min}'${u.sec}" House-${u.house_whole_sign}${u.nakshatra ? ` Nakshatra: ${u.nakshatra} Pada-${u.nakshatra_pada}` : ''}`;
+      }
     }
     
     const aspectDefs = [
@@ -125,10 +390,29 @@ RULES:
       for (const a of aspectsList) prompt += `\n${a}`;
     }
 
+    if (kundaliData.rasi_chart?.length) {
+      prompt += `\n\n--- RASI CHART (D1 Occupancy) ---`;
+      kundaliData.rasi_chart.forEach((housePlanets, idx) => {
+        const houseNumber = idx + 1;
+        prompt += `\nHouse ${houseNumber}: ${housePlanets.length ? housePlanets.join(', ') : 'Empty'}`;
+      });
+    }
+
+    if (kundaliData.navamsa_chart?.length) {
+      prompt += `\n\n--- NAVAMSA CHART (D9 Occupancy) ---`;
+      kundaliData.navamsa_chart.forEach((housePlanets, idx) => {
+        const houseNumber = idx + 1;
+        prompt += `\nHouse ${houseNumber}: ${housePlanets.length ? housePlanets.join(', ') : 'Empty'}`;
+      });
+    }
+
     if (kundaliData.shad_bala) {
       prompt += `\n\n--- SHADBALA (Planetary Strength) ---`;
       for (const [name, bala] of Object.entries(kundaliData.shad_bala)) {
+        const sthana = typeof bala.sthana_bala === 'number' ? bala.sthana_bala : bala.sthana_bala.total;
+        const kala = typeof bala.kala_bala === 'number' ? bala.kala_bala : bala.kala_bala.total;
         prompt += `\n${name}: ${bala.total_rupas ?? 0} rupas (Required: ${bala.required_rupas ?? 0}) - ${bala.strength}`;
+        prompt += ` | Sthana:${sthana ?? 0}, Dig:${bala.dig_bala ?? 0}, Kala:${kala ?? 0}, Chesta:${bala.chesta_bala ?? 0}, Naisargika:${bala.naisargika_bala ?? 0}, Drik:${bala.drik_bala ?? 0}`;
       }
     }
     
@@ -136,6 +420,7 @@ RULES:
       prompt += `\n\n--- BHAVA BALA (House Strength) ---`;
       for (const [house, bala] of Object.entries(kundaliData.bhava_bala)) {
         prompt += `\nHouse ${house} (${bala.sign}): Lord=${bala.lord}, ${bala.total_rupas ?? 0} rupas - ${bala.rating}`;
+        prompt += ` | Bhavadhipati:${bala.bhavadhipati_bala ?? 0}, Dig:${bala.bhava_digbala ?? 0}, Drishti:${bala.bhava_drishti_bala ?? 0}, Residential:${bala.residential_strength ?? 0}, PlanetContribution:${bala.planet_contribution ?? 0}`;
       }
     }
     
@@ -147,56 +432,51 @@ RULES:
     }
 
     if (kundaliData.dasha) {
+      const { currentPeriod, currentAntardasha, currentPratyantardasha, nextAntardasha, nextPratyantardasha } = getCurrentDashaContext(kundaliData);
       prompt += `\n\n--- VIMSHOTTARI DASHA ---`;
       prompt += `\nCurrent Mahadasha: ${kundaliData.dasha.current_dasha}`;
+      if (currentPeriod) prompt += `\nCurrent Mahadasha Window: ${currentPeriod.start_date} to ${currentPeriod.end_date}`;
       prompt += `\nMoon Nakshatra: ${kundaliData.dasha.moon_nakshatra_name} (Pada ${kundaliData.dasha.moon_nakshatra_pada})`;
       
-      const currentPeriod = kundaliData.dasha.periods.find(p => p.is_current);
+      // All Mahadashas
+      if (kundaliData.dasha.periods && kundaliData.dasha.periods.length > 0) {
+        prompt += `\n\nAll Mahadashas:`;
+        for (const md of kundaliData.dasha.periods) {
+          prompt += `\n- ${md.planet}: ${md.start_date} to ${md.end_date}${md.is_current ? ' (CURRENT)' : ''}`;
+        }
+      }
+
       if (currentPeriod) {
-        prompt += `\nCurrent Period: ${currentPeriod.planet} Mahadasha (${currentPeriod.start_date} to ${currentPeriod.end_date})`;
         if (currentPeriod.antardashas) {
-          const now = new Date();
-          const currentAD = currentPeriod.antardashas.find(ad => {
-            const start = new Date(ad.start_datetime || ad.start_date);
-            const end = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
-            return now >= start && now < end;
-          });
-          if (currentAD) {
-            prompt += `\nCurrent Antardasha: ${currentAD.planet} (${currentAD.start_date} to ${currentAD.end_date})`;
-            if (currentAD.pratyantardashas) {
-              const currentPAD = currentAD.pratyantardashas.find(pad => {
-                const s = new Date(pad.start_datetime || pad.start_date);
-                const e = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
-                return now >= s && now < e;
-              });
-              if (currentPAD) {
-                prompt += `\nCurrent Pratyantardasha: ${currentPAD.planet} (${currentPAD.start_date} to ${currentPAD.end_date})`;
-              }
-              prompt += `\nAll Pratyantardashas in ${currentAD.planet} Antardasha:`;
-              for (const pad of currentAD.pratyantardashas) {
-                const padStart = new Date(pad.start_datetime || pad.start_date);
-                const padEnd = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
-                const isPadCurrent = now >= padStart && now < padEnd;
-                prompt += `\n    ${pad.planet}: ${pad.start_date} to ${pad.end_date}${isPadCurrent ? ' [CURRENT]' : ''}`;
+          if (currentAntardasha) {
+            prompt += `\nCurrent Antardasha: ${currentAntardasha.planet} (${currentAntardasha.start_date} to ${currentAntardasha.end_date})`;
+            if (currentPratyantardasha) {
+              prompt += `\nCurrent Pratyantardasha: ${currentPratyantardasha.planet} (${currentPratyantardasha.start_date} to ${currentPratyantardasha.end_date})`;
+            }
+            if (currentAntardasha.pratyantardashas && currentAntardasha.pratyantardashas.length > 0) {
+              prompt += `\nAll Pratyantardashas in Current Antardasha:`;
+              for (const pad of currentAntardasha.pratyantardashas) {
+                prompt += `\n- ${pad.planet}: ${pad.start_date} to ${pad.end_date}`;
               }
             }
-            prompt += `\nAll Antardashas in current Mahadasha:`;
-            for (const ad of currentPeriod.antardashas) {
-              const adStart = new Date(ad.start_datetime || ad.start_date);
-              const adEnd = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
-              const isAdCurrent = now >= adStart && now < adEnd;
-              prompt += `\n  ${ad.planet}: ${ad.start_date} to ${ad.end_date} (${ad.years?.toFixed(2)}y)${isAdCurrent ? ' [CURRENT]' : ''}`;
-            }
+          }
+          // All Antardashas in Current Mahadasha
+          prompt += `\nAll Antardashas in Current Mahadasha (${currentPeriod.planet}):`;
+          for (const ad of currentPeriod.antardashas) {
+            const isCurrentAD = currentAntardasha && ad.planet === currentAntardasha.planet && ad.start_date === currentAntardasha.start_date;
+            prompt += `\n- ${ad.planet}: ${ad.start_date} to ${ad.end_date}${isCurrentAD ? ' (CURRENT)' : ''}`;
+          }
+          if (nextAntardasha) {
+            prompt += `\nNext Antardasha: ${nextAntardasha.planet} (${nextAntardasha.start_date} to ${nextAntardasha.end_date})`;
+          }
+          if (nextPratyantardasha) {
+            prompt += `\nNext Pratyantardasha: ${nextPratyantardasha.planet} (${nextPratyantardasha.start_date} to ${nextPratyantardasha.end_date})`;
           }
         }
       }
     }
-  }
 
-  if (kbContext) {
-    prompt += `\n\n--- KNOWLEDGE BASE CONTEXT ---`;
-    prompt += `\nUse the following reference material to enhance your answer:`;
-    prompt += `\n${kbContext}`;
+    prompt += `\n\nIMPORTANT: Use only the loaded chart/match data in this session. Keep responses concise and analyze on demand; avoid dumping every row unless user explicitly asks for full details.`;
   }
 
   return prompt;
@@ -287,10 +567,6 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
     }
   }, [isOpen]);
 
-  const lastMatchRef = useRef<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sendMessageRef = useRef<(text: string) => void>(() => {});
-
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -349,55 +625,8 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
       }
       const modelToUse = selectedModel;
 
-      // Search knowledge base only for astrology-related queries
-      let kbContext = '';
-      const astroKeywords = /\b(planet|house|bhava|dasha|nakshatra|yoga|dosha|lagna|ascendant|sign|aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces|sun|moon|mars|mercury|jupiter|venus|saturn|rahu|ketu|shadbala|bhava bala|transit|remedy|remedies|matching|compatibility|horoscope|chart|kundali|vedic|astrology|mangal|sade sati|mahadasha|antardasha|navamsa|arudha|atmakaraka|combustion|retrograde|exalt|debilit|nadi|muhurta|pushkara|gandanta)\b/i;
-      if (astroKeywords.test(messageText)) {
-        try {
-          const kbResults = await searchKnowledgeBase(messageText.trim());
-          if (kbResults.length > 0) {
-            kbContext = kbResults.map(r => `[${r.category.toUpperCase()}] ${r.title}:\n${r.content}`).join('\n\n');
-            const toolMsg: ChatMessage = {
-              id: `kb-${Date.now()}`,
-              role: 'tool',
-              content: `Found ${kbResults.length} relevant article${kbResults.length > 1 ? 's' : ''}`,
-              toolName: 'Knowledge Base',
-              kbResults: kbResults.map(r => ({ title: r.title, category: r.category, content: r.content.slice(0, 120) + '...' })),
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, toolMsg]);
-          }
-        } catch { /* KB search is optional */ }
-      }
-
-      // Web search is always available to the model automatically
-
-      let systemPrompt = buildSystemPrompt(kundaliData, chartName, kbContext || undefined);
-      if (matchData) {
-        systemPrompt += `\n\n--- COMPATIBILITY ANALYSIS ---`;
-        systemPrompt += `\n👤 Male: ${matchData.chart1Name}`;
-        systemPrompt += `\n👩 Female: ${matchData.chart2Name}`;
-        systemPrompt += `\n\nAshtakoota Scores:`;
-        matchData.scores.forEach(s => {
-          systemPrompt += `\n  ${s.category}: ${s.score}/${s.maxScore} — ${s.description}`;
-        });
-        // Add both charts' key planetary data for the AI to reference by name
-        if (matchData.chart1) {
-          systemPrompt += `\n\n--- ${matchData.chart1Name.toUpperCase()}'s CHART (Male) ---`;
-          systemPrompt += `\nLagna: ${matchData.chart1.lagna.sign}`;
-          for (const [name, p] of Object.entries(matchData.chart1.planets)) {
-            systemPrompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
-          }
-        }
-        if (matchData.chart2) {
-          systemPrompt += `\n\n--- ${matchData.chart2Name.toUpperCase()}'s CHART (Female) ---`;
-          systemPrompt += `\nLagna: ${matchData.chart2.lagna.sign}`;
-          for (const [name, p] of Object.entries(matchData.chart2.planets)) {
-            systemPrompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
-          }
-        }
-        systemPrompt += `\n\nIMPORTANT: Always refer to the couple by their names (${matchData.chart1Name} and ${matchData.chart2Name}). Analyze their compatibility using both charts.`;
-      }
+      let systemPrompt = buildSystemPrompt(kundaliData, chartName, !!matchData);
+      systemPrompt += buildMatchContextPrompt(matchData);
       const conversationMessages = [
         { role: 'system' as const, content: systemPrompt },
         ...messages.filter(m => m.role !== 'tool').map(m => ({ role: (m.role === 'tool' ? 'user' : m.role) as 'user' | 'assistant', content: m.content })),
@@ -533,20 +762,6 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
     setMessages([]);
   };
 
-  // Keep sendMessageRef in sync for matchData useEffect
-  sendMessageRef.current = sendMessage;
-
-  // Auto-send compatibility analysis when matchData arrives
-  useEffect(() => {
-    if (!matchData || !isOpen) return;
-    const matchKey = `${matchData.chart1Name}-${matchData.chart2Name}`;
-    if (lastMatchRef.current === matchKey) return;
-    lastMatchRef.current = matchKey;
-    const overall = matchData.scores.find(s => s.category === 'Overall Compatibility');
-    const pct = overall ? Math.round((overall.score / overall.maxScore) * 100) : 0;
-    sendMessageRef.current(`Compatibility: ${matchData.chart1Name} (Male) + ${matchData.chart2Name} (Female) — ${pct}% match (${overall?.score || 0}/${overall?.maxScore || 36}). Give a brief compatibility reading using their names. What works well and what to watch out for?`);
-  }, [matchData, isOpen]);
-
   const stopGeneration = () => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
@@ -591,15 +806,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
     try {
       const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
       if (!apiKey) throw new Error('OpenRouter API key not configured.');
-      let kbContext = '';
-      const astroKeywords = /\b(planet|house|bhava|dasha|nakshatra|yoga|dosha|lagna|ascendant|sign|aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces|sun|moon|mars|mercury|jupiter|venus|saturn|rahu|ketu|shadbala|bhava bala|transit|remedy|remedies|matching|compatibility|horoscope|chart|kundali|vedic|astrology)\b/i;
-      if (astroKeywords.test(messageText)) {
-        try {
-          const kbResults = await searchKnowledgeBase(messageText.trim());
-          if (kbResults.length > 0) kbContext = kbResults.map(r => `[${r.category.toUpperCase()}] ${r.title}:\n${r.content}`).join('\n\n');
-        } catch { /* optional */ }
-      }
-      const systemPrompt = buildSystemPrompt(kundaliData, chartName, kbContext || undefined);
+      const systemPrompt = `${buildSystemPrompt(kundaliData, chartName, !!matchData)}${buildMatchContextPrompt(matchData)}`;
       const conversationMessages = [
         { role: 'system' as const, content: systemPrompt },
         ...messages.filter(m => m.role !== 'tool').map(m => ({ role: (m.role === 'tool' ? 'user' : m.role) as 'user' | 'assistant', content: m.content })),
@@ -696,7 +903,13 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
             <div>
               <h3 className="text-white font-semibold text-sm leading-tight">Astrova</h3>
               <p className="text-[10px] text-neutral-500 leading-tight">
-                {kundaliData ? (
+                {matchData ? (
+                  <span className="flex items-center gap-1">
+                    <span className="text-neutral-300">{matchData.chart1Name}</span>
+                    <span className="text-pink-400">❤</span>
+                    <span className="text-neutral-300">{matchData.chart2Name}</span>
+                  </span>
+                ) : kundaliData ? (
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
                     {chartName ? <span className="text-amber-300 font-medium">{chartName}</span> : <span className="text-neutral-400">{kundaliData.lagna.sign} Lagna</span>}

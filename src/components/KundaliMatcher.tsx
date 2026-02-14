@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Heart, Star, FolderOpen, Search, X, ChevronRight, MapPin, Crown, Handshake, Sparkles, PawPrint, Globe2, Users, Orbit, Dna, Save } from 'lucide-react';
+import { Star, FolderOpen, Search, X, ChevronRight, MapPin, Crown, Handshake, Sparkles, PawPrint, Globe2, Users, Orbit, Dna, Save } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { LoadChartsModal } from './LoadChartsModal';
@@ -318,19 +318,38 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
   const compatibilityLevel = overallScore ? getCompatibilityLevel(overallScore.score, overallScore.maxScore) : null;
 
   return (
-    <div className="space-y-3 max-w-4xl mx-auto">
-      <div className="text-center space-y-1">
-        <div className="flex items-center justify-center gap-2">
-          <Heart className="w-4 h-4 text-pink-400" />
-          <h2 className="text-lg font-bold text-white">Kundali Matching</h2>
+    <div className="space-y-4 max-w-5xl mx-auto">
+      {/* Enhanced Header */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 via-purple-600/10 to-pink-600/10 rounded-2xl blur-xl" />
+        <div className="relative bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-2xl border border-pink-500/20 p-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="relative">
+              <img src={heartLogo} alt="Heart" className="w-6 h-6 animate-pulse" />
+              <div className="absolute inset-0 bg-pink-400/20 rounded-full blur-lg" />
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">Kundali Matching</h2>
+            <div className="relative">
+              <img src={heartLogo} alt="Heart" className="w-6 h-6 animate-pulse" />
+              <div className="absolute inset-0 bg-pink-400/20 rounded-full blur-lg" />
+            </div>
+          </div>
+          <p className="text-xs text-neutral-300 mb-1">
+            {name1 || 'Person 1'} <span className="text-pink-400">❤</span> {name2 || 'Person 2'}
+          </p>
+          <p className="text-neutral-400 text-sm">Ashtakoot Guna Milan • 36 Points Compatibility Analysis</p>
+          <div className="flex items-center justify-center gap-4 mt-3 text-xs text-neutral-500">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-400 rounded-full"></span> Vedic Tradition</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-400 rounded-full"></span> 8 Compatibility Factors</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 bg-purple-400 rounded-full"></span> Accurate Calculations</span>
+          </div>
         </div>
-        <p className="text-neutral-500 text-xs">Ashtakoot Guna Milan • 36 Points Compatibility</p>
       </div>
 
       {/* Birth Data Forms */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Person 1 Form */}
-        <Card className="bg-gradient-to-br from-amber-500/5 to-yellow-500/5 rounded-xl border-[hsl(220,8%,18%)] hover:border-amber-500/30 transition-all duration-300">
+        <Card className="group bg-gradient-to-br from-amber-500/8 to-orange-500/8 rounded-2xl border-amber-500/20 hover:border-amber-500/40 transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/10 overflow-hidden">
           <CardHeader className="px-3 py-2 pb-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/25 to-yellow-500/25 border border-amber-500/30 flex items-center justify-center">
@@ -504,7 +523,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         </Card>
 
         {/* Person 2 Form */}
-        <Card className="bg-gradient-to-br from-pink-500/5 to-rose-500/5 rounded-xl border-[hsl(220,8%,18%)] hover:border-pink-500/30 transition-all duration-300">
+        <Card className="group bg-gradient-to-br from-pink-500/8 to-rose-500/8 rounded-2xl border-pink-500/20 hover:border-pink-500/40 transition-all duration-500 hover:shadow-xl hover:shadow-pink-500/10 overflow-hidden">
           <CardHeader className="px-3 py-2 pb-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500/30 to-rose-500/30 border border-pink-500/40 flex items-center justify-center">
@@ -678,31 +697,40 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         </Card>
       </div>
 
-      {/* Match Button */}
+      {/* Enhanced Match Button */}
       <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-2xl blur-lg opacity-60" />
-        <Card className="relative bg-[hsl(220,10%,8%)]/60 rounded-2xl border-[hsl(220,8%,18%)]">
-          <CardContent className="p-4">
+        <div className="absolute -inset-1 bg-gradient-to-r from-pink-600/30 via-purple-600/30 to-pink-600/30 rounded-3xl blur-xl opacity-70 animate-pulse" />
+        <Card className="relative bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-3xl border-pink-500/30 backdrop-blur-sm">
+          <CardContent className="p-6">
             <Button
               onClick={handleMatch}
               disabled={isMatching || !!(selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2)}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-14 text-base font-bold bg-gradient-to-r from-pink-500 via-purple-600 to-pink-600 hover:from-pink-600 hover:via-purple-700 hover:to-pink-700 text-white border-0 rounded-2xl transition-all duration-500 shadow-2xl shadow-pink-500/30 hover:shadow-3xl hover:shadow-pink-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               size="lg"
             >
               {isMatching ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
-                  Analyzing Compatibility...
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                    <div className="absolute inset-0 bg-pink-400/20 rounded-full blur-lg animate-ping" />
+                  </div>
+                  <span>Analyzing Cosmic Compatibility...</span>
                 </div>
               ) : (
-                <>
-                  <img src={heartLogo} alt="Heart" className="w-5 h-5 mr-2" />
-                  Analyze Compatibility
-                </>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="relative">
+                    <img src={heartLogo} alt="Heart" className="w-6 h-6" />
+                    <div className="absolute inset-0 bg-pink-400/30 rounded-full blur-lg animate-pulse" />
+                  </div>
+                  <span>Analyze Compatibility</span>
+                </div>
               )}
             </Button>
             {selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2 && (
-              <p className="text-center text-xs text-yellow-400/80 mt-2">Please select two different charts to compare</p>
+              <p className="text-center text-xs text-yellow-400/90 mt-3 flex items-center justify-center gap-2">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                Please select two different charts to compare
+              </p>
             )}
           </CardContent>
         </Card>
@@ -719,93 +747,115 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         </Card>
       )}
 
-      {/* Match Results */}
+      {/* Enhanced Match Results */}
       {matchedCharts && (
-        <div className="space-y-6">
+        <div className="space-y-8 animate-fadeIn">
           {/* Overall Compatibility - Hero Card */}
           {compatibilityLevel && overallScore && (
-            <div className="relative">
-              <div className={`absolute -inset-1 bg-gradient-to-r ${compatibilityLevel.gradient} rounded-3xl blur-xl opacity-40`} />
-              <Card className={`relative bg-gradient-to-br ${compatibilityLevel.gradient} border-neutral-700/30 rounded-2xl shadow-2xl overflow-hidden`}>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.05),transparent)]" />
-                <CardContent className="relative p-8 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <Star className="w-5 h-5 text-yellow-400" />
-                    <h3 className="text-lg font-semibold text-white/80 uppercase tracking-wider">Overall Compatibility</h3>
-                    <Star className="w-5 h-5 text-yellow-400" />
-                  </div>
-
-                  {/* Circular Score */}
-                  <div className="relative w-32 h-32 mx-auto mb-4">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
-                      <circle
-                        cx="60" cy="60" r="52" fill="none"
-                        stroke={overallScore.color}
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={`${(overallScore.score / overallScore.maxScore) * 327} 327`}
-                        className="transition-all duration-1000 ease-out"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-3xl font-bold text-white">{Math.round((overallScore.score / overallScore.maxScore) * 100)}%</span>
-                      <span className="text-xs text-white/60">{overallScore.score}/{overallScore.maxScore}</span>
+            <div className="relative animate-slideUp">
+              <div className={`absolute -inset-1 bg-gradient-to-r ${compatibilityLevel.gradient} rounded-3xl blur-2xl opacity-60 animate-pulse`} />
+              <Card className={`relative bg-gradient-to-br ${compatibilityLevel.gradient} border-white/20 rounded-3xl shadow-3xl overflow-hidden backdrop-blur-sm`}>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.1),transparent)]" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                <CardContent className="relative p-10 text-center">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <div className="relative">
+                      <Star className="w-6 h-6 text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} />
+                      <div className="absolute inset-0 bg-yellow-300/30 rounded-full blur-lg animate-pulse" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white uppercase tracking-wider">Cosmic Compatibility</h3>
+                    <div className="relative">
+                      <Star className="w-6 h-6 text-yellow-300 animate-spin" style={{ animationDuration: '3s' }} />
+                      <div className="absolute inset-0 bg-yellow-300/30 rounded-full blur-lg animate-pulse" />
                     </div>
                   </div>
 
-                  <Badge className={`${compatibilityLevel.badgeColor} text-white px-4 py-1.5 text-sm font-semibold rounded-full`}>
+                  {/* Enhanced Circular Score */}
+                  <div className="relative w-40 h-40 mx-auto mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-full blur-2xl animate-pulse" />
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="10" />
+                      <circle
+                        cx="60" cy="60" r="54" fill="none"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                        strokeDasharray={`${(overallScore.score / overallScore.maxScore) * 340} 340`}
+                        className="transition-all duration-1500 ease-out"
+                      />
+                      <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={overallScore.color} stopOpacity="1" />
+                          <stop offset="100%" stopColor={overallScore.color} stopOpacity="0.6" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-black text-white drop-shadow-lg">{Math.round((overallScore.score / overallScore.maxScore) * 100)}%</span>
+                      <span className="text-xs text-white/70 font-medium">{overallScore.score}/{overallScore.maxScore} Points</span>
+                    </div>
+                  </div>
+
+                  <Badge className={`${compatibilityLevel.badgeColor} text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg animate-bounce`}>
                     {compatibilityLevel.label}
                   </Badge>
-                  <p className="text-neutral-200/80 mt-3 text-sm max-w-md mx-auto">{compatibilityLevel.description}</p>
+                  <p className="text-white/90 mt-4 text-sm max-w-lg mx-auto leading-relaxed drop-shadow">{compatibilityLevel.description}</p>
                 </CardContent>
               </Card>
             </div>
           )}
 
-          {/* Ashtakoota Score Breakdown */}
-          <div className="bg-[hsl(220,10%,8%)]/40 rounded-2xl border border-[hsl(220,8%,18%)] p-5">
-            <div className="flex items-center gap-2 mb-5">
-              <Star className="w-4 h-4 text-amber-400" />
-              <h3 className="text-white font-semibold text-base">Ashtakoota Guna Milan</h3>
-              <span className="text-xs text-neutral-500 ml-auto">8 compatibility factors</span>
+          {/* Enhanced Ashtakoota Score Breakdown */}
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl border-purple-500/20 p-6 backdrop-blur-sm animate-slideUp" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="relative">
+                <Star className="w-5 h-5 text-purple-400 animate-spin" style={{ animationDuration: '4s' }} />
+                <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-lg animate-pulse" />
+              </div>
+              <h3 className="text-white font-bold text-lg">Ashtakoota Guna Milan</h3>
+              <span className="text-xs text-purple-400 ml-auto bg-purple-500/20 px-3 py-1 rounded-full">8 Sacred Factors</span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {matchScores.filter(s => s.category !== 'Overall Compatibility').map((score, index) => {
                 const pct = score.maxScore > 0 ? (score.score / score.maxScore) * 100 : 0;
-                const kootIconMap: Record<string, { icon: React.ElementType; color: string }> = {
-                  'Varna': { icon: Crown, color: 'text-amber-400' },
-                  'Vashya': { icon: Handshake, color: 'text-blue-400' },
-                  'Tara': { icon: Sparkles, color: 'text-yellow-400' },
-                  'Yoni': { icon: PawPrint, color: 'text-green-400' },
-                  'Graha Maitri': { icon: Globe2, color: 'text-purple-400' },
-                  'Gana': { icon: Users, color: 'text-cyan-400' },
-                  'Bhakoot': { icon: Orbit, color: 'text-pink-400' },
-                  'Nadi': { icon: Dna, color: 'text-emerald-400' },
+                const kootIconMap: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+                  'Varna': { icon: Crown, color: 'text-amber-400', bg: 'bg-amber-500/20' },
+                  'Vashya': { icon: Handshake, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+                  'Tara': { icon: Sparkles, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+                  'Yoni': { icon: PawPrint, color: 'text-green-400', bg: 'bg-green-500/20' },
+                  'Graha Maitri': { icon: Globe2, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+                  'Gana': { icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+                  'Bhakoot': { icon: Orbit, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+                  'Nadi': { icon: Dna, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
                 };
                 const kootInfo = kootIconMap[score.category];
                 const KootIcon = kootInfo?.icon || Star;
                 const kootColor = kootInfo?.color || 'text-neutral-400';
+                const kootBg = kootInfo?.bg || 'bg-neutral-500/20';
                 return (
-                  <div key={index} className="group">
-                    <div className="flex items-center gap-3">
-                      <KootIcon className={`w-4 h-4 ${kootColor} shrink-0`} />
+                  <div key={index} className="group hover:scale-[1.02] transition-all duration-300" style={{ animationDelay: `${index * 100}ms` }}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 ${kootBg} rounded-xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform`}>
+                        <KootIcon className={`w-5 h-5 ${kootColor}`} />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-white">{score.category}</span>
-                            <span className="text-[10px] text-neutral-500 hidden md:inline">{score.description}</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-bold text-white">{score.category}</span>
+                            <span className="text-[10px] text-neutral-500 hidden lg:inline bg-neutral-500/20 px-2 py-1 rounded">{score.description}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold tabular-nums" style={{ color: score.color }}>{score.score}</span>
+                            <span className="text-sm font-black tabular-nums drop-shadow" style={{ color: score.color }}>{score.score}</span>
                             <span className="text-[10px] text-neutral-600">/ {score.maxScore}</span>
                           </div>
                         </div>
-                        <div className="w-full bg-[hsl(220,10%,12%)] rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-neutral-800/50 rounded-full h-3 overflow-hidden border border-neutral-700/30">
                           <div
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{ width: `${pct}%`, backgroundColor: score.color, transitionDelay: `${index * 100}ms` }}
-                          />
+                            className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+                            style={{ width: `${pct}%`, backgroundColor: score.color }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -813,88 +863,77 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 );
               })}
             </div>
-            {/* Total bar */}
+            {/* Enhanced Total bar */}
             {overallScore && (
-              <div className="mt-5 pt-4 border-t border-neutral-700/40">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-white">Total Score</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold" style={{ color: overallScore.color }}>{overallScore.score}</span>
+              <div className="mt-6 pt-6 border-t border-purple-500/20">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-lg font-bold text-white">Total Cosmic Score</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black drop-shadow-lg" style={{ color: overallScore.color }}>{overallScore.score}</span>
                     <span className="text-sm text-neutral-500">/ {overallScore.maxScore}</span>
                   </div>
                 </div>
-                <div className="w-full bg-[hsl(220,10%,12%)] rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-neutral-800/50 rounded-full h-4 overflow-hidden border border-neutral-700/30">
                   <div
-                    className="h-full rounded-full transition-all duration-1000 ease-out"
+                    className="h-full rounded-full transition-all duration-1500 ease-out relative overflow-hidden"
                     style={{ width: `${(overallScore.score / overallScore.maxScore) * 100}%`, backgroundColor: overallScore.color }}
-                  />
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Chart Comparison - Side by Side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Person 1 Chart */}
-            <div className="rounded-xl border border-amber-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.05), transparent)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                  <span className="text-amber-300 font-bold text-sm">♂</span>
-                </div>
-                <span className="text-white font-semibold text-sm">{matchedCharts.chart1Name}</span>
-                <span className="text-[10px] text-neutral-500 ml-auto">{matchedCharts.chart1.birth.date} • {matchedCharts.chart1.birth.time}</span>
-              </div>
-              <div className="space-y-0 text-xs">
-                <div className="flex items-center justify-between py-1.5 border-b border-neutral-800/30">
-                  <span className="text-neutral-500">Lagna</span>
-                  <span className="text-white font-medium">{matchedCharts.chart1.lagna.sign}</span>
-                </div>
-                {['Moon', 'Sun', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'].map(planet => {
-                  const p = matchedCharts.chart1.planets[planet];
-                  if (!p) return null;
-                  return (
-                    <div key={planet} className="flex items-center justify-between py-1.5 border-b border-neutral-800/20">
-                      <span className="text-neutral-500">{planet}</span>
-                      <div className="text-right flex items-center gap-1.5">
-                        <span className="text-white font-medium">{p.sign}</span>
-                        {p.nakshatra && <span className="text-neutral-600 text-[10px]">{p.nakshatra}</span>}
-                        {p.retrograde && <span className="text-red-400 text-[10px] font-medium">R</span>}
+          {/* Enhanced Chart Comparison - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slideUp" style={{ animationDelay: '400ms' }}>
+            {[
+              { chart: matchedCharts.chart1, name: matchedCharts.chart1Name, accent: 'amber', symbol: '♂', gradient: 'from-amber-500/20 to-orange-500/20' },
+              { chart: matchedCharts.chart2, name: matchedCharts.chart2Name, accent: 'pink', symbol: '♀', gradient: 'from-pink-500/20 to-rose-500/20' },
+            ].map(({ chart, name, accent, symbol, gradient }) => (
+              <div key={name} className={`group relative rounded-2xl border-${accent}-500/30 p-5 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-${accent}-500/20 overflow-hidden`} style={{ background: `linear-gradient(135deg, ${gradient}, transparent)` }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${gradient} border-${accent}-500/40 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <span className={`text-${accent}-300 font-bold text-sm drop-shadow`}>{symbol}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white font-bold text-base">{name}</h4>
+                      <p className="text-[10px] text-neutral-500">{chart.birth.date} • {chart.birth.time}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between py-2 border-b border-neutral-700/40">
+                      <span className="text-neutral-400 text-xs font-medium">Lagna</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-bold text-sm">{chart.lagna.sign}</span>
+                        <span className="text-[10px] text-neutral-600">{chart.lagna.sign_sanskrit}</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            {/* Person 2 Chart */}
-            <div className="rounded-xl border border-pink-500/20 p-4" style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.05), transparent)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
-                  <span className="text-pink-300 font-bold text-sm">♀</span>
+                    {['Moon', 'Sun', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'].map((planet, index) => {
+                      const p = chart.planets[planet];
+                      if (!p) return null;
+                      return (
+                        <div key={planet} className="flex items-center justify-between py-2 border-b border-neutral-700/20 hover:bg-white/5 px-2 rounded transition-colors" style={{ animationDelay: `${index * 50}ms` }}>
+                          <span className="text-neutral-400 text-xs font-medium">{planet}</span>
+                          <div className="text-right flex items-center gap-2">
+                            <span className="text-white font-bold text-sm">{p.sign}</span>
+                            <span className="text-[10px] text-neutral-600">{p.sign_sanskrit}</span>
+                            {p.nakshatra && (
+                              <span className="bg-neutral-700/50 px-2 py-0.5 rounded text-[9px] text-neutral-300">{p.nakshatra}</span>
+                            )}
+                            {p.retrograde && <span className="text-red-400 text-[10px] font-bold bg-red-500/20 px-1.5 py-0.5 rounded">R</span>}
+                            {p.exalted && <span className="text-green-400 text-[10px] font-bold bg-green-500/20 px-1.5 py-0.5 rounded">E</span>}
+                            {p.debilitated && <span className="text-orange-400 text-[10px] font-bold bg-orange-500/20 px-1.5 py-0.5 rounded">D</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <span className="text-white font-semibold text-sm">{matchedCharts.chart2Name}</span>
-                <span className="text-[10px] text-neutral-500 ml-auto">{matchedCharts.chart2.birth.date} • {matchedCharts.chart2.birth.time}</span>
               </div>
-              <div className="space-y-0 text-xs">
-                <div className="flex items-center justify-between py-1.5 border-b border-neutral-800/30">
-                  <span className="text-neutral-500">Lagna</span>
-                  <span className="text-white font-medium">{matchedCharts.chart2.lagna.sign}</span>
-                </div>
-                {['Moon', 'Sun', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'].map(planet => {
-                  const p = matchedCharts.chart2.planets[planet];
-                  if (!p) return null;
-                  return (
-                    <div key={planet} className="flex items-center justify-between py-1.5 border-b border-neutral-800/20">
-                      <span className="text-neutral-500">{planet}</span>
-                      <div className="text-right flex items-center gap-1.5">
-                        <span className="text-white font-medium">{p.sign}</span>
-                        {p.nakshatra && <span className="text-neutral-600 text-[10px]">{p.nakshatra}</span>}
-                        {p.retrograde && <span className="text-red-400 text-[10px] font-medium">R</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}

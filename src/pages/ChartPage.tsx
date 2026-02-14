@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Trash2, Download, Save, FolderOpen, Check, AlertTriangle, Edit3, Calendar, X } from 'lucide-react';
+import { Trash2, Save, FolderOpen, Check, AlertTriangle, Edit3, Calendar, X } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { NorthIndianChart } from '@/components/NorthIndianChart';
 import { StrengthAnalysis } from '@/components/StrengthAnalysis';
 import { RealtimeControls } from '@/components/RealtimeControls';
 import { LoadChartsModal } from '@/components/LoadChartsModal';
 import { KundaliMatcher } from '@/components/KundaliMatcher';
-import { AstrovaSidebar } from '@/components/AstrovaSidebar';
+import { AstrovaSidebar, buildSystemPrompt } from '@/components/AstrovaSidebar';
 import { BuyCreditsModal } from '@/components/BuyCreditsModal';
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -50,11 +50,22 @@ function saveChartsToStorage(charts: SavedChart[]) {
 
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const UPAGRAHA_DISPLAY_ORDER = ['Dhuma', 'Vyatipata', 'Parivesha', 'Indrachapa', 'Upaketu', 'Kaala', 'Mrityu', 'ArthaPrahara', 'YamaGhantaka', 'Gulika', 'Mandi'];
+
+function parseCalendarDate(dateStr: string): Date | null {
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
+  if (ymd) {
+    return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+  }
+  const d = new Date(dateStr);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function formatDashaDate(dateStr?: string): string {
   if (!dateStr) return '—';
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
+    const d = parseCalendarDate(dateStr);
+    if (!d) return dateStr;
     return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
   } catch { return dateStr; }
 }
@@ -83,7 +94,9 @@ function ChartPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [matchData, setMatchData] = useState<{ chart1Name: string; chart2Name: string; chart1: KundaliResponse; chart2: KundaliResponse; scores: { category: string; score: number; maxScore: number; description: string }[] } | null>(null);
   const [matcherSaveError, setMatcherSaveError] = useState<string | null>(null);
+  const [showModelInfo, setShowModelInfo] = useState(false);
   const location = useLocation();
+  const isAdmin = astrovaUser?.role === 'admin';
 
   // WF6: Auto-switch to matcher view when on /match route
   useEffect(() => {
@@ -215,6 +228,7 @@ function ChartPage() {
   const handleSubmit = useCallback((request: KundaliRequest) => {
     setIsLoading(true);
     setError(null);
+    setMatchData(null);
     setCurrentChartName('');
     setInlineSaveName('');
     setNameInputError(false);
@@ -235,6 +249,7 @@ function ChartPage() {
     if (lastRealtimeSuccessRef.current === dataKey && kundaliData) return;
     lastRealtimeRequestRef.current = dataKey;
 
+    setMatchData(null);
     setCurrentChartName('');
 
     if (
@@ -267,83 +282,6 @@ function ChartPage() {
       handleRealtimeChange(currentRequest);
     }
   }, [currentRequest, handleRealtimeChange]);
-
-  const handleDownloadJSON = () => {
-    if (!kundaliData) return;
-    const now = new Date();
-    const currentPeriod = kundaliData.dasha?.periods.find(p => p.is_current);
-    const currentAD = currentPeriod?.antardashas?.find(ad => {
-      const s = new Date(ad.start_datetime || ad.start_date);
-      const e = ad.end_datetime ? new Date(ad.end_datetime) : new Date(ad.end_date || '');
-      return now >= s && now < e;
-    });
-    const currentPAD = currentAD?.pratyantardashas?.find(pad => {
-      const s = new Date(pad.start_datetime || pad.start_date);
-      const e = pad.end_datetime ? new Date(pad.end_datetime) : new Date(pad.end_date || '');
-      return now >= s && now < e;
-    });
-
-    // Compute aspects for download
-    const aspectDefs = [
-      { name: 'Conjunction', angle: 0, orb: 10 },
-      { name: 'Opposition', angle: 180, orb: 10 },
-      { name: 'Trine', angle: 120, orb: 8 },
-      { name: 'Square', angle: 90, orb: 8 },
-      { name: 'Sextile', angle: 60, orb: 6 },
-    ];
-    const pNames = Object.keys(kundaliData.planets);
-    const aspects: { planet1: string; planet2: string; type: string; angle: number }[] = [];
-    for (let i = 0; i < pNames.length; i++) {
-      for (let j = i + 1; j < pNames.length; j++) {
-        const p1 = kundaliData.planets[pNames[i]];
-        const p2 = kundaliData.planets[pNames[j]];
-        let ang = Math.abs(p1.longitude - p2.longitude);
-        if (ang > 180) ang = 360 - ang;
-        for (const ad of aspectDefs) {
-          if (Math.abs(ang - ad.angle) <= ad.orb) {
-            aspects.push({ planet1: pNames[i], planet2: pNames[j], type: ad.name, angle: Math.round(ang) });
-            break;
-          }
-        }
-      }
-    }
-
-    const enriched = {
-      export_info: {
-        app: 'Astrova',
-        version: '1.0.0',
-        exported_at: now.toISOString(),
-        chart_name: currentChartName || undefined,
-      },
-      summary: {
-        ascendant: `${kundaliData.lagna.sign} (${kundaliData.lagna.sign_sanskrit}) ${kundaliData.lagna.deg}°${kundaliData.lagna.min}'`,
-        moon_sign: kundaliData.planets.Moon?.sign,
-        sun_sign: kundaliData.planets.Sun?.sign,
-        moon_nakshatra: kundaliData.dasha?.moon_nakshatra_name,
-        current_mahadasha: currentPeriod?.planet,
-        current_antardasha: currentAD?.planet,
-        current_pratyantardasha: currentPAD?.planet,
-        strong_planets: Object.entries(kundaliData.shad_bala)
-          .filter(([, b]) => b.strength === 'Strong')
-          .map(([name]) => name),
-        weak_planets: Object.entries(kundaliData.shad_bala)
-          .filter(([, b]) => b.strength === 'Weak')
-          .map(([name]) => name),
-        yogas: kundaliData.yogas?.map(y => y.name) || [],
-      },
-      aspects,
-      ...kundaliData,
-    };
-
-    const blob = new Blob([JSON.stringify(enriched, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const fname = currentChartName ? currentChartName.replace(/\s+/g, '_').toLowerCase() : kundaliData.birth.date;
-    a.download = `astrova_${fname}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const handleLoadCharts = () => {
     setShowLoadChartsModal(true);
@@ -501,9 +439,16 @@ function ChartPage() {
 
           <Header
             activeView={activeView}
-            onViewChange={(v) => setActiveView(v as 'kundali' | 'matcher')}
+            onViewChange={(v) => {
+              const nextView = v as 'kundali' | 'matcher';
+              setActiveView(nextView);
+              if (nextView === 'kundali') {
+                setMatchData(null);
+              }
+            }}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             sidebarOpen={sidebarOpen}
+            onOpenModelInfo={() => setShowModelInfo(true)}
           />
 
           {/* Main layout with sidebar */}
@@ -672,11 +617,6 @@ function ChartPage() {
                                     )
                                   ) : null}
 
-                                  <Button variant="outline" size="sm" onClick={handleDownloadJSON}
-                                    className={`${actionButtonClass} h-8 px-2 ${(!kundaliData) ? 'opacity-50 pointer-events-none' : ''}`}>
-                                    <Download className="w-4 h-4" />
-                                    <span className="hidden sm:inline text-xs">Export</span>
-                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -735,7 +675,7 @@ function ChartPage() {
                               </div>
                               
                               {/* Ascendant & Dasha Info */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                                 {/* Ascendant Card */}
                                 <div className="bg-gradient-to-br from-amber-500/10 to-yellow-600/10 rounded-xl p-4 border border-amber-500/30">
                                   <div className="flex items-center gap-2 mb-2">
@@ -758,6 +698,32 @@ function ChartPage() {
                                     <div className="text-xs"><span className="text-neutral-500">Pada:</span> <span className="text-white font-medium">{kundaliData.planets.Moon?.nakshatra_pada || kundaliData.dasha?.moon_nakshatra_pada || '—'}</span></div>
                                   </div>
                                 </div>
+
+                                {/* Upagraha Card */}
+                                {kundaliData.upagrahas && Object.keys(kundaliData.upagrahas).length > 0 && (
+                                  <div className="bg-gradient-to-br from-purple-500/10 to-indigo-600/10 rounded-xl p-4 border border-purple-500/30">
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <div className="w-6 h-6 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                                        <span className="text-purple-300 text-xs font-bold">U</span>
+                                      </div>
+                                      <h4 className="text-sm font-semibold text-white">Upagrahas (BPHS)</h4>
+                                    </div>
+                                    <div className="space-y-1.5 max-h-[212px] overflow-y-auto pr-1 custom-scrollbar">
+                                      {UPAGRAHA_DISPLAY_ORDER.filter((name) => Boolean(kundaliData.upagrahas[name])).map((name) => {
+                                        const upa = kundaliData.upagrahas[name];
+                                        return (
+                                          <div key={name} className="flex items-center justify-between text-xs rounded-md px-2 py-1 bg-purple-500/5 border border-purple-500/15">
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="text-purple-300 font-medium">{upa?.symbol || name.slice(0, 2)}</span>
+                                              <span className="text-white">{name}</span>
+                                            </div>
+                                            <span className="text-purple-200/90">{upa?.sign} {upa?.deg}°{upa?.min}'</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                                 
                                 {/* Current Dasha Card */}
                                 {kundaliData.dasha && (() => {
@@ -914,8 +880,11 @@ function ChartPage() {
                           locationName,
                           coordinates: { latitude: birthData.latitude, longitude: birthData.longitude, timezone: birthData.tz_offset_hours },
                         };
-                        setSavedCharts(prev => [...prev, newChart]);
-                        saveChartsToStorage([...savedCharts, newChart]);
+                        setSavedCharts(prev => {
+                          const next = [...prev, newChart];
+                          saveChartsToStorage(next);
+                          return next;
+                        });
                         if (astrovaUserId) {
                           saveChartToSupabase(astrovaUserId, {
                             name,
@@ -964,6 +933,56 @@ function ChartPage() {
                 matchData={matchData}
               />
             </div>
+
+            {showModelInfo && isAdmin && (
+              <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-3 sm:p-6">
+                <div className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-[hsl(220,8%,18%)] bg-[hsl(220,10%,7%)]">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[hsl(220,8%,16%)]">
+                    <h3 className="text-white font-semibold text-sm sm:text-base">Model Context (Current Session)</h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowModelInfo(false)}
+                      className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-white/5"
+                      title="Close"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="p-4 overflow-auto max-h-[calc(85vh-56px)]">
+                    <pre className="text-xs leading-relaxed text-neutral-200 whitespace-pre-wrap break-words">
+{(() => {
+  let prompt = buildSystemPrompt(kundaliData, currentChartName || undefined);
+  if (matchData) {
+    prompt += `\n\n--- COMPATIBILITY ANALYSIS ---`;
+    prompt += `\n👤 Male: ${matchData.chart1Name}`;
+    prompt += `\n👩 Female: ${matchData.chart2Name}`;
+    prompt += `\n\nAshtakoota Scores:`;
+    matchData.scores.forEach(s => {
+      prompt += `\n  ${s.category}: ${s.score}/${s.maxScore} — ${s.description}`;
+    });
+    if (matchData.chart1) {
+      prompt += `\n\n--- ${matchData.chart1Name.toUpperCase()}'s CHART (Male) ---`;
+      prompt += `\nLagna: ${matchData.chart1.lagna.sign}`;
+      for (const [name, p] of Object.entries(matchData.chart1.planets)) {
+        prompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
+      }
+    }
+    if (matchData.chart2) {
+      prompt += `\n\n--- ${matchData.chart2Name.toUpperCase()}'s CHART (Female) ---`;
+      prompt += `\nLagna: ${matchData.chart2.lagna.sign}`;
+      for (const [name, p] of Object.entries(matchData.chart2.planets)) {
+        prompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
+      }
+    }
+    prompt += `\n\nIMPORTANT: Always refer to the couple by their names (${matchData.chart1Name} and ${matchData.chart2Name}). Analyze their compatibility using both charts.`;
+  }
+  return prompt;
+})()}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
 
