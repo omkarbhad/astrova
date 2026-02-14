@@ -26,7 +26,7 @@ export function Header({
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[hsl(220,10%,6%)]/95 backdrop-blur-xl border-b border-[hsl(220,8%,16%)]">
+    <header className="sticky top-0 z-[60] w-full bg-[hsl(220,10%,6%)]/95 backdrop-blur-xl border-b border-[hsl(220,8%,16%)]">
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
@@ -48,7 +48,7 @@ export function Header({
                 <button
                   key={item.key}
                   onClick={() => onViewChange(item.key)}
-                  className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shrink-0 ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all duration-200 shrink-0 ${
                     isActive
                       ? item.activeBg
                       : 'text-neutral-500 hover:text-neutral-300'
@@ -84,10 +84,10 @@ export function Header({
             {isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
-                className="p-1.5 rounded-full text-neutral-500 hover:text-amber-300 hover:bg-neutral-800/60 transition-all"
+                className="p-1.5 rounded-full text-neutral-500 hover:bg-neutral-800/60 transition-all group"
                 title="Admin Panel"
               >
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <Shield className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300" />
               </button>
             )}
 

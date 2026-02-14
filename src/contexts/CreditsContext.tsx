@@ -1,11 +1,18 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { deductUserCredits } from '@/lib/supabase';
+import { deductUserCredits, supabase, getAdminConfig, updateUserCredits } from '@/lib/supabase';
+
+interface CreditCosts {
+  AI_MESSAGE: number;
+  CHART_GENERATION: number;
+  MATCHING: number;
+}
 
 interface CreditsContextType {
   credits: number;
-  deductCredits: (amount: number) => boolean;
+  creditCosts: CreditCosts;
+  deductCredits: (amount: number, action?: string) => boolean;
   addCredits: (amount: number) => void;
   showBuyModal: boolean;
   setShowBuyModal: (show: boolean) => void;
@@ -14,6 +21,12 @@ interface CreditsContextType {
 const CreditsContext = createContext<CreditsContextType | null>(null);
 const CREDITS_STORAGE_KEY = 'astrova_dakshina_credits';
 const INITIAL_CREDITS = 20;
+
+const DEFAULT_CREDIT_COSTS: CreditCosts = {
+  AI_MESSAGE: 1,
+  CHART_GENERATION: 0,
+  MATCHING: 0,
+};
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const { astrovaUser } = useAuth();
@@ -25,7 +38,25 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       return INITIAL_CREDITS;
     }
   });
+  const [creditCosts, setCreditCosts] = useState<CreditCosts>(DEFAULT_CREDIT_COSTS);
   const [showBuyModal, setShowBuyModal] = useState(false);
+
+  // Fetch credit costs from admin config
+  useEffect(() => {
+    (async () => {
+      try {
+        const costs = await getAdminConfig('credit_costs');
+        if (costs && typeof costs === 'object') {
+          const c = costs as Record<string, number>;
+          setCreditCosts({
+            AI_MESSAGE: c.ai_message ?? DEFAULT_CREDIT_COSTS.AI_MESSAGE,
+            CHART_GENERATION: c.chart_generation ?? DEFAULT_CREDIT_COSTS.CHART_GENERATION,
+            MATCHING: c.matching ?? DEFAULT_CREDIT_COSTS.MATCHING,
+          });
+        }
+      } catch { /* use defaults */ }
+    })();
+  }, []);
 
   // Sync credits from Supabase user on login
   useEffect(() => {
@@ -39,25 +70,50 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(CREDITS_STORAGE_KEY, credits.toString());
   }, [credits]);
 
-  const deductCredits = useCallback((amount: number): boolean => {
+  const deductCredits = useCallback((amount: number, action?: string): boolean => {
+    if (amount <= 0) return true;
     if (credits < amount) {
       setShowBuyModal(true);
       return false;
     }
-    setCredits(prev => prev - amount);
-    // Deduct in Supabase async (fire-and-forget)
+    const newCredits = credits - amount;
+    setCredits(newCredits);
+    localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
+    // Deduct in Supabase and re-sync
     if (astrovaUser?.id) {
-      deductUserCredits(astrovaUser.id, amount, 'ai_message').catch(() => {});
+      deductUserCredits(astrovaUser.id, amount, action || 'ai_message').then(async () => {
+        if (supabase) {
+          const { data } = await supabase.from('astrova_users').select('credits').eq('id', astrovaUser.id).single();
+          if (data && typeof data.credits === 'number') {
+            setCredits(data.credits);
+            localStorage.setItem(CREDITS_STORAGE_KEY, data.credits.toString());
+          }
+        }
+      }).catch(() => {});
     }
     return true;
   }, [credits, astrovaUser?.id]);
 
   const addCredits = useCallback((amount: number) => {
-    setCredits(prev => prev + amount);
-  }, []);
+    const newCredits = credits + amount;
+    setCredits(newCredits);
+    localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
+    // Sync to Supabase and re-fetch actual balance
+    if (astrovaUser?.id) {
+      updateUserCredits(astrovaUser.id, amount, 'credit_purchase').then(async () => {
+        if (supabase) {
+          const { data } = await supabase.from('astrova_users').select('credits').eq('id', astrovaUser.id).single();
+          if (data && typeof data.credits === 'number') {
+            setCredits(data.credits);
+            localStorage.setItem(CREDITS_STORAGE_KEY, data.credits.toString());
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [credits, astrovaUser?.id]);
 
   return (
-    <CreditsContext.Provider value={{ credits, deductCredits, addCredits, showBuyModal, setShowBuyModal }}>
+    <CreditsContext.Provider value={{ credits, creditCosts, deductCredits, addCredits, showBuyModal, setShowBuyModal }}>
       {children}
     </CreditsContext.Provider>
   );
@@ -79,13 +135,11 @@ export const CREDIT_PACKAGES = [
   { id: 'unlimited', credits: 300, price: 799, label: 'Unlimited', popular: false },
 ];
 
-// Credit cost per action
+// Fallback credit costs (overridden by admin config at runtime)
 export const CREDIT_COSTS = {
   AI_MESSAGE: 1,
   CHART_GENERATION: 0,
   MATCHING: 0,
-  CHART_ANALYSIS: 2,
-  DETAILED_READING: 5,
 };
 
 export function CreditsDisplay({ compact = false }: { compact?: boolean }) {

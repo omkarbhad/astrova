@@ -1,20 +1,29 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { Loader2, LogOut, User, Coins } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function UserMenu() {
   const { isLoaded, isSignedIn, astrovaUser, signOut } = useAuth();
+  let liveCredits: number | null = null;
+  try { const ctx = useCredits(); liveCredits = ctx.credits; } catch { /* CreditsProvider may not be mounted */ }
   const [open, setOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const nav = useNavigate();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
     };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) setOpen(false);
+    };
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+    document.addEventListener('keydown', handleKey);
+    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey); };
+  }, [open]);
 
   // Reset avatar error when user changes
   useEffect(() => {
@@ -81,13 +90,13 @@ export function UserMenu() {
             </div>
             <div className="flex items-center gap-1.5 mt-2 px-0.5">
               <Coins className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-amber-300 text-xs font-semibold">{astrovaUser.credits}</span>
+              <span className="text-amber-300 text-xs font-semibold">{liveCredits ?? astrovaUser.credits}</span>
               <span className="text-neutral-500 text-[10px]">credits</span>
             </div>
           </div>
           <div className="p-1.5">
             <button
-              onClick={() => { signOut(); setOpen(false); window.location.href = '/'; }}
+              onClick={() => { signOut(); setOpen(false); nav('/'); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors"
             >
               <LogOut className="w-4 h-4" />

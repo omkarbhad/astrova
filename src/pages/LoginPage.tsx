@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { StarsBackground, CosmicOrbs } from '@/components/landing/ui/stars-background';
@@ -207,8 +207,11 @@ const LoginPage = () => {
               </div>
 
               {error && (
-                <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
-                  {error}
+                <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 flex items-center justify-between gap-2">
+                  <span>{error}</span>
+                  <button onClick={() => setError(null)} className="text-white/40 hover:text-white/80 transition-colors shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 

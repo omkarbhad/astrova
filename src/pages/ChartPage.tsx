@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Trash2, Download, Save, FolderOpen, Check, AlertTriangle, Edit3, Calendar, X } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { NorthIndianChart } from '@/components/NorthIndianChart';
@@ -80,7 +81,16 @@ function ChartPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState(false);
   const [deleteToast, setDeleteToast] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [matchData, setMatchData] = useState<{ chart1Name: string; chart2Name: string; scores: { category: string; score: number; maxScore: number; description: string }[] } | null>(null);
+  const [matchData, setMatchData] = useState<{ chart1Name: string; chart2Name: string; chart1: KundaliResponse; chart2: KundaliResponse; scores: { category: string; score: number; maxScore: number; description: string }[] } | null>(null);
+  const [matcherSaveError, setMatcherSaveError] = useState<string | null>(null);
+  const location = useLocation();
+
+  // WF6: Auto-switch to matcher view when on /match route
+  useEffect(() => {
+    if (location.pathname === '/match' && activeView !== 'matcher') {
+      setActiveView('matcher');
+    }
+  }, [location.pathname]);
 
   const skipNextLocationClearRef = useRef(false);
   const reverseGeocodeAbortRef = useRef<AbortController | null>(null);
@@ -442,6 +452,9 @@ function ChartPage() {
       setCurrentLocationName(hasExplicitCoords ? (chart.locationName || '') : '');
       setCurrentChartName(chart.name);
       setSelectedChartId(chartId);
+      setIsEditingName(false);
+      setInlineSaveName('');
+      setNameInputError(false);
 
       try {
         const result = generateKundali(restoredRequest);
@@ -562,7 +575,8 @@ function ChartPage() {
                                             onClick={() => { setIsEditingName(true); setNameInputError(false); }}
                                             title={currentChartName}
                                           >
-                                            {currentChartName}
+                                            {selectedChartId && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                                            <span className="truncate">{currentChartName}</span>
                                           </span>
                                         ) : (
                                           <span
@@ -606,7 +620,7 @@ function ChartPage() {
 
                                 {/* Auto-update toggle */}
                                 <label className="flex items-center gap-1.5 cursor-pointer">
-                                  <span className="text-xs text-white/60 hidden sm:inline">Auto</span>
+                                  <span className="text-xs text-white/60">Auto</span>
                                   <div className="relative">
                                     <input
                                       type="checkbox"
@@ -871,13 +885,22 @@ function ChartPage() {
                         setMatchData({
                           chart1Name: data.chart1Name,
                           chart2Name: data.chart2Name,
+                          chart1: data.chart1,
+                          chart2: data.chart2,
                           scores: data.scores.map(s => ({ category: s.category, score: s.score, maxScore: s.maxScore, description: s.description })),
                         });
                         setSidebarOpen(true);
                       }}
                       onSaveChart={async (name, birthData, locationName) => {
                         if (!name || !name.trim()) {
-                          alert('Please enter a name before saving.');
+                          setMatcherSaveError('Please enter a name before saving.');
+                          setTimeout(() => setMatcherSaveError(null), 3000);
+                          return;
+                        }
+                        const normalized = name.trim().toLowerCase();
+                        if (savedCharts.find(c => c.name.trim().toLowerCase() === normalized)) {
+                          setMatcherSaveError(`A chart named "${name.trim()}" already exists.`);
+                          setTimeout(() => setMatcherSaveError(null), 3000);
                           return;
                         }
                         const kundali = calculateKundali(birthData);
@@ -924,11 +947,9 @@ function ChartPage() {
                 chartName={currentChartName || undefined}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
-                onNavigate={(view) => setActiveView(view)}
-                onLoadChart={handleLoadChart}
                 onGenerateChart={(data) => {
                   const [y, m, d] = data.date.split('-').map(Number);
-                  const timeParts = data.time.split(':').map(Number);
+                  const timeParts = data.time.replace(/\s*[AaPp][Mm]/i, '').split(':').map(Number);
                   const tz = estimateTimezone(data.lon);
                   const req: KundaliRequest = {
                     year: y, month: m, day: d,
@@ -940,7 +961,6 @@ function ChartPage() {
                   handleSubmit(req);
                   if (data.name) { setInlineSaveName(data.name); setCurrentChartName(''); }
                 }}
-                savedCharts={savedCharts.map(c => ({ id: c.id, name: c.name }))}
                 matchData={matchData}
               />
             </div>
@@ -960,8 +980,8 @@ function ChartPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-neutral-600">© {new Date().getFullYear()} Astrova</span>
                   <span className="text-neutral-700">·</span>
-                  <a href="#" className="text-xs text-neutral-500 hover:text-amber-300 transition-colors">Privacy</a>
-                  <a href="#" className="text-xs text-neutral-500 hover:text-amber-300 transition-colors">Terms</a>
+                  <span className="text-xs text-neutral-500">Privacy</span>
+                  <span className="text-xs text-neutral-500">Terms</span>
                 </div>
               </div>
             </div>
@@ -982,9 +1002,17 @@ function ChartPage() {
 
           {/* Delete Toast */}
           {deleteToast && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-neutral-900 border border-neutral-700/60 rounded-xl shadow-2xl text-sm text-white flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-neutral-900 border border-neutral-700/60 rounded-xl shadow-2xl text-sm text-white flex items-center gap-2" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
               <Trash2 className="w-3.5 h-3.5 text-red-400" />
               {deleteToast}
+            </div>
+          )}
+
+          {/* Matcher Save Error Toast */}
+          {matcherSaveError && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-red-900/90 border border-red-500/40 rounded-xl shadow-2xl text-sm text-red-200 flex items-center gap-2" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
+              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+              {matcherSaveError}
             </div>
           )}
         </div>

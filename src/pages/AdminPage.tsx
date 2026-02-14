@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { getAllKBArticles, upsertKBArticle, deleteKBArticle, supabase, getEnabledModels, toggleModel, addModelFromOpenRouter, deleteModel, getAdminConfig, setAdminConfig, getAllAstrovaUsers, updateUserCredits, toggleUserBan, setUserRole } from '@/lib/supabase';
 import type { KBArticle, EnabledModel, AstrovaUser } from '@/lib/supabase';
+import { buildSystemPrompt } from '@/components/AstrovaSidebar';
 
 export default function AdminPage() {
   const { astrovaUser, isLoaded } = useAuth();
@@ -1229,6 +1230,25 @@ The admin can then save it directly. Be concise, factual, and use proper Vedic a
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* System Prompt Preview */}
+            <div className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-amber-400" /> AI System Prompt
+                </h3>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(buildSystemPrompt(null)); setCopiedMessageId('sys-prompt'); setTimeout(() => setCopiedMessageId(null), 2000); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] text-neutral-500 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  {copiedMessageId === 'sys-prompt' ? <><Check className="w-3 h-3 text-green-400" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+                </button>
+              </div>
+              <p className="text-neutral-500 text-[10px] mb-3">This is the base system prompt sent to the AI. Chart data, KB context, and match data are appended dynamically when available.</p>
+              <div className="bg-[hsl(220,10%,5%)] border border-[hsl(220,8%,14%)] rounded-lg p-4 max-h-[400px] overflow-y-auto scrollbar-thin">
+                <pre className="text-[11px] text-neutral-300 leading-relaxed whitespace-pre-wrap font-mono">{buildSystemPrompt(null)}</pre>
               </div>
             </div>
           </div>

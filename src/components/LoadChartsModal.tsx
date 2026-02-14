@@ -154,6 +154,9 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
           </div>
 
           <div className="p-6 overflow-y-auto max-h-[calc(80vh-96px)] scrollbar-thin">
+          {query.trim() && filteredCharts.length > 0 && (
+            <p className="text-neutral-500 text-xs mb-3">{filteredCharts.length} of {charts.length} charts</p>
+          )}
           
           {charts.length === 0 ? (
             <div className="text-center py-12 space-y-3">

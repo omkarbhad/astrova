@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, ArrowUp, Loader2, LayoutGrid, Heart, FolderOpen, BookOpen, PanelRightClose, Trash2, Eye, Briefcase, HeartPulse, Activity, Clock, Dumbbell, Home, Pill, Globe, ChevronDown } from 'lucide-react';
+import { ArrowUp, BookOpen, PanelRightClose, Trash2, Eye, Briefcase, HeartPulse, Activity, Clock, Dumbbell, Home, Pill, ChevronDown, ChevronRight, Copy, Check, Square, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from './ui/button';
-import { useCredits, CREDIT_COSTS, CreditsDisplay } from '@/contexts/CreditsContext';
+import { useCredits, CreditsDisplay } from '@/contexts/CreditsContext';
 import { BuyCreditsModal } from './BuyCreditsModal';
 import type { KundaliResponse } from '../types/kundali';
-import { searchKnowledgeBase, getAdminConfig, getUserEnabledModels, type EnabledModel } from '../lib/supabase';
+import { searchKnowledgeBase, getAdminConfig, getUserEnabledModels } from '../lib/supabase';
 
 interface ChatMessage {
   id: string;
@@ -16,16 +16,16 @@ interface ChatMessage {
   toolName?: string;
   kbResults?: { title: string; category: string; content: string }[];
   isStreaming?: boolean;
-}
-
-interface SavedChartRef {
-  id: string;
-  name: string;
+  thinking?: string;
+  showThinking?: boolean;
+  thinkingDuration?: number;
 }
 
 interface MatchDataRef {
   chart1Name: string;
   chart2Name: string;
+  chart1?: KundaliResponse;
+  chart2?: KundaliResponse;
   scores: { category: string; score: number; maxScore: number; description: string }[];
 }
 
@@ -34,14 +34,11 @@ interface AstrovaSidebarProps {
   chartName?: string;
   isOpen: boolean;
   onToggle: () => void;
-  onNavigate?: (view: 'kundali' | 'matcher') => void;
-  onLoadChart?: (chartId: string) => void;
   onGenerateChart?: (data: { date: string; time: string; lat: number; lon: number; name?: string }) => void;
-  savedCharts?: SavedChartRef[];
   matchData?: MatchDataRef | null;
 }
 
-const QUICK_PROMPTS = [
+const CHART_PROMPTS = [
   { label: 'Overview', prompt: 'Give me a full overview of my birth chart', icon: Eye, color: 'text-amber-400' },
   { label: 'Career', prompt: 'What does my chart say about my career?', icon: Briefcase, color: 'text-blue-400' },
   { label: 'Love', prompt: 'Tell me about love and marriage in my chart', icon: HeartPulse, color: 'text-pink-400' },
@@ -52,37 +49,28 @@ const QUICK_PROMPTS = [
   { label: 'Remedies', prompt: 'What remedies do you suggest for my chart?', icon: Pill, color: 'text-emerald-400' },
 ];
 
-function buildSystemPrompt(kundaliData: KundaliResponse | null, chartName?: string, kbContext?: string): string {
-  let prompt = `You are Astrova — a sharp Vedic astrologer who talks like a real human friend. Short, punchy, no BS.
+const GENERAL_PROMPTS = [
+  { label: 'What is Vedic?', prompt: 'What is Vedic astrology and how is it different from Western astrology?', icon: Eye, color: 'text-amber-400' },
+  { label: 'Houses', prompt: 'Explain the 12 houses in Vedic astrology briefly', icon: Home, color: 'text-cyan-400' },
+  { label: 'Planets', prompt: 'What do the 9 planets (Navagraha) signify in Vedic astrology?', icon: Activity, color: 'text-green-400' },
+  { label: 'Doshas', prompt: 'What are common doshas like Mangal Dosha and Sade Sati?', icon: HeartPulse, color: 'text-pink-400' },
+];
 
-RESPONSE LENGTH RULES (CRITICAL):
-- DEFAULT: 2-4 sentences max. Like texting a friend.
-- Only give long detailed responses when user says "explain", "detail", "full", "elaborate", "tell me more", "go deeper", or "in depth".
-- Never dump walls of text unprompted.
-- One insight per reply unless asked for more.
+export function buildSystemPrompt(kundaliData: KundaliResponse | null, chartName?: string, kbContext?: string): string {
+  let prompt = `You are Astrova — a sharp, modern Vedic astrologer. You read charts like a pro and talk like a trusted friend.
 
-TONE:
-- Talk like a smart friend, not a textbook.
-- Casual but accurate. "Your Mars in 10th is fire for career" not "Mars positioned in the 10th bhava indicates..."
-- Use bold for key placements. Keep it scannable.
-- No filler phrases like "Let me analyze" or "Based on your chart" — just say it.
-
-ASTROLOGY (use when chart is loaded):
-- Always cite the actual planet, sign, house from the chart data.
-- Parashara system, Shadbala, Bhava Bala, Vimshottari Dasha, Nakshatras, Yogas, Doshas.
-- Bhrigu Nandi Nadi: 12th from planet = loss, 2nd = gain. Saturn-Jupiter axis for karma. Nakshatra lord chains.
-- Functional benefic/malefic logic per ascendant.
-- Never fabricate data not in the chart.
-
-REMEDIES (only modern, never religious):
-- No mantras, gemstones, pujas, havans, yantras, fasting, or rituals. Ever.
-- Only: therapy, gym, journaling, meditation apps, skill-building, routines, hobbies, career moves.
-- Frame as practical advice, not spiritual prescription.
-
-BOUNDARIES:
-- No medical/legal advice, no death predictions, no fear tactics, no guaranteed outcomes.
-- Non-astrology questions: answer normally. If chart exists, connect briefly.
+RULES:
+- Default: 2-4 sentences. Short, punchy, no filler.
+- Only give long responses when user says "explain", "detail", "full", "elaborate", "tell me more".
+- Talk like a smart friend: "Your Mars in 10th is fire for career" not "Mars positioned in the 10th bhava indicates..."
+- Bold key placements. Keep it scannable.
+- Always cite actual planet, sign, house from chart data. Never fabricate.
+- Use Parashara system, Shadbala, Bhava Bala, Vimshottari Dasha, Nakshatras, Yogas.
+- Remedies: only modern practical ones (therapy, gym, journaling, meditation, skill-building, routines). No mantras, gemstones, pujas, rituals.
+- No medical/legal advice, no death predictions, no fear tactics.
+- Non-astrology questions: answer normally, connect to chart briefly if loaded.
 - No chart loaded: give general astrology knowledge, don't make up placements.
+- Use emojis where appropriate.
 `;
 
   if (kundaliData) {
@@ -214,7 +202,30 @@ BOUNDARIES:
   return prompt;
 }
 
-export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNavigate, onLoadChart, onGenerateChart, savedCharts, matchData }: AstrovaSidebarProps) {
+function parseBirthDetailsFromText(text: string): { date: string; time: string; lat: number; lon: number; name?: string } | null {
+  // Match date patterns: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY
+  const dateMatch = text.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
+  const timeMatch = text.match(/(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)/);
+  const latMatch = text.match(/lat(?:itude)?[:\s]*(-?\d+\.?\d*)/i);
+  const lonMatch = text.match(/lon(?:gitude)?[:\s]*(-?\d+\.?\d*)/i);
+  
+  if (dateMatch && timeMatch) {
+    let dateStr = dateMatch[0].replace(/\//g, '-');
+    const parts = dateStr.split('-');
+    if (parts[0].length <= 2 && parts.length === 3) {
+      dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return {
+      date: dateStr,
+      time: timeMatch[1],
+      lat: latMatch ? parseFloat(latMatch[1]) : 28.6139,
+      lon: lonMatch ? parseFloat(lonMatch[1]) : 77.2090,
+    };
+  }
+  return null;
+}
+
+export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGenerateChart, matchData }: AstrovaSidebarProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -223,18 +234,17 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { credits, deductCredits, showBuyModal, setShowBuyModal } = useCredits();
+  const { credits, creditCosts, deductCredits, showBuyModal, setShowBuyModal } = useCredits();
 
   // Model selection state
   const [selectedModel, setSelectedModel] = useState<string>('');
-  const [availableModels, setAvailableModels] = useState<EnabledModel[]>([]);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load enabled models and default
+  // Load default model
   useEffect(() => {
     async function loadModels() {
       const models = await getUserEnabledModels();
-      setAvailableModels(models);
-      // Try admin default first
       const adminModel = await getAdminConfig('default_model');
       if (adminModel && typeof adminModel === 'string') {
         setSelectedModel(adminModel);
@@ -257,7 +267,15 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onToggle();
+      if (e.key === 'Escape' && isOpen) {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          abortControllerRef.current = null;
+          setIsLoading(false);
+          setMessages(prev => prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m));
+        }
+        onToggle();
+      }
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
@@ -269,17 +287,9 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
     }
   }, [isOpen]);
 
-  // Auto-send compatibility analysis when matchData arrives
   const lastMatchRef = useRef<string>('');
-  useEffect(() => {
-    if (!matchData || !isOpen) return;
-    const matchKey = `${matchData.chart1Name}-${matchData.chart2Name}`;
-    if (lastMatchRef.current === matchKey) return;
-    lastMatchRef.current = matchKey;
-    const overall = matchData.scores.find(s => s.category === 'Overall Compatibility');
-    const pct = overall ? Math.round((overall.score / overall.maxScore) * 100) : 0;
-    sendMessage(`Compatibility analysis done for ${matchData.chart1Name} and ${matchData.chart2Name} (${pct}% match, ${overall?.score || 0}/${overall?.maxScore || 36}). Give a brief compatibility reading based on the Ashtakoota scores. Keep it concise.`);
-  }, [matchData, isOpen]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sendMessageRef = useRef<(text: string) => void>(() => {});
 
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
@@ -291,7 +301,13 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim()) return;
 
-    if (!deductCredits(CREDIT_COSTS.AI_MESSAGE)) {
+    // Ensure we have a valid model
+    if (!selectedModel) {
+      setMessages(prev => [...prev, { id: `error-${Date.now()}`, role: 'assistant' as const, content: 'Model not loaded. Please refresh the page.', timestamp: new Date() }]);
+      return;
+    }
+
+    if (!deductCredits(creditCosts.AI_MESSAGE, 'ai_message')) {
       setInsufficientCredits(true);
       setTimeout(() => setInsufficientCredits(false), 3000);
       return;
@@ -306,6 +322,24 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    if (inputRef.current) inputRef.current.style.height = 'auto';
+
+    // Auto-detect birth details and generate chart
+    if (!kundaliData && onGenerateChart) {
+      const birthDetails = parseBirthDetailsFromText(messageText);
+      if (birthDetails) {
+        onGenerateChart(birthDetails);
+        const toolMsg: ChatMessage = {
+          id: `chart-gen-${Date.now()}`,
+          role: 'tool',
+          content: `Chart generated for ${birthDetails.date} ${birthDetails.time}`,
+          toolName: 'Chart Generator',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, toolMsg]);
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -315,34 +349,54 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
       }
       const modelToUse = selectedModel;
 
-      // Search knowledge base for relevant context
+      // Search knowledge base only for astrology-related queries
       let kbContext = '';
-      try {
-        const kbResults = await searchKnowledgeBase(messageText.trim());
-        if (kbResults.length > 0) {
-          kbContext = kbResults.map(r => `[${r.category.toUpperCase()}] ${r.title}:\n${r.content}`).join('\n\n');
-          const toolMsg: ChatMessage = {
-            id: `kb-${Date.now()}`,
-            role: 'tool',
-            content: `Searched knowledge base — found ${kbResults.length} relevant article${kbResults.length > 1 ? 's' : ''}`,
-            toolName: 'Knowledge Base',
-            kbResults: kbResults.map(r => ({ title: r.title, category: r.category, content: r.content.slice(0, 120) + '...' })),
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, toolMsg]);
-        }
-      } catch { /* KB search is optional */ }
+      const astroKeywords = /\b(planet|house|bhava|dasha|nakshatra|yoga|dosha|lagna|ascendant|sign|aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces|sun|moon|mars|mercury|jupiter|venus|saturn|rahu|ketu|shadbala|bhava bala|transit|remedy|remedies|matching|compatibility|horoscope|chart|kundali|vedic|astrology|mangal|sade sati|mahadasha|antardasha|navamsa|arudha|atmakaraka|combustion|retrograde|exalt|debilit|nadi|muhurta|pushkara|gandanta)\b/i;
+      if (astroKeywords.test(messageText)) {
+        try {
+          const kbResults = await searchKnowledgeBase(messageText.trim());
+          if (kbResults.length > 0) {
+            kbContext = kbResults.map(r => `[${r.category.toUpperCase()}] ${r.title}:\n${r.content}`).join('\n\n');
+            const toolMsg: ChatMessage = {
+              id: `kb-${Date.now()}`,
+              role: 'tool',
+              content: `Found ${kbResults.length} relevant article${kbResults.length > 1 ? 's' : ''}`,
+              toolName: 'Knowledge Base',
+              kbResults: kbResults.map(r => ({ title: r.title, category: r.category, content: r.content.slice(0, 120) + '...' })),
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, toolMsg]);
+          }
+        } catch { /* KB search is optional */ }
+      }
 
       // Web search is always available to the model automatically
 
       let systemPrompt = buildSystemPrompt(kundaliData, chartName, kbContext || undefined);
       if (matchData) {
         systemPrompt += `\n\n--- COMPATIBILITY ANALYSIS ---`;
-        systemPrompt += `\nPerson 1: ${matchData.chart1Name} | Person 2: ${matchData.chart2Name}`;
-        systemPrompt += `\nAshtakoota Scores:`;
+        systemPrompt += `\n👤 Male: ${matchData.chart1Name}`;
+        systemPrompt += `\n👩 Female: ${matchData.chart2Name}`;
+        systemPrompt += `\n\nAshtakoota Scores:`;
         matchData.scores.forEach(s => {
           systemPrompt += `\n  ${s.category}: ${s.score}/${s.maxScore} — ${s.description}`;
         });
+        // Add both charts' key planetary data for the AI to reference by name
+        if (matchData.chart1) {
+          systemPrompt += `\n\n--- ${matchData.chart1Name.toUpperCase()}'s CHART (Male) ---`;
+          systemPrompt += `\nLagna: ${matchData.chart1.lagna.sign}`;
+          for (const [name, p] of Object.entries(matchData.chart1.planets)) {
+            systemPrompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
+          }
+        }
+        if (matchData.chart2) {
+          systemPrompt += `\n\n--- ${matchData.chart2Name.toUpperCase()}'s CHART (Female) ---`;
+          systemPrompt += `\nLagna: ${matchData.chart2.lagna.sign}`;
+          for (const [name, p] of Object.entries(matchData.chart2.planets)) {
+            systemPrompt += `\n${name}: ${p.sign} H${p.house_whole_sign}${p.nakshatra ? ` Nak:${p.nakshatra}` : ''}${p.retrograde ? ' [R]' : ''}`;
+          }
+        }
+        systemPrompt += `\n\nIMPORTANT: Always refer to the couple by their names (${matchData.chart1Name} and ${matchData.chart2Name}). Analyze their compatibility using both charts.`;
       }
       const conversationMessages = [
         { role: 'system' as const, content: systemPrompt },
@@ -361,7 +415,10 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
       };
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Streaming fetch
+      // Streaming fetch with abort controller
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -373,11 +430,11 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         body: JSON.stringify({
           model: modelToUse,
           messages: conversationMessages,
-          max_tokens: 150,
+          max_tokens: 4096,
           temperature: 0.7,
           stream: true,
-          plugins: [{ id: 'web' }],
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -389,6 +446,8 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
+      let thinkingContent = '';
+      let thinkingStartTime = 0;
 
       if (reader) {
         let buffer = '';
@@ -408,9 +467,16 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
             
             try {
               const parsed = JSON.parse(data);
-              const delta = parsed.choices?.[0]?.delta?.content;
-              if (delta) {
-                fullContent += delta;
+              const delta = parsed.choices?.[0]?.delta;
+              if (delta?.reasoning) {
+                if (!thinkingStartTime) thinkingStartTime = Date.now();
+                thinkingContent += delta.reasoning;
+                setMessages(prev => prev.map(m => 
+                  m.id === assistantId ? { ...m, thinking: thinkingContent } : m
+                ));
+              }
+              if (delta?.content) {
+                fullContent += delta.content;
                 setMessages(prev => prev.map(m => 
                   m.id === assistantId ? { ...m, content: fullContent } : m
                 ));
@@ -421,13 +487,15 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
       }
 
       // Finalize streaming
+      const thinkDuration = thinkingStartTime ? Math.round((Date.now() - thinkingStartTime) / 1000) : 0;
       setMessages(prev => prev.map(m => 
-        m.id === assistantId ? { ...m, content: fullContent || '', isStreaming: false } : m
+        m.id === assistantId ? { ...m, content: fullContent || '', isStreaming: false, thinkingDuration: thinkDuration || undefined } : m
       ));
 
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: `error-${Date.now()}`,
         role: 'assistant',
         content: err instanceof Error ? err.message : 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date(),
@@ -438,6 +506,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         return [...filtered, errorMessage];
       });
     } finally {
+      abortControllerRef.current = null;
       setIsLoading(false);
       inputRef.current?.focus();
     }
@@ -456,46 +525,146 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
   };
 
   const clearChat = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+    }
     setMessages([]);
   };
 
-  const parseBirthDetails = (text: string): { date: string; time: string; lat: number; lon: number; name?: string } | null => {
-    const dateMatch = text.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})|(\d{1,2}[-/]\d{1,2}[-/]\d{4})/);
-    const timeMatch = text.match(/(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)/);
-    const latMatch = text.match(/lat(?:itude)?[:\s]*(-?\d+\.?\d*)/i);
-    const lonMatch = text.match(/lon(?:gitude)?[:\s]*(-?\d+\.?\d*)/i);
-    
-    if (dateMatch && timeMatch) {
-      let dateStr = dateMatch[0].replace(/\//g, '-');
-      const parts = dateStr.split('-');
-      if (parts[0].length <= 2 && parts.length === 3) {
-        dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+  // Keep sendMessageRef in sync for matchData useEffect
+  sendMessageRef.current = sendMessage;
+
+  // Auto-send compatibility analysis when matchData arrives
+  useEffect(() => {
+    if (!matchData || !isOpen) return;
+    const matchKey = `${matchData.chart1Name}-${matchData.chart2Name}`;
+    if (lastMatchRef.current === matchKey) return;
+    lastMatchRef.current = matchKey;
+    const overall = matchData.scores.find(s => s.category === 'Overall Compatibility');
+    const pct = overall ? Math.round((overall.score / overall.maxScore) * 100) : 0;
+    sendMessageRef.current(`Compatibility: ${matchData.chart1Name} (Male) + ${matchData.chart2Name} (Female) — ${pct}% match (${overall?.score || 0}/${overall?.maxScore || 36}). Give a brief compatibility reading using their names. What works well and what to watch out for?`);
+  }, [matchData, isOpen]);
+
+  const stopGeneration = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsLoading(false);
+    setMessages(prev => prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m));
+  };
+
+  const copyMessage = (id: string, content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMessageId(id);
+    setTimeout(() => setCopiedMessageId(null), 2000);
+  };
+
+  const retryLastMessage = () => {
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) {
+      // Remove last assistant error message and the user message (will be re-added by sendMessage)
+      setMessages(prev => {
+        let idx = -1;
+        for (let i = prev.length - 1; i >= 0; i--) {
+          if (prev[i].role === 'assistant') { idx = i; break; }
+        }
+        if (idx >= 0) return prev.slice(0, idx);
+        return prev;
+      });
+      // Skip credit deduction for retry by calling sendMessage with retry flag
+      sendMessageRetry(lastUserMsg.content);
+    }
+  };
+
+  const sendMessageRetry = async (messageText: string) => {
+    if (!messageText.trim()) return;
+    // No credit deduction for retries — the original attempt already deducted
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: messageText.trim(),
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      if (!apiKey) throw new Error('OpenRouter API key not configured.');
+      let kbContext = '';
+      const astroKeywords = /\b(planet|house|bhava|dasha|nakshatra|yoga|dosha|lagna|ascendant|sign|aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces|sun|moon|mars|mercury|jupiter|venus|saturn|rahu|ketu|shadbala|bhava bala|transit|remedy|remedies|matching|compatibility|horoscope|chart|kundali|vedic|astrology)\b/i;
+      if (astroKeywords.test(messageText)) {
+        try {
+          const kbResults = await searchKnowledgeBase(messageText.trim());
+          if (kbResults.length > 0) kbContext = kbResults.map(r => `[${r.category.toUpperCase()}] ${r.title}:\n${r.content}`).join('\n\n');
+        } catch { /* optional */ }
       }
-      return {
-        date: dateStr,
-        time: timeMatch[1],
-        lat: latMatch ? parseFloat(latMatch[1]) : 28.6139,
-        lon: lonMatch ? parseFloat(lonMatch[1]) : 77.2090,
-      };
-    }
-    return null;
+      const systemPrompt = buildSystemPrompt(kundaliData, chartName, kbContext || undefined);
+      const conversationMessages = [
+        { role: 'system' as const, content: systemPrompt },
+        ...messages.filter(m => m.role !== 'tool').map(m => ({ role: (m.role === 'tool' ? 'user' : m.role) as 'user' | 'assistant', content: m.content })),
+        { role: 'user' as const, content: messageText.trim() },
+      ];
+      const assistantId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: new Date(), isStreaming: true }]);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': window.location.origin, 'X-Title': 'Astrova - Vedic Astrology' },
+        body: JSON.stringify({ model: selectedModel, messages: conversationMessages, max_tokens: 4096, temperature: 0.7, stream: true }),
+        signal: controller.signal,
+      });
+      if (!response.ok) { const ed = await response.json().catch(() => ({})); throw new Error((ed as { error?: { message?: string } })?.error?.message || `API error: ${response.status}`); }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      let thinkingContent = '';
+      let thinkingStartTime = 0;
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+            const data = trimmed.slice(6);
+            if (data === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(data);
+              const delta = parsed.choices?.[0]?.delta;
+              if (delta?.reasoning) { if (!thinkingStartTime) thinkingStartTime = Date.now(); thinkingContent += delta.reasoning; setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, thinking: thinkingContent } : m)); }
+              if (delta?.content) { fullContent += delta.content; setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullContent } : m)); }
+            } catch { /* skip */ }
+          }
+        }
+      }
+      const thinkDuration = thinkingStartTime ? Math.round((Date.now() - thinkingStartTime) / 1000) : 0;
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullContent || '', isStreaming: false, thinkingDuration: thinkDuration || undefined } : m));
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      console.error('Chat API Error:', err);
+      let errorMessage = 'Sorry, I encountered an error. Please try again.';
+      if (err instanceof Error) {
+        if (err.message.includes('401') || err.message.includes('403')) {
+          errorMessage = 'API authentication failed. Please check your API key.';
+        } else if (err.message.includes('404') || err.message.includes('model not found')) {
+          errorMessage = 'Model not available. Please try a different model.';
+        } else if (err.message.includes('429') || err.message.includes('rate limit')) {
+          errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+        } else if (err.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      setMessages(prev => { const filtered = prev.filter(m => !(m.isStreaming && !m.content)); return [...filtered, { id: `error-${Date.now()}`, role: 'assistant' as const, content: errorMessage, timestamp: new Date() }]; });
+    } finally { abortControllerRef.current = null; setIsLoading(false); inputRef.current?.focus(); }
   };
-
-  const handleGenerateFromChat = (text: string) => {
-    const details = parseBirthDetails(text);
-    if (details && onGenerateChart) {
-      onGenerateChart(details);
-      const toolMsg: ChatMessage = {
-        id: `tool-gen-${Date.now()}`,
-        role: 'tool',
-        content: `Generated chart for ${details.date} ${details.time}`,
-        toolName: 'Chart Generator',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, toolMsg]);
-    }
-  };
-
 
   // Floating toggle button when sidebar is closed
   if (!isOpen) {
@@ -505,10 +674,10 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         className="fixed right-4 bottom-20 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 border border-amber-400/50 shadow-lg shadow-amber-500/25 flex items-center justify-center hover:scale-110 transition-all duration-200 group"
         title="Open Astrova AI"
       >
-        <Sparkles className="w-5 h-5 text-white group-hover:animate-pulse" />
+        <img src="/star.png" alt="" className="w-5 h-5 group-hover:animate-pulse" />
         {messages.length > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
-            {messages.filter(m => m.role === 'assistant').length}
+            {(() => { const c = messages.filter(m => m.role === 'assistant').length; return c > 9 ? '9+' : c; })()}
           </span>
         )}
       </button>
@@ -522,7 +691,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <img src="/star.png" alt="" className="w-3.5 h-3.5" />
             </div>
             <div>
               <h3 className="text-white font-semibold text-sm leading-tight">Astrova</h3>
@@ -567,7 +736,6 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         </div>
       </div>
 
-
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
@@ -577,19 +745,18 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-2">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 border border-amber-500/20 flex items-center justify-center mb-3">
-              <Sparkles className="w-7 h-7 text-amber-400/70" />
+              <img src="/star.png" alt="" className="w-7 h-7" />
             </div>
             <h3 className="text-white font-semibold text-base mb-1">Astrova</h3>
             <p className="text-neutral-500 text-[10px] mb-0.5">Your Modern Astrologer</p>
             <p className="text-neutral-500 text-xs mb-5 max-w-[220px]">
               {kundaliData
                 ? 'Ask me about your birth chart, dashas, strengths, and more.'
-                : 'Generate a chart first to get personalized readings.'}
+                : 'Ask about Vedic astrology, or generate a chart for personalized readings.'}
             </p>
 
-            {kundaliData && (
-              <div className="grid grid-cols-2 gap-2 w-full">
-                {QUICK_PROMPTS.map((qp) => {
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {(kundaliData ? CHART_PROMPTS : GENERAL_PROMPTS).map((qp) => {
                   const Icon = qp.icon;
                   return (
                     <button
@@ -603,7 +770,6 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
                   );
                 })}
               </div>
-            )}
           </div>
         ) : (
           <>
@@ -615,15 +781,6 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
                     <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-md bg-[hsl(220,10%,14%)] border border-[hsl(220,8%,20%)]">
                       <p className="text-white/90 text-sm leading-relaxed">{msg.content}</p>
                     </div>
-                    {parseBirthDetails(msg.content) && onGenerateChart && (
-                      <button
-                        onClick={() => handleGenerateFromChat(msg.content)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-medium hover:bg-amber-500/20 transition-colors"
-                      >
-                        <LayoutGrid className="w-3 h-3" />
-                        Generate Chart
-                      </button>
-                    )}
                   </div>
                 )}
                 
@@ -631,13 +788,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
                 {msg.role === 'tool' && (
                   <div className="mb-2">
                     <div className="flex items-center gap-1.5 text-[10px]">
-                      {msg.toolName === 'Knowledge Base' ? (
-                        <BookOpen className="w-3 h-3 text-amber-400" />
-                      ) : msg.toolName === 'Internet Access' ? (
-                        <Globe className="w-3 h-3 text-blue-400" />
-                      ) : (
-                        <LayoutGrid className="w-3 h-3 text-emerald-400" />
-                      )}
+                      <BookOpen className="w-3 h-3 text-amber-400" />
                       <span className="text-neutral-400 font-medium">{msg.content}</span>
                     </div>
                   </div>
@@ -646,33 +797,80 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
                 {/* Assistant message */}
                 {msg.role === 'assistant' && (
                   <div className="mb-4">
-                    <div 
-                      className="prose prose-invert prose-sm max-w-none text-neutral-200
-                        [&_h1]:text-white [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-2 [&_h1]:mt-0
-                        [&_h2]:text-white [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3
-                        [&_h3]:text-white [&_h3]:text-sm [&_h3]:font-medium [&_h3]:mb-1 [&_h3]:mt-2
-                        [&_p]:text-neutral-300 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2
-                        [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:mb-2 [&_ul]:text-sm
-                        [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:mb-2 [&_ol]:text-sm
-                        [&_li]:text-neutral-300 [&_li]:text-sm [&_li]:mb-1
-                        [&_strong]:text-white [&_strong]:font-semibold
-                        [&_em]:text-amber-300
-                        [&_code]:text-amber-300 [&_code]:bg-[hsl(220,10%,14%)] [&_code]:px-1 [&_code]:rounded [&_code]:text-xs
-                        [&_pre]:bg-[hsl(220,10%,10%)] [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
-                        [&_blockquote]:border-l-2 [&_blockquote]:border-amber-500/50 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-400
-                      "
-                    >
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {msg.content}
-                      </ReactMarkdown>
-                      {msg.isStreaming && !msg.content && (
-                        <div className="flex items-center gap-2">
-                          <img src="/star.png" alt="" className="w-4 h-4 animate-spin" style={{ animationDuration: '2s' }} />
-                          <span className="text-amber-400/70 text-xs">Thinking...</span>
+                    {/* Thinking tokens - collapsible */}
+                    {msg.thinking && (
+                      <div className="mb-1.5">
+                        {msg.isStreaming && !msg.content ? (
+                          <div className="flex items-center gap-1.5 text-[10px] text-amber-400/70">
+                            <img src="/star.png" alt="" className="w-4 h-4 animate-spin" style={{ animationDuration: '2s' }} />
+                            <span>Thinking...</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, showThinking: !m.showThinking } : m))}
+                            className="flex items-center gap-1 text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
+                          >
+                            <ChevronRight className={`w-3 h-3 transition-transform ${msg.showThinking ? 'rotate-90' : ''}`} />
+                            <img src="/star.png" alt="" className="w-3 h-3" />
+                            <span>Thought{msg.thinkingDuration ? ` for ${msg.thinkingDuration}s` : ''}</span>
+                          </button>
+                        )}
+                        {msg.showThinking && (
+                          <div className="mt-1.5 px-3 py-2.5 rounded-xl bg-[hsl(220,10%,9%)] border border-[hsl(220,8%,15%)] text-[11px] text-neutral-400 leading-relaxed max-h-[180px] overflow-y-auto whitespace-pre-wrap">
+                            {msg.thinking}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="group/msg">
+                      <div 
+                        className="prose prose-invert prose-sm max-w-none text-neutral-200
+                          [&_h1]:text-white [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-2 [&_h1]:mt-0
+                          [&_h2]:text-white [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3
+                          [&_h3]:text-white [&_h3]:text-sm [&_h3]:font-medium [&_h3]:mb-1 [&_h3]:mt-2
+                          [&_p]:text-neutral-300 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2
+                          [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:mb-2 [&_ul]:text-sm
+                          [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:mb-2 [&_ol]:text-sm
+                          [&_li]:text-neutral-300 [&_li]:text-sm [&_li]:mb-1
+                          [&_strong]:text-white [&_strong]:font-semibold
+                          [&_em]:text-amber-300
+                          [&_code]:text-amber-300 [&_code]:bg-[hsl(220,10%,14%)] [&_code]:px-1 [&_code]:rounded [&_code]:text-xs
+                          [&_pre]:bg-[hsl(220,10%,10%)] [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
+                          [&_blockquote]:border-l-2 [&_blockquote]:border-amber-500/50 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-400
+                        "
+                      >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                        {msg.isStreaming && !msg.content && !msg.thinking && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-amber-400/70">
+                            <img src="/star.png" alt="" className="w-4 h-4 animate-spin" style={{ animationDuration: '2s' }} />
+                            <span>Thinking...</span>
+                          </div>
+                        )}
+                        {msg.isStreaming && msg.content && (
+                          <span className="inline-block w-1.5 h-4 bg-amber-400/70 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+                        )}
+                      </div>
+                      {/* Copy + Retry buttons - hover reveal */}
+                      {!msg.isStreaming && msg.content && (
+                        <div className="flex items-center gap-1 mt-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => copyMessage(msg.id, msg.content)}
+                            className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-neutral-500 hover:text-white hover:bg-white/5 transition-all"
+                          >
+                            {copiedMessageId === msg.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            {copiedMessageId === msg.id ? 'Copied' : 'Copy'}
+                          </button>
+                          {msg.id.startsWith('error-') && (
+                            <button
+                              onClick={retryLastMessage}
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-neutral-500 hover:text-amber-300 hover:bg-amber-500/10 transition-all"
+                            >
+                              <RefreshCw className="w-3 h-3" /> Retry
+                            </button>
+                          )}
                         </div>
-                      )}
-                      {msg.isStreaming && msg.content && (
-                        <img src="/star.png" alt="" className="inline-block w-3 h-3 animate-spin ml-1 align-text-bottom" style={{ animationDuration: '2s' }} />
                       )}
                     </div>
                   </div>
@@ -685,56 +883,13 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
         )}
 
         {showScrollDown && (
-          <button
-            onClick={scrollToBottom}
-            className="sticky bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[hsl(220,10%,12%)] border border-[hsl(220,8%,22%)] flex items-center justify-center hover:bg-[hsl(220,10%,18%)] transition-colors shadow-lg"
-          >
-            <ChevronDown className="w-3.5 h-3.5 text-white" />
-          </button>
-        )}
-      </div>
-
-      {/* Tools Bar */}
-      <div className="flex gap-1 px-3 py-1.5 border-t border-[hsl(220,8%,15%)] overflow-x-auto scrollbar-thin items-center">
-        {onNavigate && (
-          <>
+          <div className="sticky bottom-2 flex justify-center pointer-events-none">
             <button
-              onClick={() => onNavigate?.('kundali')}
-              className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] hover:bg-amber-500/20 transition-all"
-              title="Charts"
+              onClick={scrollToBottom}
+              className="pointer-events-auto w-7 h-7 rounded-full bg-[hsl(220,10%,12%)] border border-[hsl(220,8%,22%)] flex items-center justify-center hover:bg-[hsl(220,10%,18%)] transition-colors shadow-lg"
             >
-              <LayoutGrid className="w-3 h-3" /> <span className="hidden sm:inline">Charts</span>
+              <ChevronDown className="w-3.5 h-3.5 text-white" />
             </button>
-            <button
-              onClick={() => onNavigate?.('matcher')}
-              className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-md bg-pink-500/10 border border-pink-500/20 text-pink-300 text-[10px] hover:bg-pink-500/20 transition-all"
-              title="Matcher"
-            >
-              <Heart className="w-3 h-3" /> <span className="hidden sm:inline">Matcher</span>
-            </button>
-          </>
-        )}
-        {savedCharts && savedCharts.length > 0 && onLoadChart && (
-          <div className="relative group shrink-0">
-            <button
-              className="flex items-center gap-1 px-2 py-1 rounded-md bg-[hsl(220,10%,12%)] border border-[hsl(220,8%,20%)] text-neutral-400 text-[10px] hover:bg-[hsl(220,10%,16%)] hover:text-white transition-all"
-              title="Load Chart"
-            >
-              <FolderOpen className="w-3 h-3" /> <span className="hidden sm:inline">Load</span>
-            </button>
-            <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block z-[100] min-w-[140px] max-h-[160px] overflow-y-auto bg-[hsl(220,10%,9%)] border border-[hsl(220,8%,20%)] rounded-lg shadow-xl">
-              {savedCharts.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => { onLoadChart?.(c.id); onNavigate?.('kundali'); }}
-                  className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-amber-500/10 transition-colors ${
-                    chartName === c.name ? 'text-amber-300 font-medium' : 'text-neutral-300'
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
           </div>
         )}
       </div>
@@ -746,38 +901,36 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onNav
             Insufficient credits. Purchase more to continue.
           </div>
         )}
-        <div className="relative bg-[hsl(220,10%,11%)] border border-[hsl(220,8%,20%)] rounded-2xl focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all">
+        <div className="relative bg-[hsl(220,10%,11%)] border border-[hsl(220,8%,20%)] rounded-2xl focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all flex items-center">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={kundaliData ? 'Ask Astrova anything...' : 'Generate a chart first...'}
+            placeholder={kundaliData ? 'Ask Astrova anything...' : 'Ask about Vedic astrology...'}
             disabled={isLoading}
             rows={1}
-            className="w-full bg-transparent px-4 pt-3 pb-10 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] max-h-[120px]"
-            style={{ height: 'auto' }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
-            }}
+            className="flex-1 bg-transparent px-4 py-0 text-sm text-white placeholder-neutral-500 focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed h-[44px] text-left leading-[44px]"
           />
-          <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between">
-            <span className="text-[9px] text-neutral-600 pl-1">
-              {selectedModel ? availableModels.find(m => m.model_id === selectedModel)?.display_name || selectedModel.split('/').pop() : 'AI'}
-            </span>
-            <Button
-              type="submit"
-              disabled={isLoading || !input.trim() || credits < CREDIT_COSTS.AI_MESSAGE}
-              className="h-7 w-7 p-0 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-0 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 transition-all"
-            >
-              {isLoading ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
+          <div className="absolute bottom-1.5 right-2 flex items-center">
+            {isLoading ? (
+              <Button
+                type="button"
+                onClick={stopGeneration}
+                className="h-7 w-7 p-0 rounded-lg bg-red-600/80 hover:bg-red-600 border-0 shrink-0 transition-all"
+                title="Stop generating"
+              >
+                <Square className="w-3 h-3 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={!input.trim() || credits < creditCosts.AI_MESSAGE}
+                className="h-7 w-7 p-0 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-0 disabled:opacity-20 disabled:cursor-not-allowed shrink-0 transition-all"
+              >
                 <ArrowUp className="w-3.5 h-3.5" />
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
         </div>
       </form>

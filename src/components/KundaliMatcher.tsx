@@ -58,7 +58,8 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [loadingForPerson, setLoadingForPerson] = useState<1 | 2>(1);
   const hasAutoLoadedRef = useRef(false);
-  const locationSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationSearchTimerRef1 = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationSearchTimerRef2 = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Location search states
   const [locationSearch1, setLocationSearch1] = useState('');
@@ -69,7 +70,9 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
   const [isSearching2, setIsSearching2] = useState(false);
   const [showLocationDropdown1, setShowLocationDropdown1] = useState(false);
   const [showLocationDropdown2, setShowLocationDropdown2] = useState(false);
-  const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
+  const [selectedResultIndex1, setSelectedResultIndex1] = useState(-1);
+  const [selectedResultIndex2, setSelectedResultIndex2] = useState(-1);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
   
   // Form states for direct input
   const [formData1, setFormData1] = useState<KundaliRequest>({
@@ -106,6 +109,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
     return list.includes(formData1.year) ? list : [...list, formData1.year].sort((a, b) => a - b);
   }, [formData1.year]);
 
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
   const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -300,12 +304,12 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
       setLocationSearch1('');
       setLocationSuggestions1([]);
       setShowLocationDropdown1(false);
-      setSelectedResultIndex(-1);
+      setSelectedResultIndex1(-1);
     } else {
       setLocationSearch2('');
       setLocationSuggestions2([]);
       setShowLocationDropdown2(false);
-      setSelectedResultIndex(-1);
+      setSelectedResultIndex2(-1);
     }
   };
 
@@ -350,7 +354,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 <FolderOpen className="w-3.5 h-3.5" />
               </Button>
               {onSaveChart && (
-                <Button variant="outline" size="sm" onClick={() => onSaveChart(name1, formData1, locationSearch1 || undefined)} className="gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
+                <Button variant="outline" size="sm" onClick={() => { onSaveChart(name1, formData1, locationSearch1 || undefined); setSaveToast(`Saved "${name1 || 'Chart'}"`); setTimeout(() => setSaveToast(null), 2500); }} className="gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
                   <Save className="w-3.5 h-3.5" />
                 </Button>
               )}
@@ -364,7 +368,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                     {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
                   </select>
                   <select value={formData1.month} onChange={(e) => setFormData1({...formData1, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
-                    {months.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                    {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
                   </select>
                   <select value={formData1.year} onChange={(e) => setFormData1({...formData1, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-amber-500/50 transition-all appearance-none cursor-pointer">
                     {years.map(y => (<option key={y} value={y}>{y}</option>))}
@@ -397,8 +401,8 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         value={locationSearch1}
                         onChange={(e) => {
                           setLocationSearch1(e.target.value);
-                          if (locationSearchTimerRef.current) clearTimeout(locationSearchTimerRef.current);
-                          locationSearchTimerRef.current = setTimeout(() => searchLocation(e.target.value, 1), 400);
+                          if (locationSearchTimerRef1.current) clearTimeout(locationSearchTimerRef1.current);
+                          locationSearchTimerRef1.current = setTimeout(() => searchLocation(e.target.value, 1), 400);
                         }}
                         onFocus={() => setShowLocationDropdown1(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown1(false), 200)}
@@ -436,9 +440,9 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                                 key={index}
                                 type="button"
                                 onMouseDown={() => selectLocation(location, 1)}
-                                onMouseEnter={() => setSelectedResultIndex(index)}
+                                onMouseEnter={() => setSelectedResultIndex1(index)}
                                 className={`w-full text-left px-3 py-3 rounded-lg transition-all ${
-                                  index === selectedResultIndex
+                                  index === selectedResultIndex1
                                     ? 'bg-neutral-900/50 text-white'
                                     : 'text-white/80 hover:bg-neutral-900/40'
                                 }`}
@@ -506,7 +510,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 <FolderOpen className="w-3.5 h-3.5" />
               </Button>
               {onSaveChart && (
-                <Button variant="outline" size="sm" onClick={() => onSaveChart(name2, formData2, locationSearch2 || undefined)} className="gap-1 bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:bg-pink-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
+                <Button variant="outline" size="sm" onClick={() => { onSaveChart(name2, formData2, locationSearch2 || undefined); setSaveToast(`Saved "${name2 || 'Chart'}"`); setTimeout(() => setSaveToast(null), 2500); }} className="gap-1 bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:bg-pink-500/20 h-9 w-9 p-0 justify-center" title="Save chart">
                   <Save className="w-3.5 h-3.5" />
                 </Button>
               )}
@@ -520,7 +524,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                     {days.map(d => (<option key={d} value={d}>{d.toString().padStart(2, '0')}</option>))}
                   </select>
                   <select value={formData2.month} onChange={(e) => setFormData2({...formData2, month: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
-                    {months.map(m => (<option key={m} value={m}>{m.toString().padStart(2, '0')}</option>))}
+                    {months.map(m => (<option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>))}
                   </select>
                   <select value={formData2.year} onChange={(e) => setFormData2({...formData2, year: parseInt(e.target.value)})} className="w-full h-8 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 text-xs text-white focus:border-pink-500/50 transition-all appearance-none cursor-pointer">
                     {years.map(y => (<option key={y} value={y}>{y}</option>))}
@@ -553,12 +557,12 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         value={locationSearch2}
                         onChange={(e) => {
                           setLocationSearch2(e.target.value);
-                          if (locationSearchTimerRef.current) clearTimeout(locationSearchTimerRef.current);
-                          locationSearchTimerRef.current = setTimeout(() => searchLocation(e.target.value, 2), 400);
+                          if (locationSearchTimerRef2.current) clearTimeout(locationSearchTimerRef2.current);
+                          locationSearchTimerRef2.current = setTimeout(() => searchLocation(e.target.value, 2), 400);
                         }}
                         onFocus={() => setShowLocationDropdown2(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown2(false), 200)}
-                        className="w-full bg-neutral-900/40 border border-amber-500/20 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-amber-500/40 transition-colors"
+                        className="w-full bg-neutral-900/40 border border-pink-500/20 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-pink-500/40 transition-colors"
                         placeholder="Search city..."
                       />
                       
@@ -592,9 +596,9 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                                 key={index}
                                 type="button"
                                 onMouseDown={() => selectLocation(location, 2)}
-                                onMouseEnter={() => setSelectedResultIndex(index)}
+                                onMouseEnter={() => setSelectedResultIndex2(index)}
                                 className={`w-full text-left px-3 py-3 rounded-lg transition-all ${
-                                  index === selectedResultIndex
+                                  index === selectedResultIndex2
                                     ? 'bg-neutral-900/50 text-white'
                                     : 'text-white/80 hover:bg-neutral-900/40'
                                 }`}
@@ -840,11 +844,18 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
       )}
 
       {/* Load Charts Modal */}
+      {saveToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-emerald-900/90 border border-emerald-500/40 rounded-xl shadow-2xl text-sm text-emerald-200 flex items-center gap-2">
+          <Save className="w-3.5 h-3.5" />
+          {saveToast}
+        </div>
+      )}
+
       <LoadChartsModal
         isOpen={showLoadModal}
         charts={savedCharts}
         onLoad={handleLoadChart}
-        onEdit={() => {}} // No edit functionality in matcher
+        onEdit={() => {}}
         onDelete={handleDeleteChart}
         onClose={() => setShowLoadModal(false)}
       />

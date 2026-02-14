@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Coins, Check, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useCredits, CREDIT_PACKAGES } from '@/contexts/CreditsContext';
@@ -9,12 +10,12 @@ interface BuyCreditsModalProps {
 
 export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
   const { addCredits, credits } = useCredits();
+  const [purchased, setPurchased] = useState<{ credits: number } | null>(null);
 
   const handlePurchase = (pkg: typeof CREDIT_PACKAGES[0]) => {
-    // In a real app, this would integrate with a payment gateway
-    // For now, we'll just add the credits
     addCredits(pkg.credits);
-    onClose();
+    setPurchased({ credits: pkg.credits });
+    setTimeout(() => { setPurchased(null); onClose(); }, 1200);
   };
 
   return (
@@ -36,12 +37,22 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
             </p>
           </div>
 
-          <div className="grid gap-3">
+          {purchased && (
+            <div className="text-center py-6">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-7 h-7 text-emerald-400" />
+              </div>
+              <p className="text-lg font-bold text-white">+{purchased.credits} Credits Added!</p>
+              <p className="text-sm text-neutral-400 mt-1">Your balance has been updated</p>
+            </div>
+          )}
+
+          {!purchased && <div className="grid gap-3">
             {CREDIT_PACKAGES.map((pkg) => (
               <button
                 key={pkg.id}
                 onClick={() => handlePurchase(pkg)}
-                className={`relative w-full p-4 rounded-xl border transition-all text-left hover:scale-[1.02] ${
+                className={`relative w-full p-4 rounded-xl border transition-all text-left hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:outline-none ${
                   pkg.popular
                     ? 'bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-500/50 hover:border-amber-500'
                     : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
@@ -68,16 +79,16 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
                 </div>
               </button>
             ))}
-          </div>
+          </div>}
 
-          <div className="mt-4 pt-4 border-t border-neutral-800">
+          {!purchased && <div className="mt-4 pt-4 border-t border-neutral-800">
             <div className="flex items-start gap-2 text-xs text-neutral-400">
               <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
               <p>
                 Credits never expire. Use them for AI readings, chart analysis, and detailed interpretations.
               </p>
             </div>
-          </div>
+          </div>}
         </div>
       </DialogContent>
     </Dialog>

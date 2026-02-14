@@ -207,6 +207,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
     return list.includes(localData.year) ? list : [...list, localData.year].sort((a, b) => a - b);
   }, [localData.year]);
 
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
   const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
@@ -273,7 +274,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg px-2 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/30 appearance-none transition-colors"
               >
                 {months.map(m => (
-                  <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
+                  <option key={m} value={m}>{MONTH_NAMES[m - 1]}</option>
                 ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
