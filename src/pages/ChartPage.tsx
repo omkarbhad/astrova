@@ -558,9 +558,9 @@ function ChartPage() {
                         </div>
                       </div>
                       {currentRequest && (
-                        <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+                        <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
                           {/* Birth Details Section */}
-                          <div className="bg-[linear-gradient(160deg,rgba(15,23,42,0.9),rgba(17,24,39,0.85))] rounded-2xl sm:rounded-3xl border border-[hsl(220,8%,18%)] shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
+                          <div className="bg-[linear-gradient(160deg,rgba(15,23,42,0.9),rgba(17,24,39,0.85))] rounded-2xl sm:rounded-3xl border border-[hsl(220,8%,18%)] shadow-[0_12px_30px_rgba(0,0,0,0.3)] max-w-6xl mx-auto">
                             {/* Header with controls */}
                             <div className="flex flex-col gap-3 px-4 sm:px-6 py-3.5 sm:py-4.5 bg-[linear-gradient(120deg,rgba(17,24,39,0.9),rgba(15,23,42,0.85))] border-b border-[hsl(220,8%,18%)] rounded-t-2xl sm:rounded-t-3xl">
                               <div className="flex items-center justify-between gap-3">
@@ -819,7 +819,7 @@ function ChartPage() {
                               </div>
                               
                               {/* Ascendant & Dasha Info */}
-                              <div className="max-w-5xl mx-auto rounded-2xl border border-amber-500/20 bg-[linear-gradient(145deg,rgba(245,158,11,0.08),rgba(30,41,59,0.52))] p-3 sm:p-4 shadow-[0_12px_26px_rgba(0,0,0,0.22)]">
+                              <div className="max-w-6xl mx-auto rounded-2xl border border-amber-500/20 bg-[linear-gradient(145deg,rgba(245,158,11,0.08),rgba(30,41,59,0.52))] p-3 sm:p-4 shadow-[0_12px_26px_rgba(0,0,0,0.22)]">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 place-items-stretch">
                                 {/* Ascendant Card */}
                                 <div className={summaryCardClass}>
