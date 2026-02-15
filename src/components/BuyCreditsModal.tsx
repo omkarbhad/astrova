@@ -43,7 +43,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="z-[90] sm:max-w-md bg-[hsl(220,10%,8%)] border-[hsl(220,8%,18%)] text-white">
+      <DialogContent className="z-[90] sm:max-w-md bg-[linear-gradient(160deg,rgba(12,9,6,0.94),rgba(22,14,8,0.9))] border-amber-500/20 text-white shadow-[0_18px_42px_rgba(0,0,0,0.35)]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Coins className="w-5 h-5 text-amber-400" />
@@ -78,8 +78,8 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
                 disabled={isPurchasing}
                 className={`relative w-full p-4 rounded-xl border transition-all text-left hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:outline-none ${
                   pkg.popular
-                    ? 'bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-500/50 hover:border-amber-500'
-                    : 'bg-[hsl(220,10%,10%)] border-[hsl(220,8%,22%)] hover:border-[hsl(220,8%,30%)]'
+                    ? 'bg-gradient-to-r from-amber-500/12 to-yellow-500/10 border-amber-500/50 hover:border-amber-500'
+                    : 'bg-[hsl(24,16%,8%)] border-amber-500/20 hover:border-amber-500/35'
                 } ${isPurchasing ? 'opacity-70 cursor-not-allowed' : ''}`}
                 aria-label={`Buy ${pkg.credits} credits for rupees ${pkg.price}`}
               >
@@ -106,7 +106,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
             ))}
           </div>}
 
-          {!purchased && <div className="mt-4 pt-4 border-t border-[hsl(220,8%,18%)]">
+          {!purchased && <div className="mt-4 pt-4 border-t border-amber-500/20">
             <div className="flex items-start gap-2 text-xs text-neutral-400">
               <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <p>

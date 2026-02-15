@@ -91,12 +91,12 @@ function CompactAshtakavargaTable({ ashtakavarga }: { ashtakavarga?: Ashtakavarg
   const maxSarvaPoint = Math.max(1, ...sarvaPoints);
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
+    <div className="bg-[hsl(24,16%,8%)] rounded-lg border border-amber-500/15 overflow-hidden">
       <div className="max-h-[420px] overflow-auto custom-scrollbar">
         <table className="w-full text-xs min-w-[980px]">
-          <thead className="bg-[hsl(220,10%,10%)] sticky top-0 z-10">
-            <tr className="border-b border-[hsl(220,8%,18%)]">
-              <th className="px-3 py-2 text-left text-neutral-400 sticky left-0 bg-[hsl(220,10%,10%)] z-20">Planet</th>
+          <thead className="bg-[hsl(24,18%,9%)] sticky top-0 z-10">
+            <tr className="border-b border-amber-500/15">
+              <th className="px-3 py-2 text-left text-neutral-400 sticky left-0 bg-[hsl(24,18%,9%)] z-20">Planet</th>
               {ASHTAKAVARGA_SIGNS.map((sign) => (
                 <th key={sign} className="px-2 py-2 text-center text-neutral-500">{sign}</th>
               ))}
@@ -107,8 +107,8 @@ function CompactAshtakavargaTable({ ashtakavarga }: { ashtakavarga?: Ashtakavarg
             {rows.map((row) => {
               const config = PLANET_CONFIG[row.planet];
               return (
-                <tr key={row.planet} className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] transition-colors">
-                  <td className="px-3 py-2 sticky left-0 bg-[hsl(220,10%,8%)]">
+                <tr key={row.planet} className="border-b border-amber-500/10 hover:bg-amber-500/5 transition-colors">
+                  <td className="px-3 py-2 sticky left-0 bg-[hsl(24,16%,8%)]">
                     <div className="flex items-center gap-2">
                       <span style={{ color: config?.color }}>{config?.icon}</span>
                       <span className="text-white font-medium">{row.planet}</span>
@@ -124,7 +124,7 @@ function CompactAshtakavargaTable({ ashtakavarga }: { ashtakavarga?: Ashtakavarg
               );
             })}
             <tr className="bg-amber-500/10 border-t border-amber-500/30">
-              <td className="px-3 py-2 text-amber-300 font-semibold sticky left-0 bg-[hsl(220,10%,12%)]">Sarva</td>
+              <td className="px-3 py-2 text-amber-300 font-semibold sticky left-0 bg-[hsl(24,20%,10%)]">Sarva</td>
               {sarvaPoints.map((value, idx) => {
                 const intensity = value / maxSarvaPoint;
                 return (
@@ -1041,7 +1041,7 @@ function InsightCard({ title, value, subtitle, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl p-4 text-center hover:border-amber-500/20 transition-all duration-200 relative overflow-hidden group">
+    <div className="bg-[hsl(24,16%,8%)] border border-amber-500/15 rounded-xl p-4 text-center hover:border-amber-500/30 transition-all duration-200 relative overflow-hidden group">
       <div className="absolute top-0 left-0 right-0 h-[2px] opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
       <div className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">{title}</div>
       <div className="text-2xl font-bold mb-1" style={{ color }}>{value}</div>
@@ -1123,11 +1123,11 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
   );
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
+    <div className="bg-[hsl(24,16%,8%)] rounded-lg border border-amber-500/15 overflow-hidden">
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs min-w-[920px]">
-          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
-            <tr className="border-b border-[hsl(220,8%,18%)]">
+          <thead className="bg-[hsl(24,18%,9%)] sticky top-0">
+            <tr className="border-b border-amber-500/15">
               <th className="px-3 py-2 text-left text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('planet')}>Planet<SortIcon col="planet" /></th>
               <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('sthana')}>Sthana<SortIcon col="sthana" /></th>
               <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('dig')}>Dig<SortIcon col="dig" /></th>
@@ -1151,7 +1151,7 @@ function CompactShadBalaTable({ shadBala }: { shadBala: Record<string, Partial<S
               const config = PLANET_CONFIG[planet];
 
               return (
-                <tr key={planet} className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] transition-colors">
+                <tr key={planet} className="border-b border-amber-500/10 hover:bg-amber-500/5 transition-colors">
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <span style={{ color: config?.color }}>{config?.icon}</span>
@@ -1233,11 +1233,11 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
   );
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
+    <div className="bg-[hsl(24,16%,8%)] rounded-lg border border-amber-500/15 overflow-hidden">
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
-            <tr className="border-b border-[hsl(220,8%,18%)]">
+          <thead className="bg-[hsl(24,18%,9%)] sticky top-0">
+            <tr className="border-b border-amber-500/15">
               <th className="px-3 py-2 text-left text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('house')}>House<SortIcon col="house" /></th>
               <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('rupas')}>Rupas<SortIcon col="rupas" /></th>
               <th className="px-3 py-2 text-center text-neutral-400 cursor-pointer hover:text-white select-none" onClick={() => handleSort('max')}>Max<SortIcon col="max" /></th>
@@ -1266,7 +1266,7 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
               return (
                 <Fragment key={house}>
                   <tr 
-                    className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors"
+                    className="border-b border-amber-500/10 hover:bg-amber-500/5 cursor-pointer transition-colors"
                     onClick={() => setExpandedHouse(expandedHouse === house ? null : house)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -1300,7 +1300,7 @@ function CompactBhavaBalaTable({ bhavaBala }: { bhavaBala: Record<number, Partia
                     </td>
                   </tr>
                   {expandedHouse === house && (
-                    <tr className="bg-[hsl(220,10%,9%)]">
+                    <tr className="bg-black/20">
                       <td colSpan={5} className="px-3 py-2">
                         <div className="text-[10px] text-neutral-500 space-y-1">
                           <div>Description: {config?.description}</div>
@@ -1332,8 +1332,8 @@ function CompactPlanetPositionsTable({ planets, upagrahas, lagna }: {
   const BODY_ORDER = [...PLANET_ORDER, ...UPAGRAHA_ORDER];
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
-      <div className="p-3 bg-[hsl(220,10%,10%)] border-b border-[hsl(220,8%,18%)]">
+    <div className="bg-[hsl(24,16%,8%)] rounded-lg border border-amber-500/15 overflow-hidden">
+      <div className="p-3 bg-[hsl(24,18%,9%)] border-b border-amber-500/15">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Planetary Positions</h3>
           <div className="text-[10px] text-neutral-500">
@@ -1343,8 +1343,8 @@ function CompactPlanetPositionsTable({ planets, upagrahas, lagna }: {
       </div>
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
-            <tr className="border-b border-[hsl(220,8%,18%)]">
+          <thead className="bg-[hsl(24,18%,9%)] sticky top-0">
+            <tr className="border-b border-amber-500/15">
               <th className="px-3 py-2 text-left text-neutral-400">Planet</th>
               <th className="px-3 py-2 text-left text-neutral-400">Sign</th>
               <th className="px-3 py-2 text-center text-neutral-400">Degree</th>
@@ -1362,7 +1362,7 @@ function CompactPlanetPositionsTable({ planets, upagrahas, lagna }: {
               return (
                 <Fragment key={planetName}>
                   <tr 
-                    className="border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors"
+                    className="border-b border-amber-500/10 hover:bg-amber-500/5 cursor-pointer transition-colors"
                     onClick={() => setExpandedPlanet(expandedPlanet === planetName ? null : planetName)}
                   >
                     <td className="px-3 py-2">
@@ -1382,7 +1382,7 @@ function CompactPlanetPositionsTable({ planets, upagrahas, lagna }: {
                     </td>
                   </tr>
                   {expandedPlanet === planetName && (
-                    <tr className="bg-[hsl(220,10%,9%)]">
+                    <tr className="bg-black/20">
                       <td colSpan={5} className="px-3 py-3">
                         <div className="text-[10px] space-y-1.5">
                           <div className="text-neutral-400">{config?.description}</div>
@@ -1481,8 +1481,8 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
   };
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-lg border border-[hsl(220,8%,18%)] overflow-hidden">
-      <div className="p-3 bg-[hsl(220,10%,10%)] border-b border-[hsl(220,8%,18%)]">
+    <div className="bg-[hsl(24,16%,8%)] rounded-lg border border-amber-500/15 overflow-hidden">
+      <div className="p-3 bg-[hsl(24,18%,9%)] border-b border-amber-500/15">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Vimshottari Dasha</h3>
           <div className="text-[10px] text-neutral-500 text-right">
@@ -1494,8 +1494,8 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
       </div>
       <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-xs">
-          <thead className="bg-[hsl(220,10%,10%)] sticky top-0">
-            <tr className="border-b border-[hsl(220,8%,18%)]">
+          <thead className="bg-[hsl(24,18%,9%)] sticky top-0">
+            <tr className="border-b border-amber-500/15">
               <th className="px-3 py-2 text-left text-neutral-500">Planet</th>
               <th className="px-3 py-2 text-left text-neutral-500">Current PAD</th>
               <th className="px-3 py-2 text-left text-neutral-500">Start</th>
@@ -1514,7 +1514,7 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
               return (
                 <Fragment key={period.planet}>
                   <tr 
-                    className={`border-b border-[hsl(220,8%,14%)] hover:bg-[hsl(220,10%,10%)] cursor-pointer transition-colors ${
+                    className={`border-b border-amber-500/10 hover:bg-amber-500/5 cursor-pointer transition-colors ${
                       isActive ? 'bg-amber-500/10' : ''
                     }`}
                     onClick={() => setExpandedPeriod(expandedPeriod === period.planet ? null : period.planet)}
@@ -1556,7 +1556,7 @@ function CompactDashaTable({ dashaData }: { dashaData: DashaInfo }) {
                     </td>
                   </tr>
                   {expandedPeriod === period.planet && (
-                    <tr className="bg-[hsl(220,10%,9%)]">
+                    <tr className="bg-black/20">
                       <td colSpan={6} className="px-3 py-3">
                         <div className="text-[10px] text-neutral-400 mb-2">{config?.description}</div>
                         {period.antardashas && period.antardashas.length > 0 && (
@@ -1794,9 +1794,9 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
   }, [planetData, houseData]);
 
   return (
-    <div className="bg-[hsl(220,10%,8%)] rounded-xl sm:rounded-2xl border border-[hsl(220,8%,18%)] overflow-hidden">
+    <div className="bg-[linear-gradient(160deg,rgba(12,9,6,0.92),rgba(24,16,8,0.86))] rounded-2xl border border-amber-500/15 overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
       {/* Header */}
-      <div className="px-4 py-4 bg-[hsl(220,10%,7%)] border-b border-[hsl(220,8%,18%)]">
+      <div className="px-4 py-4 bg-[linear-gradient(120deg,rgba(19,12,7,0.92),rgba(32,20,10,0.86))] border-b border-amber-500/15">
         <div className="flex items-center justify-between gap-3">
           {/* Title */}
           <div className="flex items-center gap-2 min-w-0">
@@ -1810,7 +1810,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
           </div>
 
           {/* Desktop segmented control */}
-          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] overflow-x-auto scrollbar-none">
+          <div className="hidden sm:flex items-center gap-1 p-1 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 overflow-x-auto scrollbar-none">
             {STRENGTH_TABS.map(tab => (
               <button
                 key={tab}
@@ -1818,7 +1818,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-white text-black'
-                    : 'text-white/70 hover:text-white hover:bg-[hsl(220,10%,14%)]'
+                    : 'text-white/70 hover:text-white hover:bg-[hsl(24,20%,12%)]'
                 }`}
               >
                 {getTabLabel(tab)}
@@ -1831,14 +1831,14 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
             <button
               type="button"
               onClick={() => setDropdownOpen((v) => !v)}
-              className="px-3 py-2 rounded-lg bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] text-white text-xs font-medium flex items-center gap-2"
+              className="px-3 py-2 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 text-white text-xs font-medium flex items-center gap-2"
             >
               <span>{getTabLabel(activeTab)}</span>
               <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-lg bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] shadow-xl overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-48 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 shadow-xl overflow-hidden z-50">
                 {STRENGTH_TABS.map(tab => (
                   <button
                     key={tab}
@@ -1850,7 +1850,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                     className={`w-full px-3 py-2 text-left text-xs font-medium transition-colors ${
                       activeTab === tab
                         ? 'bg-white text-black'
-                        : 'text-neutral-300 hover:text-white hover:bg-[hsl(220,10%,12%)]'
+                        : 'text-neutral-300 hover:text-white hover:bg-[hsl(24,20%,12%)]'
                     }`}
                   >
                     {getTabLabel(tab)}
@@ -1947,7 +1947,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                 const percent = pd ? (pd.value / pd.maxValue) * 100 : 0;
                 
                 return (
-                  <div key={planet} className="bg-[hsl(220,10%,10%)] rounded-lg p-3 border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors">
+                  <div key={planet} className="bg-[hsl(24,18%,9%)] rounded-lg p-3 border border-amber-500/15 hover:border-amber-500/30 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xl" style={{ color: config.color }}>{config.icon}</span>
@@ -1999,7 +1999,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
               {[1, 4, 7, 10].map(h => {
                 const config = HOUSE_CONFIG[h];
                 return (
-                  <div key={h} className="bg-[hsl(220,10%,10%)] rounded-lg p-3 border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors">
+                  <div key={h} className="bg-[hsl(24,18%,9%)] rounded-lg p-3 border border-amber-500/15 hover:border-amber-500/30 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-bold" style={{ color: config.color }}>H{h}</span>
                       <span className="text-xs text-neutral-400">{config.label}</span>
@@ -2040,13 +2040,13 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-3 p-3 bg-[hsl(220,10%,10%)] rounded-lg border border-[hsl(220,8%,18%)]">
+            <div className="flex flex-wrap gap-3 p-3 bg-[hsl(24,18%,9%)] rounded-lg border border-amber-500/15">
               <div className="flex items-center gap-2">
                 <label className="text-[10px] text-neutral-400 uppercase">Planet:</label>
                 <select
                   value={aspectFilters.planet}
                   onChange={(e) => setAspectFilters(f => ({ ...f, planet: e.target.value }))}
-                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
+                  className="bg-[hsl(24,16%,8%)] border border-amber-500/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/35"
                 >
                   <option value="all">All</option>
                   {aspectPlanets.map(p => (
@@ -2059,7 +2059,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                 <select
                   value={aspectFilters.type}
                   onChange={(e) => setAspectFilters(f => ({ ...f, type: e.target.value }))}
-                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
+                  className="bg-[hsl(24,16%,8%)] border border-amber-500/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/35"
                 >
                   <option value="all">All</option>
                   {ASPECT_DEFS.map(a => (
@@ -2072,7 +2072,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                 <select
                   value={aspectFilters.nature}
                   onChange={(e) => setAspectFilters(f => ({ ...f, nature: e.target.value }))}
-                  className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/30"
+                  className="bg-[hsl(24,16%,8%)] border border-amber-500/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500/35"
                 >
                   <option value="all">All</option>
                   <option value="harmonious">Harmonious</option>
@@ -2116,7 +2116,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
                     return (
                       <div 
                         key={i} 
-                        className="flex items-center gap-3 p-3 bg-[hsl(220,10%,10%)] rounded-lg border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors"
+                        className="flex items-center gap-3 p-3 bg-[hsl(24,18%,9%)] rounded-lg border border-amber-500/15 hover:border-amber-500/30 transition-colors"
                       >
                         <div className="flex items-center gap-2 min-w-[100px]">
                           <span style={{ color: p1Config?.color ?? '#888' }} className="text-lg">{p1Config?.icon ?? aspect.planet1.slice(0,2)}</span>
@@ -2155,7 +2155,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
             )}
 
             {/* Aspect Interpretation Guide */}
-            <div className="bg-[hsl(220,10%,9%)] rounded-lg p-4 border border-[hsl(220,8%,16%)]">
+            <div className="bg-black/20 rounded-lg p-4 border border-amber-500/15">
               <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">Understanding Aspects</h4>
               <div className="grid sm:grid-cols-2 gap-3 text-[11px]">
                 <div>
@@ -2272,7 +2272,7 @@ export function StrengthAnalysis({ shadBala, bhavaBala, ashtakavarga, planets, u
 
         {/* Legend - show only for non-aspects and non-table tabs */}
         {activeTab !== 'aspects' && activeTab !== 'shad-table' && activeTab !== 'bhava-table' && activeTab !== 'ashtakavarga' && activeTab !== 'positions' && activeTab !== 'dasha' && (
-          <div className="mt-6 pt-4 border-t border-[hsl(220,8%,16%)] flex flex-wrap justify-center gap-4 text-[10px]">
+          <div className="mt-6 pt-4 border-t border-amber-500/15 flex flex-wrap justify-center gap-4 text-[10px]">
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-amber-300" />
               <span className="text-neutral-500">Strong ≥100%</span>

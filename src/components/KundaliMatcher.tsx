@@ -87,11 +87,11 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
   const [selectedResultIndex2, setSelectedResultIndex2] = useState(-1);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
-  const actionButtonClass = 'gap-1 border border-[hsl(220,8%,18%)] bg-[hsl(220,10%,10%)] text-white hover:bg-[hsl(220,10%,14%)] hover:border-amber-500/20 h-9 px-3';
+  const actionButtonClass = 'gap-1 border border-amber-500/20 bg-[hsl(24,18%,9%)] text-white hover:bg-[hsl(24,20%,12%)] hover:border-amber-500/35 h-9 px-3';
   const bannerClass = 'relative overflow-hidden rounded-2xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.1),rgba(217,119,6,0.08),rgba(18,11,6,0.9))] p-5 sm:p-6';
-  const formPanelClass = 'bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl overflow-hidden hover:border-amber-500/20 transition-colors';
+  const formPanelClass = 'bg-[linear-gradient(160deg,rgba(14,10,6,0.93),rgba(32,20,10,0.72))] border border-amber-500/15 rounded-xl overflow-hidden hover:border-amber-500/30 transition-colors';
   const fieldLabelClass = 'block text-xs text-neutral-400 mb-1';
-  const selectFieldClass = 'w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 appearance-none transition-colors cursor-pointer';
+  const selectFieldClass = 'w-full h-9 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 appearance-none transition-colors cursor-pointer';
   
   // Form states for direct input
   const [formData1, setFormData1] = useState<KundaliRequest>(DEFAULT_FORM_DATA);
@@ -437,7 +437,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all w-full"
+                  className="bg-[hsl(24,18%,9%)] border border-amber-500/20 text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 1 name"
                 />
@@ -531,7 +531,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         onKeyDown={(e) => handleLocationInputKeyDown(e, 1)}
                         onFocus={() => setShowLocationDropdown1(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown1(false), 200)}
-                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-colors"
+                        className="w-full h-9 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 transition-colors"
                         placeholder="Search city..."
                         aria-label="Search location for person 1"
                         autoComplete="off"
@@ -634,7 +634,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                   value={name2}
                   onChange={(e) => setName2(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all w-full"
+                  className="bg-[hsl(24,18%,9%)] border border-amber-500/20 text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 2 name"
                 />
@@ -728,7 +728,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         onKeyDown={(e) => handleLocationInputKeyDown(e, 2)}
                         onFocus={() => setShowLocationDropdown2(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown2(false), 200)}
-                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-colors"
+                        className="w-full h-9 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 transition-colors"
                         placeholder="Search city..."
                         aria-label="Search location for person 2"
                         autoComplete="off"
@@ -814,7 +814,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
       </Card>
 
       {/* Match Button */}
-      <Card className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl lg:col-span-2 hover:border-amber-500/20 transition-colors">
+      <Card className="bg-[linear-gradient(160deg,rgba(14,10,6,0.93),rgba(32,20,10,0.72))] border border-amber-500/15 rounded-xl lg:col-span-2 hover:border-amber-500/30 transition-colors">
         <CardContent className="p-4 sm:p-5 flex flex-col items-center">
             <Button
               onClick={handleMatch}
@@ -906,14 +906,23 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             </div>
           )}
 
-          {/* Enhanced Ashtakoota Score Breakdown */}
-          <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 rounded-2xl border border-amber-500/20 p-4 sm:p-6 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <Star className="w-5 h-5 text-amber-300" />
-              <h3 className="text-white font-bold text-lg">Ashtakoota Guna Milan</h3>
-              <span className="text-xs text-amber-300 ml-auto bg-amber-500/15 px-3 py-1 rounded-full border border-amber-500/30">8 Factors</span>
+          {/* Ashtakoota Guna Milan */}
+          <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-[linear-gradient(145deg,rgba(245,158,11,0.08),rgba(28,17,8,0.62))] p-4 sm:p-6 shadow-[0_12px_26px_rgba(0,0,0,0.22)]">
+            <div className="pointer-events-none absolute -top-14 -right-12 h-32 w-32 rounded-full bg-amber-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -left-12 h-36 w-36 rounded-full bg-amber-500/10 blur-3xl" />
+
+            <div className="relative flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                <Star className="w-4 h-4 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">Ashtakoota Guna Milan</h3>
+                <p className="text-[11px] text-neutral-400">Eight-factor compatibility breakdown</p>
+              </div>
+              <span className="text-[11px] text-amber-200 ml-auto bg-amber-500/15 px-3 py-1 rounded-full border border-amber-500/30">8 Factors</span>
             </div>
-            <div className="space-y-4">
+
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-3">
               {matchScores.filter(s => s.category !== 'Overall Compatibility').map((score, index) => {
                 const pct = score.maxScore > 0 ? (score.score / score.maxScore) * 100 : 0;
                 const kootIconMap: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
@@ -930,46 +939,45 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 const KootIcon = kootInfo?.icon || Star;
                 const kootColor = kootInfo?.color || 'text-neutral-400';
                 const kootBg = kootInfo?.bg || 'bg-neutral-500/20';
+
                 return (
-                  <div key={index} className="group hover:scale-[1.02] transition-all duration-300" style={{ animationDelay: `${index * 100}ms` }}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 ${kootBg} rounded-xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform`}>
-                        <KootIcon className={`w-5 h-5 ${kootColor}`} />
+                  <div key={index} className="rounded-xl border border-amber-500/20 bg-[hsl(24,16%,8%)] p-3.5 hover:border-amber-500/35 transition-colors">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <div className={`w-9 h-9 ${kootBg} rounded-lg flex items-center justify-center border border-amber-500/25`}>
+                        <KootIcon className={`w-4 h-4 ${kootColor}`} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-white">{score.category}</span>
-                            <span className="text-[10px] text-neutral-500 hidden md:inline bg-neutral-500/20 px-2 py-1 rounded">{score.description}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-black tabular-nums drop-shadow" style={{ color: score.color }}>{score.score}</span>
-                            <span className="text-[10px] text-neutral-600">/ {score.maxScore}</span>
-                          </div>
-                        </div>
-                        <div className="w-full bg-neutral-800/50 rounded-full h-3 overflow-hidden border border-neutral-700/30">
-                          <div
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{ width: `${pct}%`, backgroundColor: score.color }}
-                          />
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">{score.category}</div>
+                        <div className="text-[10px] text-neutral-500 truncate">{score.description}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black tabular-nums leading-none" style={{ color: score.color }}>{score.score}</div>
+                        <div className="text-[10px] text-neutral-500">/ {score.maxScore}</div>
                       </div>
                     </div>
+
+                    <div className="w-full bg-black/30 rounded-full h-2.5 overflow-hidden border border-amber-500/15">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${pct}%`, backgroundColor: score.color }}
+                      />
+                    </div>
+                    <div className="mt-1.5 text-[10px] text-neutral-500">{pct.toFixed(0)}% matched</div>
                   </div>
                 );
               })}
             </div>
-            {/* Enhanced Total bar */}
+
             {overallScore && (
-              <div className="mt-6 pt-6 border-t border-amber-500/20">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg font-bold text-white">Total Cosmic Score</span>
+              <div className="relative mt-5 pt-5 border-t border-amber-500/20">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-sm font-semibold text-white">Total Cosmic Score</span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black drop-shadow-lg" style={{ color: overallScore.color }}>{overallScore.score}</span>
-                    <span className="text-sm text-neutral-500">/ {overallScore.maxScore}</span>
+                    <span className="text-2xl font-black tabular-nums" style={{ color: overallScore.color }}>{overallScore.score}</span>
+                    <span className="text-xs text-neutral-500">/ {overallScore.maxScore}</span>
                   </div>
                 </div>
-                <div className="w-full bg-neutral-800/50 rounded-full h-4 overflow-hidden border border-neutral-700/30">
+                <div className="w-full bg-black/30 rounded-full h-3.5 overflow-hidden border border-amber-500/15">
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${(overallScore.score / overallScore.maxScore) * 100}%`, backgroundColor: overallScore.color }}
@@ -977,6 +985,28 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Compatibility Reading Guide */}
+          <div className="rounded-2xl border border-amber-500/20 bg-[hsl(24,16%,8%)] p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <h4 className="text-sm font-semibold text-white">How to read this match (simple)</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-xl border border-amber-500/15 bg-[hsl(24,18%,9%)] p-3">
+                <div className="text-xs font-semibold text-amber-200 mb-1">1) Start with Total Score</div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">Above 70% usually means smoother daily compatibility. 55-70% is workable with communication. Below 55% needs conscious effort.</p>
+              </div>
+              <div className="rounded-xl border border-amber-500/15 bg-[hsl(24,18%,9%)] p-3">
+                <div className="text-xs font-semibold text-amber-200 mb-1">2) Check low-scoring Kootas</div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">Focus on weaker factors first (especially Nadi, Bhakoot, Gana, Yoni). These point to potential friction patterns in lifestyle and temperament.</p>
+              </div>
+              <div className="rounded-xl border border-amber-500/15 bg-[hsl(24,18%,9%)] p-3">
+                <div className="text-xs font-semibold text-amber-200 mb-1">3) Use it as guidance, not fear</div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">A match score is a map, not destiny. Strong communication, values, and timing can improve outcomes beyond raw numbers.</p>
+              </div>
+            </div>
           </div>
 
           {/* Enhanced Chart Comparison - Side by Side */}

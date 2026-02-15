@@ -33,7 +33,7 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
   const [query, setQuery] = useState('');
   const [isCloseHovered, setIsCloseHovered] = useState(false);
 
-  const actionButtonClass = 'h-8 w-8 p-0 border border-[hsl(220,8%,24%)] bg-[hsl(220,10%,10%)] text-white hover:bg-[hsl(220,10%,13%)] hover:border-[hsl(220,8%,30%)]';
+  const actionButtonClass = 'h-8 w-8 p-0 border border-amber-500/20 bg-[hsl(24,18%,9%)] text-white hover:bg-[hsl(24,20%,12%)] hover:border-amber-500/35';
 
   const sortedCharts = useMemo(() => {
     return [...charts].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
@@ -117,7 +117,7 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
   return (
     <>
       <div className="fixed inset-0 z-[200] flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm px-2 sm:px-4 py-[max(0.75rem,env(safe-area-inset-top))] sm:py-6" role="dialog" aria-modal="true" aria-label="Saved charts modal" onMouseDown={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
-        <div className="w-full max-w-3xl bg-[hsl(220,10%,8%)] border border-amber-500/15 rounded-2xl shadow-2xl overflow-hidden h-[calc(100dvh-1.5rem-env(safe-area-inset-top))] sm:h-auto sm:max-h-[80vh] flex flex-col">
+        <div className="w-full max-w-3xl bg-[hsl(24,16%,8%)] border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden h-[calc(100dvh-1.5rem-env(safe-area-inset-top))] sm:h-auto sm:max-h-[80vh] flex flex-col">
           <div className="sticky top-0 z-10 bg-[linear-gradient(180deg,rgba(245,158,11,0.08),rgba(23,23,23,0.9))] backdrop-blur-md border-b border-amber-500/20 px-4 sm:px-6 py-3 sm:py-4">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -130,7 +130,7 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
                     onClick={handleClose}
                     variant="ghost"
                     size="sm"
-                    className="h-9 w-9 p-0 text-neutral-400 hover:text-white hover:bg-[hsl(220,10%,10%)]"
+                    className="h-9 w-9 p-0 text-neutral-400 hover:text-white hover:bg-[hsl(24,18%,9%)]"
                     aria-label="Close saved charts modal"
                     onMouseEnter={() => setIsCloseHovered(true)}
                     onMouseLeave={() => setIsCloseHovered(false)}
@@ -161,7 +161,7 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
                 )}
 
                 <div className="mt-3">
-                  <div className="flex items-center gap-2 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,22%)] rounded-lg px-3 h-9">
+                  <div className="flex items-center gap-2 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg px-3 h-9">
                     <Search className="w-4 h-4 text-neutral-300/70" />
                     <input
                       value={query}
@@ -202,18 +202,18 @@ export function LoadChartsModal({ isOpen, charts, onLoad, onEdit, onDelete, onCl
             <div className="text-center py-10">
               <p className="text-white font-medium">No matches</p>
               <p className="text-neutral-400 text-sm mt-1">Try a different search.</p>
-              <Button onClick={() => setQuery('')} variant="outline" className="mt-4 border border-[hsl(220,8%,24%)] bg-[hsl(220,10%,10%)] text-white hover:bg-[hsl(220,10%,13%)] hover:border-[hsl(220,8%,30%)]">Clear search</Button>
+              <Button onClick={() => setQuery('')} variant="outline" className="mt-4 border border-amber-500/20 bg-[hsl(24,18%,9%)] text-white hover:bg-[hsl(24,20%,12%)] hover:border-amber-500/35">Clear search</Button>
             </div>
           ) : (
             <div className="space-y-2.5">
               {filteredCharts.map((chart) => (
                 <div
                   key={chart.id}
-                  className="bg-[hsl(220,10%,10%)]/70 border border-[hsl(220,8%,22%)] rounded-xl p-3 hover:border-amber-500/30 hover:bg-[hsl(220,10%,11%)] transition-all duration-200"
+                  className="bg-[hsl(24,18%,9%)]/80 border border-amber-500/20 rounded-xl p-3 hover:border-amber-500/35 hover:bg-[hsl(24,20%,12%)] transition-all duration-200"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-700/50 border border-neutral-600/50 flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-100 font-semibold text-sm">
                         {(chart.name || 'C').trim().slice(0, 1).toUpperCase()}
                       </div>
                       <div className="min-w-0">

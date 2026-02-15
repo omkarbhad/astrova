@@ -281,14 +281,11 @@ export function NorthIndianChart({ data, chartType = "rasi" }: NorthIndianChartP
 
   return (
     <div className="relative mx-auto aspect-square w-full max-w-lg select-none">
-      <div className="absolute top-1.5 left-1/2 -translate-x-1/2 z-10 text-[10px] tracking-wide text-neutral-400 uppercase">
-        {chartType === "navamsa" ? "D9 Navamsa" : "D1 Rasi"}
-      </div>
-      <svg viewBox="0 0 400 400" className="h-full w-full">
+            <svg viewBox="0 0 400 400" className="h-full w-full">
         <defs>
           <linearGradient id="chartBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#171717" />
-            <stop offset="100%" stopColor="#000000" />
+            <stop offset="0%" stopColor="#1a1208" />
+            <stop offset="100%" stopColor="#0b0704" />
           </linearGradient>
           <filter id="innerShadow">
             <feOffset dx="0" dy="2" />
@@ -300,12 +297,12 @@ export function NorthIndianChart({ data, chartType = "rasi" }: NorthIndianChartP
           </filter>
         </defs>
 
-        <rect x="5" y="5" width="390" height="390" fill="url(#chartBg)" stroke="#262626" strokeWidth="2" rx="8" />
-        <polygon points="200,5 395,200 200,395 5,200" fill="none" stroke="#262626" strokeWidth="2" />
-        <line x1="7" y1="7" x2="200" y2="200" stroke="#262626" strokeWidth="2" opacity="0.9" />
-        <line x1="393" y1="7" x2="200" y2="200" stroke="#262626" strokeWidth="2" opacity="0.9" />
-        <line x1="7" y1="393" x2="200" y2="200" stroke="#262626" strokeWidth="2" opacity="0.9" />
-        <line x1="393" y1="393" x2="200" y2="200" stroke="#262626" strokeWidth="2" opacity="0.9" />
+        <rect x="5" y="5" width="390" height="390" fill="url(#chartBg)" stroke="#b45309" strokeOpacity="0.35" strokeWidth="2" rx="8" />
+        <polygon points="200,5 395,200 200,395 5,200" fill="none" stroke="#d97706" strokeOpacity="0.32" strokeWidth="2" />
+        <line x1="7" y1="7" x2="200" y2="200" stroke="#d97706" strokeOpacity="0.3" strokeWidth="2" />
+        <line x1="393" y1="7" x2="200" y2="200" stroke="#d97706" strokeOpacity="0.3" strokeWidth="2" />
+        <line x1="7" y1="393" x2="200" y2="200" stroke="#d97706" strokeOpacity="0.3" strokeWidth="2" />
+        <line x1="393" y1="393" x2="200" y2="200" stroke="#d97706" strokeOpacity="0.3" strokeWidth="2" />
         {/* <circle cx="200" cy="200" r="35" fill="none" stroke="#8B5CF6" strokeWidth="1" opacity="0.3" />
         <text x="200" y="208" textAnchor="middle" fontSize="32" fill="#3d3255ff" opacity="0.8">
           ॐ

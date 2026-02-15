@@ -82,12 +82,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[hsl(220,10%,6%)] relative overflow-hidden flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen w-full bg-[hsl(24,16%,6%)] relative overflow-hidden flex items-center justify-center px-4 py-10">
       <StarsBackground />
       <CosmicOrbs />
       
       {/* Main gradient overlay - Same as homepage */}
-      <div className="fixed inset-0 bg-[hsl(220,10%,6%)] -z-20" />
+      <div className="fixed inset-0 bg-[hsl(24,16%,6%)] -z-20" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(234,179,8,0.12),transparent)] -z-10" />
       
       {/* Subtle cosmic glow orbs - Same as homepage */}
@@ -98,7 +98,7 @@ const LoginPage = () => {
         <div className="absolute top-[70%] left-1/3 w-80 h-80 bg-yellow-600/8 rounded-full blur-[110px] animate-pulse" />
       </div>
 
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-amber-100/70 hover:text-amber-100 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
       </Link>
@@ -116,9 +116,9 @@ const LoginPage = () => {
               className="absolute -inset-[1px] rounded-2xl"
               animate={{
                 boxShadow: [
-                  '0 0 10px 2px rgba(255,255,255,0.03)',
-                  '0 0 15px 5px rgba(255,255,255,0.05)',
-                  '0 0 10px 2px rgba(255,255,255,0.03)',
+                  '0 0 10px 2px rgba(245,158,11,0.14)',
+                  '0 0 15px 5px rgba(245,158,11,0.2)',
+                  '0 0 10px 2px rgba(245,158,11,0.14)',
                 ],
                 opacity: [0.2, 0.4, 0.2],
               }}
@@ -127,7 +127,7 @@ const LoginPage = () => {
 
             <div className="absolute -inset-[1px] rounded-2xl overflow-hidden">
               <motion.div
-                className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+                className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-amber-300 to-transparent opacity-70"
                 initial={{ filter: 'blur(2px)' }}
                 animate={{ left: ['-50%', '100%'], opacity: [0.3, 0.7, 0.3], filter: ['blur(1px)', 'blur(2.5px)', 'blur(1px)'] }}
                 transition={{
@@ -137,7 +137,7 @@ const LoginPage = () => {
                 }}
               />
               <motion.div
-                className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+                className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-amber-300 to-transparent opacity-70"
                 initial={{ filter: 'blur(2px)' }}
                 animate={{ top: ['-50%', '100%'], opacity: [0.3, 0.7, 0.3], filter: ['blur(1px)', 'blur(2.5px)', 'blur(1px)'] }}
                 transition={{
@@ -147,7 +147,7 @@ const LoginPage = () => {
                 }}
               />
               <motion.div
-                className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
+                className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-amber-300 to-transparent opacity-70"
                 initial={{ filter: 'blur(2px)' }}
                 animate={{ right: ['-50%', '100%'], opacity: [0.3, 0.7, 0.3], filter: ['blur(1px)', 'blur(2.5px)', 'blur(1px)'] }}
                 transition={{
@@ -157,7 +157,7 @@ const LoginPage = () => {
                 }}
               />
               <motion.div
-                className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
+                className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-amber-300 to-transparent opacity-70"
                 initial={{ filter: 'blur(2px)' }}
                 animate={{ bottom: ['-50%', '100%'], opacity: [0.3, 0.7, 0.3], filter: ['blur(1px)', 'blur(2.5px)', 'blur(1px)'] }}
                 transition={{
@@ -168,9 +168,9 @@ const LoginPage = () => {
               />
             </div>
 
-            <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-white/3 via-white/7 to-white/3 opacity-60" />
+            <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-300/15 to-amber-500/10 opacity-70" />
 
-            <div className="relative bg-[hsl(220,10%,6%)]/40 backdrop-blur-xl rounded-2xl p-6 border border-white/[0.06] shadow-2xl overflow-hidden">
+            <div className="relative bg-[hsl(24,16%,8%)]/80 backdrop-blur-xl rounded-2xl p-6 border border-amber-500/20 shadow-2xl overflow-hidden">
               <div className="absolute inset-0 opacity-[0.03]" style={{
                 backgroundImage:
                   'linear-gradient(135deg, white 0.5px, transparent 0.5px), linear-gradient(45deg, white 0.5px, transparent 0.5px)',
@@ -191,7 +191,7 @@ const LoginPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80"
+                  className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-amber-100 to-amber-300"
                 >
                   Welcome Back
                 </motion.h1>
@@ -200,16 +200,16 @@ const LoginPage = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-white/60 text-xs"
+                  className="text-neutral-400 text-xs"
                 >
                   Sign in to continue
                 </motion.p>
               </div>
 
               {error && (
-                <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 flex items-center justify-between gap-2">
+                <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 flex items-center justify-between gap-2">
                   <span>{error}</span>
-                  <button onClick={() => setError(null)} className="text-white/40 hover:text-white/80 transition-colors shrink-0">
+                  <button onClick={() => setError(null)} className="text-red-200/60 hover:text-red-100 transition-colors shrink-0">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -222,9 +222,9 @@ const LoginPage = () => {
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   >
-                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
                     <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Mail className={`absolute left-3 w-4 h-4 transition-all duration-300 ${focusedInput === 'email' ? 'text-white' : 'text-white/40'}`} />
+                      <Mail className={`absolute left-3 w-4 h-4 transition-all duration-300 ${focusedInput === 'email' ? 'text-amber-200' : 'text-amber-400/60'}`} />
                       <Input
                         id="email"
                         type="email"
@@ -233,14 +233,14 @@ const LoginPage = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedInput('email')}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-white/10"
+                        className="w-full bg-[hsl(24,18%,9%)] border border-amber-500/15 focus:border-amber-500/35 text-white placeholder:text-neutral-500 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-[hsl(24,20%,11%)]"
                         required
                       />
                       <AnimatePresence>
                         {focusedInput === 'email' ? (
                           <motion.div
                             key="email-highlight"
-                            className="absolute inset-0 bg-white/5 -z-10"
+                            className="absolute inset-0 bg-amber-500/10 -z-10"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -256,9 +256,9 @@ const LoginPage = () => {
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   >
-                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
                     <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${focusedInput === 'password' ? 'text-white' : 'text-white/40'}`} />
+                      <Lock className={`absolute left-3 w-4 h-4 transition-all duration-300 ${focusedInput === 'password' ? 'text-amber-200' : 'text-amber-400/60'}`} />
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
@@ -267,13 +267,13 @@ const LoginPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         onFocus={() => setFocusedInput('password')}
                         onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-white/10"
+                        className="w-full bg-[hsl(24,18%,9%)] border border-amber-500/15 focus:border-amber-500/35 text-white placeholder:text-neutral-500 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-[hsl(24,20%,11%)]"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 text-white/40 hover:text-white transition-colors"
+                        className="absolute right-3 text-amber-400/70 hover:text-amber-200 transition-colors"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -282,7 +282,7 @@ const LoginPage = () => {
                         {focusedInput === 'password' ? (
                           <motion.div
                             key="password-highlight"
-                            className="absolute inset-0 bg-white/5 -z-10"
+                            className="absolute inset-0 bg-amber-500/10 -z-10"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -303,7 +303,7 @@ const LoginPage = () => {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={() => setRememberMe((v) => !v)}
-                        className="appearance-none h-4 w-4 rounded border border-white/20 bg-white/5 checked:bg-white checked:border-white focus:outline-none focus:ring-1 focus:ring-white/30 transition-all duration-200"
+                        className="appearance-none h-4 w-4 rounded border border-amber-500/30 bg-[hsl(24,18%,9%)] checked:bg-amber-400 checked:border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500/40 transition-all duration-200"
                       />
                       {rememberMe ? (
                         <motion.div
@@ -317,7 +317,7 @@ const LoginPage = () => {
                         </motion.div>
                       ) : null}
                     </div>
-                    <label htmlFor="remember-me" className="text-xs text-white/60 hover:text-white/80 transition-colors duration-200 leading-none -translate-y-0.5">
+                    <label htmlFor="remember-me" className="text-xs text-neutral-400 hover:text-amber-100 transition-colors duration-200 leading-none -translate-y-0.5">
                       Remember me
                     </label>
                   </div>
@@ -331,7 +331,7 @@ const LoginPage = () => {
                       if (resetErr) setError(resetErr.message);
                       else setError('Password reset link sent! Check your email.');
                     }}
-                    className="text-[10px] text-white/40 hover:text-white/70 transition-colors"
+                    className="text-[10px] text-neutral-500 hover:text-amber-200 transition-colors"
                   >
                     Forgot password?
                   </button>
@@ -344,8 +344,8 @@ const LoginPage = () => {
                   disabled={loading}
                   className="w-full relative group/button"
                 >
-                  <div className="absolute inset-0 bg-white/10 rounded-lg blur-lg opacity-0 group-hover/button:opacity-70 transition-opacity duration-300" />
-                  <div className="relative overflow-hidden bg-white text-black font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-amber-500/20 rounded-lg blur-lg opacity-0 group-hover/button:opacity-80 transition-opacity duration-300" />
+                  <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
                     <AnimatePresence mode="wait">
                       {loading ? (
                         <motion.div
@@ -355,7 +355,7 @@ const LoginPage = () => {
                           exit={{ opacity: 0 }}
                           className="flex items-center justify-center"
                         >
-                          <div className="w-4 h-4 border-2 border-black/70 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-amber-100/80 border-t-transparent rounded-full animate-spin" />
                         </motion.div>
                       ) : (
                         <motion.span
@@ -374,16 +374,16 @@ const LoginPage = () => {
                 </motion.button>
 
                 <div className="relative mt-2 mb-5 flex items-center">
-                  <div className="flex-grow border-t border-white/5" />
+                  <div className="flex-grow border-t border-amber-500/15" />
                   <motion.span
-                    className="mx-3 text-xs text-white/40"
+                    className="mx-3 text-xs text-neutral-500"
                     initial={{ opacity: 0.7 }}
                     animate={{ opacity: [0.7, 0.9, 0.7] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   >
                     or
                   </motion.span>
-                  <div className="flex-grow border-t border-white/5" />
+                  <div className="flex-grow border-t border-amber-500/15" />
                 </div>
 
                 <motion.button
@@ -394,30 +394,30 @@ const LoginPage = () => {
                   disabled={loading}
                   className="w-full relative group/google"
                 >
-                  <div className="absolute inset-0 bg-white/5 rounded-lg blur opacity-0 group-hover/google:opacity-70 transition-opacity duration-300" />
-                  <div className="relative overflow-hidden bg-white/5 text-white font-medium h-10 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-amber-500/10 rounded-lg blur opacity-0 group-hover/google:opacity-70 transition-opacity duration-300" />
+                  <div className="relative overflow-hidden bg-[hsl(24,18%,9%)] text-white font-medium h-10 rounded-lg border border-amber-500/20 hover:border-amber-500/35 transition-all duration-300 flex items-center justify-center gap-2">
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
-                    <span className="text-white/80 group-hover/google:text-white transition-colors text-xs">Sign in with Google</span>
+                    <span className="text-neutral-300 group-hover/google:text-amber-100 transition-colors text-xs">Sign in with Google</span>
                   </div>
                 </motion.button>
 
                 <motion.p
-                  className="text-center text-xs text-white/60 mt-4"
+                  className="text-center text-xs text-neutral-400 mt-4"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
                   Don't have an account?{' '}
                   <Link to="/register" className="relative inline-block group/signup">
-                    <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
+                    <span className="relative z-10 text-amber-200 group-hover/signup:text-amber-100 transition-colors duration-300 font-medium">
                       Sign up
                     </span>
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-amber-400 group-hover/signup:w-full transition-all duration-300" />
                   </Link>
                 </motion.p>
               </form>

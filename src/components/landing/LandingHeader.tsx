@@ -19,7 +19,7 @@ const LandingHeader = () => {
         <header className={cn(
             "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
             isScrolled 
-                ? "bg-black/80 backdrop-blur-md border-b border-neutral-800" 
+                ? "bg-[linear-gradient(180deg,rgba(20,13,7,0.96),rgba(13,9,5,0.94))] backdrop-blur-md border-b border-amber-500/20" 
                 : "bg-transparent"
         )}>
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -32,13 +32,13 @@ const LandingHeader = () => {
 
                     {/* Navigation */}
                     <nav className="hidden md:flex items-center gap-8">
-                        <a href="#features" className="text-sm text-neutral-400 hover:text-white transition-colors">
+                        <a href="#features" className="text-sm text-neutral-400 hover:text-amber-200 transition-colors">
                             Features
                         </a>
-                        <a href="#pricing" className="text-sm text-neutral-400 hover:text-white transition-colors">
+                        <a href="#pricing" className="text-sm text-neutral-400 hover:text-amber-200 transition-colors">
                             Pricing
                         </a>
-                        <a href="#reviews" className="text-sm text-neutral-400 hover:text-white transition-colors">
+                        <a href="#reviews" className="text-sm text-neutral-400 hover:text-amber-200 transition-colors">
                             Reviews
                         </a>
                     </nav>
@@ -49,7 +49,7 @@ const LandingHeader = () => {
                             asChild
                             variant="ghost"
                             size="sm"
-                            className="text-neutral-400 hover:text-white"
+                            className="text-neutral-400 hover:text-amber-200 hover:bg-amber-500/10"
                         >
                             <Link to="/login">Login</Link>
                         </Button>

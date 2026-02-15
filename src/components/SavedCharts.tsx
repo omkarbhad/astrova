@@ -40,12 +40,12 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
   };
 
   return (
-    <div className="bg-neutral-900/30 rounded-2xl p-4 border border-neutral-800/50">
+    <div className="bg-[hsl(24,16%,8%)]/80 rounded-2xl p-4 border border-amber-500/20">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Saved Charts</h2>
         <button
           onClick={() => setShowList(!showList)}
-          className="text-xs px-2 py-1 bg-neutral-900/50 rounded hover:bg-neutral-900/70 transition-colors"
+          className="text-xs px-2 py-1 bg-[hsl(24,18%,9%)] rounded border border-amber-500/20 hover:bg-[hsl(24,20%,12%)] transition-colors"
         >
           {showList ? "Hide" : "Show"} ({savedCharts.length})
         </button>
@@ -60,7 +60,7 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
             </div>
           ) : (
             savedCharts.map((chart) => (
-              <div key={chart.id} className="bg-neutral-900/50 rounded-lg p-3 border border-neutral-800/50">
+              <div key={chart.id} className="bg-[hsl(24,18%,9%)]/80 rounded-lg p-3 border border-amber-500/20">
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <div className="font-medium text-white">{chart.name}</div>
@@ -71,7 +71,7 @@ export function SavedCharts({ onLoadChart, onDeleteChart, refreshKey }: SavedCha
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => onLoadChart(chart.id)}
-                      className="p-1.5 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
+                      className="p-1.5 text-xs bg-amber-500/20 text-amber-200 rounded hover:bg-amber-500/30 transition-colors"
                       title="Load Chart"
                     >
                       Load

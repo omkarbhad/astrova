@@ -197,12 +197,12 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
     ? 'grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4'
     : 'grid grid-cols-1 sm:grid-cols-3 gap-4';
 
-  const cardClassName = `bg-[hsl(220,10%,8%)] rounded-xl ${compact ? 'p-3' : 'p-3'} border border-[hsl(220,8%,18%)] hover:border-amber-500/20 transition-colors`;
+  const cardClassName = `bg-[linear-gradient(160deg,rgba(14,10,6,0.93),rgba(32,20,10,0.72))] rounded-xl ${compact ? 'p-3' : 'p-3'} border border-amber-500/15 hover:border-amber-500/30 transition-colors`;
   const sectionIconWrapClass = 'w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0';
   const sectionIconClass = 'w-4 h-4 text-amber-300';
   const sectionHintClass = 'text-xs text-neutral-400 mt-0.5';
   const selectLabelClass = 'block text-xs text-neutral-400 mb-1';
-  const selectControlClass = 'w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg px-2 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 appearance-none transition-colors';
+  const selectControlClass = 'w-full h-9 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg px-2 pr-8 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/25 focus:border-amber-500/40 appearance-none transition-colors';
 
   // Dropdown option helpers
   const years = useMemo(() => {
@@ -509,7 +509,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 onKeyDown={handleLocationKeyDown}
                 onFocus={() => setShowLocationResults(true)}
                 onBlur={() => window.setTimeout(() => setShowLocationResults(false), 200)}
-                className={`w-full h-10 sm:h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg pl-10 pr-10 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-500/30 transition-colors`}
+                className={`w-full h-10 sm:h-9 bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg pl-10 pr-10 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-500/35 transition-colors`}
                 aria-label="Search birth location"
                 autoComplete="off"
                 spellCheck={false}
@@ -525,7 +525,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                 <button
                   type="button"
                   onClick={clearLocation}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-[hsl(220,10%,12%)] transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-amber-500/10 transition-colors"
                   title="Clear location"
                   aria-label="Clear selected location"
                 >
@@ -609,7 +609,7 @@ export function RealtimeControls({ data, onChange, showHeader = true, showLocati
                         lon: city.lon,
                       })
                     }
-                    className="h-8 px-2 text-xs bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg hover:bg-[hsl(220,10%,14%)] hover:border-amber-500/20 transition-all text-white/80 hover:text-white"
+                    className="h-8 px-2 text-xs bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg hover:bg-[hsl(24,20%,12%)] hover:border-amber-500/35 transition-all text-white/80 hover:text-white"
                   >
                     {city.name}
                   </button>

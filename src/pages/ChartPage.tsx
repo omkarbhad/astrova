@@ -50,6 +50,7 @@ function saveChartsToStorage(charts: SavedChart[]) {
 
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const GRAHA_DISPLAY_ORDER = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
 const UPAGRAHA_DISPLAY_ORDER = ['Dhuma', 'Vyatipata', 'Parivesha', 'Indrachapa', 'Upaketu', 'Kaala', 'Mrityu', 'ArthaPrahara', 'YamaGhantaka', 'Gulika', 'Mandi'];
 
 function parseCalendarDate(dateStr: string): Date | null {
@@ -550,7 +551,7 @@ function ChartPage() {
                               <Calendar className="w-6 h-6 text-amber-300" />
                               <h2 className="text-2xl font-bold text-white">Birth Chart Analysis</h2>
                             </div>
-                            <p className="text-sm text-neutral-300 text-center">Generate your Vedic birth chart — all calculations run locally</p>
+                            <p className="text-xs text-neutral-300 text-center">Generate your Vedic birth chart — all calculations run locally</p>
                             <p className="text-neutral-400 text-sm text-center mt-1 hidden sm:block">Date, time and location powered by precision Vedic calculations</p>
                             <p className="text-[11px] text-neutral-500 text-center mt-2 hidden sm:block">Fill the birth form below, then generate your chart.</p>
                           </div>
@@ -705,9 +706,9 @@ function ChartPage() {
                                 {/* Other controls below, right-aligned */}
                                 <div className="flex flex-col gap-2 w-full">
                                   {/* Controls on bottom/right - always right aligned */}
-                                  <div className="flex items-center justify-between w-full gap-1.5">
+                                  <div className="flex items-center justify-end w-full gap-1.5">
                                     {/* Shortcut text hidden on mobile, shown on larger screens */}
-                                    <p className="text-[10px] text-neutral-500 px-1 hidden lg:block text-left">Shortcut: Ctrl/Cmd + S to save • Esc to cancel delete</p>
+                                    <p className="text-[10px] text-neutral-500 px-1 hidden lg:block text-left mr-auto">Shortcut: Ctrl/Cmd + S to save • Esc to cancel delete</p>
                                     
                                     {/* Buttons */}
                                     <div className="flex items-center gap-1.5">
@@ -804,14 +805,14 @@ function ChartPage() {
                                   <div className="flex-1 flex items-center justify-center">
                                     <NorthIndianChart data={kundaliData} chartType="rasi" />
                                   </div>
-                                  <h3 className="text-sm sm:text-base font-medium text-center mt-2 sm:mt-3 text-white">Lagna (D1)</h3>
+                                  <h3 className="text-sm sm:text-base font-medium text-center mt-2 sm:mt-3 text-white flex items-center justify-center gap-1">Lagna <span className="text-[11px] px-2.5 py-1 rounded-md bg-black/30 border border-white/10">D1</span></h3>
                                 </div>
 
                                 <div className="bg-[linear-gradient(160deg,rgba(14,10,6,0.93),rgba(32,20,10,0.72))] rounded-lg sm:rounded-xl p-3 sm:p-4 border border-amber-500/15 hover:border-amber-500/30 transition-colors flex flex-col shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
                                   <div className="flex-1 flex items-center justify-center">
                                     <NorthIndianChart data={kundaliData} chartType="navamsa" />
                                   </div>
-                                  <h3 className="text-sm sm:text-base font-medium text-center mt-2 sm:mt-3 text-white">Navamsa (D9)</h3>
+                                  <h3 className="text-sm sm:text-base font-medium text-center mt-2 sm:mt-3 text-white flex items-center justify-center gap-1">Navamsa <span className="text-[11px] px-2.5 py-1 rounded-md bg-black/30 border border-white/10">D9</span></h3>
                                 </div>
                               </div>
                               
@@ -847,14 +848,26 @@ function ChartPage() {
                                       <div className="w-6 h-6 rounded-lg bg-amber-500/30 flex items-center justify-center">
                                         <Orbit className="w-3.5 h-3.5 text-amber-100" />
                                       </div>
-                                      <h4 className="text-sm font-semibold text-white">Upagrahas (BPHS)</h4>
+                                      <h4 className="text-sm font-semibold text-white">Grahas & Upagrahas</h4>
                                     </div>
-                                    {kundaliData.upagrahas && Object.keys(kundaliData.upagrahas).length > 0 ? (
+                                    {(kundaliData.upagrahas && Object.keys(kundaliData.upagrahas).length > 0) || Object.keys(kundaliData.planets || {}).length > 0 ? (
                                       <div className="space-y-1.5 max-h-[180px] sm:max-h-[212px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {GRAHA_DISPLAY_ORDER.filter((name) => Boolean(kundaliData.planets?.[name])).map((name) => {
+                                          const graha = kundaliData.planets?.[name];
+                                          return (
+                                            <div key={`graha-${name}`} className="flex items-center justify-between text-xs rounded-md px-2 py-1 bg-amber-500/10 border border-amber-500/20">
+                                              <div className="flex items-center gap-1.5">
+                                                <span className="text-amber-200 font-semibold">{graha?.symbol || name.slice(0, 2)}</span>
+                                                <span className="text-white">{name}</span>
+                                              </div>
+                                              <span className="text-amber-100/90">{graha?.sign} {graha?.deg}°{graha?.min}'</span>
+                                            </div>
+                                          );
+                                        })}
                                         {UPAGRAHA_DISPLAY_ORDER.filter((name) => Boolean(kundaliData.upagrahas[name])).map((name) => {
                                           const upa = kundaliData.upagrahas[name];
                                           return (
-                                            <div key={name} className="flex items-center justify-between text-xs rounded-md px-2 py-1 bg-amber-500/5 border border-amber-500/15">
+                                            <div key={name} className="flex items-center justify-between text-xs rounded-md px-2 py-1 bg-black/20 border border-amber-500/15">
                                               <div className="flex items-center gap-1.5">
                                                 <span className="text-amber-300 font-medium">{upa?.symbol || name.slice(0, 2)}</span>
                                                 <span className="text-white">{name}</span>
@@ -866,7 +879,7 @@ function ChartPage() {
                                       </div>
                                     ) : (
                                       <div className="h-[180px] sm:h-[212px] rounded-lg border border-amber-500/20 bg-amber-500/5 text-neutral-400 text-xs flex items-center justify-center text-center px-3">
-                                        No upagraha data for this chart.
+                                        No graha/upagraha data for this chart.
                                       </div>
                                     )}
                                   </div>
@@ -964,11 +977,11 @@ function ChartPage() {
                         <div className="max-w-6xl mx-auto">
                           <div className="rounded-2xl p-4 sm:p-5 border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.08),rgba(16,10,6,0.92))] shadow-[0_10px_25px_rgba(0,0,0,0.25)]">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                              <div>
+                              <div className="text-center sm:text-left">
                                 <p className="text-[11px] uppercase tracking-[0.12em] text-amber-300/80">Birth Chart Analysis</p>
                                 <p className="text-white font-semibold text-sm sm:text-base mt-0.5">{kundaliData.birth.date} • {kundaliData.birth.time}</p>
                               </div>
-                              <div className="flex flex-wrap items-center gap-1.5 sm:justify-end text-xs">
+                              <div className="flex flex-wrap items-center gap-1.5 sm:justify-end text-xs justify-center">
                                 <span className="px-2.5 py-1 rounded-md bg-black/25 border border-white/10 text-neutral-200 inline-flex items-center gap-1.5"><Clock3 className="w-3 h-3" />TZ {kundaliData.birth.tz_offset_hours}h</span>
                                 {kundaliData.birth.dst_applied && (
                                   <span className="px-2 py-1 rounded-md bg-amber-500/20 border border-amber-500/50 text-amber-300 font-medium">
@@ -984,7 +997,7 @@ function ChartPage() {
                       )}
                       {kundaliData && (
                         <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
-                          <div className="rounded-2xl border border-amber-500/15 bg-[linear-gradient(150deg,rgba(14,10,6,0.86),rgba(28,17,8,0.54))] p-2 sm:p-3 shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
+                          <div className="w-full">
                             <StrengthAnalysis
                               shadBala={kundaliData.shad_bala}
                               bhavaBala={kundaliData.bhava_bala}
