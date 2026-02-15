@@ -275,7 +275,9 @@ export async function addModelFromOpenRouter(modelId: string, modelName: string)
       model_id: modelId,
       display_name: modelName,
       provider,
-      is_enabled: false,
+      // Keep imported models immediately usable in production/client environments.
+      // Admin can still disable explicitly from the Models tab.
+      is_enabled: true,
       sort_order: 99,
     }, { onConflict: 'model_id' });
   if (error) console.error('[Astrova] addModel error:', error.message, error.details);

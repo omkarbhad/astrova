@@ -338,6 +338,7 @@ RULES:
 - Start with 1-line verdict, then 2-4 concise supporting points.
 - Prioritize what is most actionable right now (current dasha + strongest/weakest factors).
 - If data conflicts, mention both sides briefly and give balanced takeaway.
+- Should say 11th house not 11th, same for rashi
 `;
 
   if (kundaliData && !skipSingleChartSections) {
@@ -590,7 +591,9 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
     async function loadModels() {
       const models = await getUserEnabledModels();
       const adminModel = await getAdminConfig('default_model');
-      if (adminModel && typeof adminModel === 'string') {
+      const enabledModelIds = new Set(models.map((model) => model.model_id));
+
+      if (adminModel && typeof adminModel === 'string' && enabledModelIds.has(adminModel)) {
         setSelectedModel(adminModel);
       } else if (models.length > 0) {
         setSelectedModel(models[0].model_id);
@@ -985,12 +988,12 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
   }
 
   return (
-    <div className="flex flex-col h-full bg-[hsl(220,10%,7%)] backdrop-blur-xl border-l border-[hsl(220,8%,18%)]">
+    <div className="flex flex-col h-full bg-[hsl(24,16%,8%)] backdrop-blur-xl border-l border-amber-500/20">
       {/* Sidebar Header */}
-      <div className="px-3 py-3 border-b border-[hsl(220,8%,18%)] bg-[linear-gradient(120deg,rgba(245,158,11,0.08),rgba(249,115,22,0.03)_55%,transparent)]">
+      <div className="px-3 py-3 border-b border-amber-500/15 bg-[linear-gradient(120deg,rgba(245,158,11,0.08),rgba(249,115,22,0.03)_55%,transparent)]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[hsl(220,10%,11%)] border border-amber-400/30 shadow-[0_0_0_1px_rgba(245,158,11,0.15)_inset] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[hsl(24,18%,9%)] border border-amber-400/30 shadow-[0_0_0_1px_rgba(245,158,11,0.15)_inset] flex items-center justify-center">
               <img src={LOGO_SRC} alt="Astrova logo" className="w-5 h-5 object-contain" />
             </div>
             <div>
@@ -1066,7 +1069,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
                     <button
                       key={qp.label}
                       onClick={() => sendMessage(qp.prompt)}
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] text-neutral-300 text-[11px] font-medium hover:bg-[hsl(220,10%,13%)] hover:border-amber-500/25 hover:text-white transition-all duration-200 text-left group"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[hsl(24,18%,9%)] border border-amber-500/15 text-neutral-300 text-[11px] font-medium hover:bg-[hsl(24,20%,12%)] hover:border-amber-500/25 hover:text-white transition-all duration-200 text-left group"
                     >
                       <Icon className={`w-3.5 h-3.5 ${qp.color} shrink-0 group-hover:scale-110 transition-transform`} />
                       <span>{qp.label}</span>
@@ -1082,7 +1085,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
                 {/* User message */}
                 {msg.role === 'user' && (
                   <div className="flex flex-col items-end mb-3 gap-1">
-                    <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-md bg-[hsl(220,10%,14%)] border border-[hsl(220,8%,20%)]">
+                    <div className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-br-md bg-[hsl(24,18%,11%)] border border-amber-500/15">
                       <p className="text-white/90 text-sm leading-relaxed">{msg.content}</p>
                     </div>
                   </div>
@@ -1103,7 +1106,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
                   <div className="mb-4">
                     {/* Thinking tokens - collapsible */}
                     {msg.thinking && (
-                      <div className="mb-2 rounded-xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.03)_55%,rgba(15,23,42,0.35))] px-2.5 py-2">
+                      <div className="mb-2 rounded-xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.03)_55%,rgba(24,15,8,0.35))] px-2.5 py-2">
                         <button
                           onClick={() => toggleThinking(msg.id)}
                           className="w-full flex items-center justify-between gap-2 text-left"
@@ -1136,8 +1139,8 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
                           [&_li]:text-neutral-300 [&_li]:text-sm [&_li]:mb-1
                           [&_strong]:text-white [&_strong]:font-semibold
                           [&_em]:text-amber-300
-                          [&_code]:text-amber-300 [&_code]:bg-[hsl(220,10%,14%)] [&_code]:px-1 [&_code]:rounded [&_code]:text-xs
-                          [&_pre]:bg-[hsl(220,10%,10%)] [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
+                          [&_code]:text-amber-300 [&_code]:bg-[hsl(24,18%,11%)] [&_code]:px-1 [&_code]:rounded [&_code]:text-xs
+                          [&_pre]:bg-[hsl(24,18%,9%)] [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
                           [&_blockquote]:border-l-2 [&_blockquote]:border-amber-500/50 [&_blockquote]:pl-3 [&_blockquote]:text-neutral-400
                         "
                       >
@@ -1188,7 +1191,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
           <div className="sticky bottom-2 flex justify-center pointer-events-none">
             <button
               onClick={scrollToBottom}
-              className="pointer-events-auto w-7 h-7 rounded-full bg-[hsl(220,10%,12%)] border border-[hsl(220,8%,22%)] flex items-center justify-center hover:bg-[hsl(220,10%,18%)] transition-colors shadow-lg"
+              className="pointer-events-auto w-7 h-7 rounded-full bg-[hsl(24,18%,10%)] border border-amber-500/20 flex items-center justify-center hover:bg-[hsl(24,20%,13%)] transition-colors shadow-lg"
             >
               <ChevronDown className="w-3.5 h-3.5 text-white" />
             </button>
@@ -1197,13 +1200,13 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="px-3 pt-0.5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-[linear-gradient(180deg,transparent,rgba(9,11,16,0.9)_30%,rgba(9,11,16,0.98))]">
+      <form onSubmit={handleSubmit} className="px-3 pt-0.5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-[linear-gradient(180deg,transparent,rgba(18,11,7,0.9)_30%,rgba(18,11,7,0.98))]">
         {insufficientCredits && (
           <div className="mb-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-[10px] text-center">
             Insufficient credits. Purchase more to continue.
           </div>
         )}
-        <div className="relative bg-[hsl(220,10%,11%)] border border-[hsl(220,8%,20%)] rounded-[26px] focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all flex items-end shadow-[0_8px_26px_rgba(0,0,0,0.3)]">
+        <div className="relative bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-[26px] focus-within:border-amber-500/40 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all flex items-end shadow-[0_8px_26px_rgba(0,0,0,0.3)]">
           <textarea
             ref={inputRef}
             value={input}

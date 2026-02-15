@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Heart, Shield, LayoutGrid, Sparkles, Info } from 'lucide-react';
+import { Heart, Shield, Calendar, Sparkles, Info } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,12 +34,12 @@ export function Header({
   }, [onToggleSidebar, onViewChange]);
 
   const navItems = [
-    { key: 'kundali' as const, label: 'Charts', icon: LayoutGrid, activeColor: 'text-amber-400', activeBg: 'bg-amber-500/15 text-amber-300 shadow-sm shadow-amber-500/10' },
+    { key: 'kundali' as const, label: 'Charts', icon: Calendar, activeColor: 'text-amber-400', activeBg: 'bg-amber-500/15 text-amber-300 shadow-sm shadow-amber-500/10' },
     { key: 'matcher' as const, label: 'Matcher', icon: Heart, activeColor: 'text-amber-400', activeBg: 'bg-amber-500/15 text-amber-300 shadow-sm shadow-amber-500/10' },
   ];
 
   return (
-    <header className="sticky top-0 z-[60] w-full bg-[hsl(220,10%,6%)]/95 backdrop-blur-xl border-b border-[hsl(220,8%,16%)]">
+    <header className="sticky top-0 z-[60] w-full bg-[hsl(220,10%,6%)]/95 backdrop-blur-xl border-b border-amber-500/15">
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
@@ -53,7 +53,7 @@ export function Header({
           </div>
 
           {/* Center Nav - Icons only on mobile, full on desktop */}
-          <nav className="flex items-center gap-0.5 p-0.5 rounded-full bg-[hsl(220,10%,7%)]/90 border border-[hsl(220,8%,18%)]">
+          <nav className="flex items-center gap-0.5 p-0.5 rounded-full bg-black/30 border border-amber-500/20">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeView === item.key;
@@ -64,7 +64,7 @@ export function Header({
                   className={`flex items-center gap-1.5 px-3 sm:px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all duration-200 shrink-0 ${
                     isActive
                       ? item.activeBg
-                      : 'text-neutral-500 hover:text-neutral-300'
+                      : 'text-neutral-500 hover:text-amber-200'
                   }`}
                   title={item.label}
                   aria-label={`Open ${item.label}`}
@@ -96,7 +96,7 @@ export function Header({
                 onClick={onToggleSidebar}
                 className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                   sidebarOpen
-                    ? 'text-neutral-400 hover:text-amber-300 hover:bg-amber-500/10 border border-[hsl(220,8%,20%)] hover:border-amber-500/30'
+                    ? 'text-neutral-400 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/35'
                     : 'bg-amber-500/20 text-amber-300 shadow-sm shadow-amber-500/10 ring-1 ring-amber-500/30'
                 }`}
                 title="Toggle Astrova AI"
@@ -111,7 +111,7 @@ export function Header({
             {isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
-                className="p-1.5 rounded-full text-neutral-500 hover:bg-neutral-800/60 transition-all group"
+                className="p-1.5 rounded-full text-neutral-500 hover:bg-amber-500/10 transition-all group"
                 title="Admin Panel"
                 aria-label="Open admin panel"
               >
@@ -120,7 +120,7 @@ export function Header({
             )}
 
             {/* Divider */}
-            <div className="w-px h-5 bg-[hsl(220,8%,18%)] mx-0.5 hidden sm:block" />
+            <div className="w-px h-5 bg-amber-500/20 mx-0.5 hidden sm:block" />
 
             {/* User Menu */}
             <UserMenu />

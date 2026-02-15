@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Star, FolderOpen, Search, X, ChevronRight, MapPin, Crown, Handshake, Sparkles, PawPrint, Globe2, Users, Orbit, Dna, Save } from 'lucide-react';
+import { Star, FolderOpen, Search, X, ChevronRight, MapPin, Crown, Handshake, Sparkles, PawPrint, Globe2, Users, Orbit, Dna, Save, Heart } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { LoadChartsModal } from './LoadChartsModal';
@@ -87,11 +87,11 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
   const [selectedResultIndex2, setSelectedResultIndex2] = useState(-1);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
-  const actionButtonClass = 'gap-1 border border-[hsl(220,8%,24%)] bg-[hsl(220,10%,10%)] text-white hover:bg-[hsl(220,10%,13%)] hover:border-[hsl(220,8%,30%)] h-9 sm:h-8 px-3';
-  const bannerClass = 'relative overflow-hidden rounded-2xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.1),rgba(217,119,6,0.08),rgba(15,23,42,0.9))] p-5 sm:p-6';
-  const formPanelClass = 'bg-[hsl(220,10%,8%)] border-amber-500/20 rounded-2xl overflow-hidden hover:border-amber-500/35 transition-colors';
-  const fieldLabelClass = 'text-xs font-medium text-neutral-300 mb-1 block';
-  const selectFieldClass = 'w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg px-2 text-sm text-white focus:border-amber-500/40 transition-all appearance-none cursor-pointer';
+  const actionButtonClass = 'gap-1 border border-[hsl(220,8%,18%)] bg-[hsl(220,10%,10%)] text-white hover:bg-[hsl(220,10%,14%)] hover:border-amber-500/20 h-9 px-3';
+  const bannerClass = 'relative overflow-hidden rounded-2xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.1),rgba(217,119,6,0.08),rgba(18,11,6,0.9))] p-5 sm:p-6';
+  const formPanelClass = 'bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl overflow-hidden hover:border-amber-500/20 transition-colors';
+  const fieldLabelClass = 'block text-xs text-neutral-400 mb-1';
+  const selectFieldClass = 'w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 appearance-none transition-colors cursor-pointer';
   
   // Form states for direct input
   const [formData1, setFormData1] = useState<KundaliRequest>(DEFAULT_FORM_DATA);
@@ -408,9 +408,8 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-amber-300/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Sparkles className="w-6 h-6 text-amber-300" />
+            <Heart className="w-6 h-6 text-amber-300" />
             <h2 className="text-2xl font-bold text-white">Kundali Matcher</h2>
-            <Sparkles className="w-6 h-6 text-amber-300" />
           </div>
           <p className="text-sm text-neutral-300 text-center">Compare two Vedic birth charts — all calculations run locally</p>
           <p className="text-neutral-400 text-sm text-center mt-1 hidden sm:block">Date, time and location powered by precision Vedic calculations</p>
@@ -425,35 +424,37 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
           <CardHeader className="px-4 py-3 pb-2 border-b border-amber-500/15 bg-amber-500/5">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/25 to-yellow-500/25 border border-amber-500/30 flex items-center justify-center">
-                <span className="text-amber-300 font-bold text-sm">♂</span>
+                <span className="text-amber-300 font-bold text-xs leading-none flex items-center justify-center">♂</span>
               </div>
               <CardTitle className="text-white text-sm sm:text-base">{name1 || 'Person 1'}</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="px-4 py-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-2">
-              <div className="w-full sm:w-auto sm:max-w-xs">
+              <div className="w-full">
                 <Input
                   id="name1"
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all w-full"
+                  className="bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 1 name"
                 />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button variant="outline" size="sm" onClick={() => openLoadModal(1)} className={`${actionButtonClass} justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 1">
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  <span className="text-xs hidden sm:inline">Load ({savedCharts.length})</span>
+                <Button variant="outline" size="sm" onClick={() => openLoadModal(1)} className={`${actionButtonClass} px-3 justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 1">
+                  <FolderOpen className="w-4 h-4" />
+                  <span className="text-xs ml-1 hidden sm:inline">Saved Charts</span>
+                  <span className="text-xs ml-1 sm:hidden">Saved</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/30 border border-white/10 ml-1">{savedCharts.length}</span>
                 </Button>
                 {onSaveChart && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => { void handleSavePersonChart(1); }}
-                    className="gap-1 h-9 sm:h-8 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
+                    className="gap-1 h-9 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
                     title="Save chart"
                     disabled={!name1.trim()}
                   >
@@ -530,7 +531,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         onKeyDown={(e) => handleLocationInputKeyDown(e, 1)}
                         onFocus={() => setShowLocationDropdown1(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown1(false), 200)}
-                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-500/50 transition-colors"
+                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-colors"
                         placeholder="Search city..."
                         aria-label="Search location for person 1"
                         autoComplete="off"
@@ -616,39 +617,41 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         </Card>
 
         {/* Person 2 Form */}
-        <Card className="bg-[hsl(220,10%,8%)] border-amber-500/20 rounded-2xl overflow-hidden hover:border-amber-500/35 transition-colors">
+        <Card className={formPanelClass}>
           <CardHeader className="px-4 py-3 pb-2 border-b border-amber-500/15 bg-amber-500/5">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/25 to-yellow-500/25 border border-amber-500/30 flex items-center justify-center">
-                <span className="text-amber-300 font-bold text-sm">♀</span>
+                <span className="text-amber-300 font-bold text-xs leading-none flex items-center justify-center">♀</span>
               </div>
               <CardTitle className="text-white text-sm sm:text-base">{name2 || 'Person 2'}</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="px-4 py-4 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-2">
-              <div className="w-full sm:w-auto sm:max-w-xs">
+              <div className="w-full">
                 <Input
                   id="name2"
                   value={name2}
                   onChange={(e) => setName2(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all w-full"
+                  className="bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 2 name"
                 />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button variant="outline" size="sm" onClick={() => openLoadModal(2)} className={`${actionButtonClass} justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 2">
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  <span className="text-xs hidden sm:inline">Load ({savedCharts.length})</span>
+                <Button variant="outline" size="sm" onClick={() => openLoadModal(2)} className={`${actionButtonClass} px-3 justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 2">
+                  <FolderOpen className="w-4 h-4" />
+                  <span className="text-xs ml-1 hidden sm:inline">Saved Charts</span>
+                  <span className="text-xs ml-1 sm:hidden">Saved</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/30 border border-white/10 ml-1">{savedCharts.length}</span>
                 </Button>
                 {onSaveChart && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => { void handleSavePersonChart(2); }}
-                    className="gap-1 h-9 sm:h-8 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
+                    className="gap-1 h-9 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
                     title="Save chart"
                     disabled={!name2.trim()}
                   >
@@ -725,7 +728,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                         onKeyDown={(e) => handleLocationInputKeyDown(e, 2)}
                         onFocus={() => setShowLocationDropdown2(true)}
                         onBlur={() => window.setTimeout(() => setShowLocationDropdown2(false), 200)}
-                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,20%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-500/50 transition-colors"
+                        className="w-full h-9 bg-[hsl(220,10%,10%)] border border-[hsl(220,8%,18%)] rounded-lg pl-8 pr-8 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 transition-colors"
                         placeholder="Search city..."
                         aria-label="Search location for person 2"
                         autoComplete="off"
@@ -811,13 +814,13 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
       </Card>
 
       {/* Match Button */}
-      <Card className="bg-[hsl(220,10%,8%)] border border-amber-500/20 rounded-2xl lg:col-span-2">
+      <Card className="bg-[hsl(220,10%,8%)] border border-[hsl(220,8%,18%)] rounded-xl lg:col-span-2 hover:border-amber-500/20 transition-colors">
         <CardContent className="p-4 sm:p-5 flex flex-col items-center">
             <Button
               onClick={handleMatch}
               disabled={isMatching || !!(selectedChart1 && selectedChart2 && selectedChart1 === selectedChart2)}
               aria-label={isMatching ? 'Calculating compatibility' : 'Analyze compatibility'}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 focus-visible:ring-offset-0 disabled:pointer-events-none px-6 w-full max-w-2xl h-11 sm:h-10 text-sm font-semibold bg-amber-500/20 hover:bg-amber-500/28 text-amber-200 border border-amber-500/35 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-0 disabled:pointer-events-none px-6 w-full max-w-2xl h-10 text-sm font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white border-0 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               size="lg"
             >
               {isMatching ? (
@@ -846,7 +849,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
         <Card className="bg-red-500/10 border border-red-500/30 rounded-2xl" role="alert">
           <CardContent className="p-4 text-red-300 text-sm flex items-center justify-between">
             <span>{matchError}</span>
-            <button onClick={() => setMatchError(null)} className="h-9 w-9 sm:h-8 sm:w-8 inline-flex items-center justify-center rounded-lg text-red-400 hover:text-red-200 hover:bg-red-500/10 transition-colors shrink-0 ml-2" aria-label="Dismiss match error">
+            <button onClick={() => setMatchError(null)} className="h-9 w-9 inline-flex items-center justify-center rounded-lg text-red-400 hover:text-red-200 hover:bg-red-500/10 transition-colors shrink-0 ml-2" aria-label="Dismiss match error">
               <X className="w-4 h-4" />
             </button>
           </CardContent>
@@ -984,7 +987,6 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             ].map(({ chart, name, symbol }) => {
               const panelClass = 'group relative rounded-2xl border border-amber-500/30 p-4 sm:p-5 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/15 overflow-hidden bg-amber-500/5 h-full';
               const iconWrapClass = 'w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/40 flex items-center justify-center';
-              const symbolClass = 'text-amber-300 font-bold text-sm drop-shadow';
 
               return (
               <div key={name} className={panelClass}>
@@ -992,7 +994,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 <div className="relative">
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`${iconWrapClass} group-hover:scale-110 transition-transform`}>
-                      <span className={symbolClass}>{symbol}</span>
+                      <span className="text-amber-300 font-bold text-xs leading-none flex items-center justify-center drop-shadow">{symbol}</span>
                     </div>
                     <div className="flex-1">
                       <h4 className="text-white font-bold text-base">{name}</h4>
@@ -1036,7 +1038,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
 
       {/* Load Charts Modal */}
       {saveToast && (
-        <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-[hsl(220,10%,9%)] border border-amber-500/40 rounded-xl shadow-2xl text-sm text-amber-200 flex items-center gap-2">
+        <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-4 py-2.5 bg-[hsl(220,10%,10%)] border border-amber-500/30 rounded-xl shadow-2xl text-sm text-amber-200 flex items-center gap-2">
           <Save className="w-3.5 h-3.5" />
           {saveToast}
           <button type="button" className="ml-1 h-8 w-8 inline-flex items-center justify-center rounded-lg text-amber-300 hover:text-amber-100 hover:bg-amber-500/10" onClick={() => setSaveToast(null)} aria-label="Dismiss save message">
