@@ -412,9 +412,9 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             <h2 className="text-2xl font-bold text-white">Kundali Matcher</h2>
             <Sparkles className="w-6 h-6 text-amber-300" />
           </div>
-          <p className="text-sm text-neutral-300 text-center">Generate and compare two Vedic birth charts — all calculations run locally</p>
-          <p className="text-neutral-400 text-sm text-center mt-1">Date, time and location powered by precision Vedic calculations</p>
-          <p className="text-[11px] text-neutral-500 text-center mt-2">Fill both birth forms, then run compatibility.</p>
+          <p className="text-sm text-neutral-300 text-center">Compare two Vedic birth charts — all calculations run locally</p>
+          <p className="text-neutral-400 text-sm text-center mt-1 hidden sm:block">Date, time and location powered by precision Vedic calculations</p>
+          <p className="text-[11px] text-neutral-500 text-center mt-2 hidden sm:block">Fill both birth forms, then run compatibility.</p>
         </div>
       </div>
 
@@ -431,35 +431,37 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             </div>
           </CardHeader>
           <CardContent className="px-4 py-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] items-end gap-2">
-              <div className="min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-2">
+              <div className="w-full sm:w-auto sm:max-w-xs">
                 <Input
                   id="name1"
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all"
+                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 1 name"
                 />
               </div>
-              <Button variant="outline" size="sm" onClick={() => openLoadModal(1)} className={`${actionButtonClass} w-full sm:w-auto justify-center`} title="Load saved chart" aria-label="Load saved chart for person 1">
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span className="text-xs">Load ({savedCharts.length})</span>
-              </Button>
-              {onSaveChart && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { void handleSavePersonChart(1); }}
-                  className="gap-1 h-9 sm:h-8 px-3 w-full sm:w-auto justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20"
-                  title="Save chart"
-                  disabled={!name1.trim()}
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span className="text-xs">Save</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button variant="outline" size="sm" onClick={() => openLoadModal(1)} className={`${actionButtonClass} justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 1">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span className="text-xs hidden sm:inline">Load ({savedCharts.length})</span>
                 </Button>
-              )}
+                {onSaveChart && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { void handleSavePersonChart(1); }}
+                    className="gap-1 h-9 sm:h-8 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
+                    title="Save chart"
+                    disabled={!name1.trim()}
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span className="text-xs">Save</span>
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="space-y-3">
@@ -624,35 +626,37 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
             </div>
           </CardHeader>
           <CardContent className="px-4 py-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] items-end gap-2">
-              <div className="min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-2">
+              <div className="w-full sm:w-auto sm:max-w-xs">
                 <Input
                   id="name2"
                   value={name2}
                   onChange={(e) => setName2(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleMatch(); }}
-                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all"
+                  className="bg-[hsl(220,10%,10%)] border-[hsl(220,8%,18%)] text-white h-10 sm:h-9 text-sm rounded-lg focus:border-amber-500/50 transition-all w-full"
                   placeholder="Name"
                   aria-label="Person 2 name"
                 />
               </div>
-              <Button variant="outline" size="sm" onClick={() => openLoadModal(2)} className={`${actionButtonClass} w-full sm:w-auto justify-center`} title="Load saved chart" aria-label="Load saved chart for person 2">
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span className="text-xs">Load ({savedCharts.length})</span>
-              </Button>
-              {onSaveChart && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { void handleSavePersonChart(2); }}
-                  className="gap-1 h-9 sm:h-8 px-3 w-full sm:w-auto justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20"
-                  title="Save chart"
-                  disabled={!name2.trim()}
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span className="text-xs">Save</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button variant="outline" size="sm" onClick={() => openLoadModal(2)} className={`${actionButtonClass} justify-center flex-shrink-0`} title="Load saved chart" aria-label="Load saved chart for person 2">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span className="text-xs hidden sm:inline">Load ({savedCharts.length})</span>
                 </Button>
-              )}
+                {onSaveChart && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { void handleSavePersonChart(2); }}
+                    className="gap-1 h-9 sm:h-8 px-3 justify-center bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:bg-amber-500/20 flex-shrink-0"
+                    title="Save chart"
+                    disabled={!name2.trim()}
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span className="text-xs">Save</span>
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="space-y-3">
@@ -823,7 +827,7 @@ export function KundaliMatcher({ savedCharts, onDeleteChart, onMatchComplete, on
                 </div>
               ) : (
                 <div className="w-full flex items-center justify-center text-center">
-                  <span>Analyze Compatibility</span>
+                  <span>Analyze</span>
                 </div>
               )}
             </Button>

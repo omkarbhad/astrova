@@ -551,9 +551,9 @@ function ChartPage() {
                               <h2 className="text-2xl font-bold text-white">Birth Chart Analysis</h2>
                               <Sparkles className="w-6 h-6 text-amber-300" />
                             </div>
-                            <p className="text-sm text-neutral-300 text-center">Generate and analyze your Vedic birth chart — all calculations run locally</p>
-                            <p className="text-neutral-400 text-sm text-center mt-1">Date, time and location powered by precision Vedic calculations</p>
-                            <p className="text-[11px] text-neutral-500 text-center mt-2">Fill the birth form below, then generate your chart.</p>
+                            <p className="text-sm text-neutral-300 text-center">Generate your Vedic birth chart — all calculations run locally</p>
+                            <p className="text-neutral-400 text-sm text-center mt-1 hidden sm:block">Date, time and location powered by precision Vedic calculations</p>
+                            <p className="text-[11px] text-neutral-500 text-center mt-2 hidden sm:block">Fill the birth form below, then generate your chart.</p>
                           </div>
                         </div>
                       </div>
@@ -706,17 +706,17 @@ function ChartPage() {
                                 {/* Other controls below, right-aligned */}
                                 <div className="flex flex-col gap-2 w-full">
                                   {/* Controls on bottom/right - always right aligned */}
-                                  <div className="flex items-center justify-between w-full">
-                                    {/* Shortcut text on left */}
+                                  <div className="flex items-center justify-end w-full gap-1.5">
+                                    {/* Shortcut text hidden on mobile, shown on larger screens */}
                                     <p className="text-[10px] text-neutral-500 px-1 hidden lg:block">Shortcut: Ctrl/Cmd + S to save • Esc to cancel delete</p>
                                     
-                                    {/* Buttons on right */}
+                                    {/* Buttons */}
                                     <div className="flex items-center gap-1.5">
                                       {/* Saved Charts button */}
                                       <Button
                                         variant="outline" size="sm" onClick={handleLoadCharts} className={`${actionButtonClass} px-3 h-9 sm:h-8 flex-shrink-0`} aria-label="Open saved charts modal">
                                         <FolderOpen className="w-4 h-4" />
-                                        <span className="text-xs ml-1">Saved Charts</span>
+                                        <span className="text-xs ml-1">Saved</span>
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/30 border border-white/10 ml-1">{savedCharts.length}</span>
                                       </Button>
 
@@ -754,7 +754,7 @@ function ChartPage() {
                                         }`}
                                       >
                                         <span className="text-xs font-semibold">
-                                          {realtimeEnabled ? 'Automatically generated' : (isLoading ? 'Generating...' : 'Generate Chart')}
+                                          {realtimeEnabled ? 'Auto' : (isLoading ? 'Generating...' : 'Generate')}
                                         </span>
                                       </Button>
                                     </div>
