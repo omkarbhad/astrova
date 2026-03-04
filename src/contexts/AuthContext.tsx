@@ -6,6 +6,7 @@ interface AuthContextType {
   astrovaUser: AstrovaUser | null;
   isLoaded: boolean;
   isSignedIn: boolean;
+  isSessionUser: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, name?: string) => Promise<{ error?: string; needsVerification?: boolean }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -37,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // A user is truly signed in only when we have both a user AND a JWT token
   const isSignedIn = !!sessionUser && !!jwtToken;
+  
+  // For redirect purposes, consider signed in as soon as we have a session user
+  const isSessionUser = !!sessionUser;
 
   // Keep api.ts token in sync
   useEffect(() => {
@@ -134,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       astrovaUser,
       isLoaded,
       isSignedIn,
+      isSessionUser,
       signIn,
       signUp,
       signInWithGoogle,

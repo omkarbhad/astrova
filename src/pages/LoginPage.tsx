@@ -16,18 +16,18 @@ const LoginPage = () => {
   const [focusedInput, setFocusedInput] = useState<'email' | 'password' | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { signIn, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
+  const { signIn, signInWithGoogle, isLoaded, isSessionUser } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already signed in (or just signed in successfully)
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (isLoaded && isSessionUser) {
       navigate('/chart', { replace: true });
     }
-  }, [isLoaded, isSignedIn, navigate]);
+  }, [isLoaded, isSessionUser, navigate]);
 
   // Don't render the login form if already authenticated — avoids flash
-  if (isSignedIn) return null;
+  if (isSessionUser) return null;
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);

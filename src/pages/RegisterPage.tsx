@@ -19,17 +19,17 @@ const RegisterPage = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [focusedInput, setFocusedInput] = useState<'name' | 'email' | 'password' | 'confirmPassword' | 'code' | null>(null);
 
-  const { signUp, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
+  const { signUp, signInWithGoogle, isLoaded, isSessionUser } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already signed in (or just signed up successfully)
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (isLoaded && isSessionUser) {
       navigate('/chart', { replace: true });
     }
-  }, [isLoaded, isSignedIn, navigate]);
+  }, [isLoaded, isSessionUser, navigate]);
 
-  if (isSignedIn) return null;
+  if (isSessionUser) return null;
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
