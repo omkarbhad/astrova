@@ -6,7 +6,6 @@ interface AuthContextType {
   astrovaUser: AstrovaUser | null;
   isLoaded: boolean;
   isSignedIn: boolean;
-  isSessionUser: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, name?: string) => Promise<{ error?: string; needsVerification?: boolean }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -29,103 +28,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
-  const syncAttempts = useRef(0);
   const prevSessionUserId = useRef<string | undefined>(undefined);
 
-  const isLoaded = !session.isPending;
+  const sessionPending = session.isPending;
   const sessionUser = session.data?.user;
 
-  // When session user changes (different account), clear old user data immediately
+  // isLoaded = fully resolved: session check done AND (no user OR JWT fetched)
+  // This prevents AuthGuard from redirecting while JWT is still loading
+  const isLoaded = !sessionPending && (!sessionUser || !!jwtToken);
+
+  // Signed in = session exists + JWT token ready
+  const isSignedIn = !!sessionUser && !!jwtToken;
+
+  // When session user changes (different account or sign-out), clear old data
   useEffect(() => {
     if (sessionUser?.id !== prevSessionUserId.current) {
       if (prevSessionUserId.current && sessionUser?.id) {
-        // User switched accounts — wipe old data
         setAstrovaUser(null);
         setJwtToken(null);
-        syncAttempts.current = 0;
         clearUserData();
       }
       prevSessionUserId.current = sessionUser?.id;
     }
   }, [sessionUser?.id]);
 
-  // Fetch JWT token whenever the session changes using getJWTToken()
+  // Fetch JWT token whenever session changes
   useEffect(() => {
     if (!sessionUser) {
       setJwtToken(null);
       return;
     }
-    getJWTToken().then((token: string | null) => {
-      setJwtToken(token ?? null);
-    }).catch(() => setJwtToken(null));
+    getJWTToken().then((token) => setJwtToken(token ?? null)).catch(() => setJwtToken(null));
   }, [sessionUser?.id, session.data]);
-
-  // A user is truly signed in only when we have both a user AND a JWT token
-  const isSignedIn = !!sessionUser && !!jwtToken;
-  
-  // For redirect purposes, consider signed in as soon as we have a session user
-  const isSessionUser = !!sessionUser;
 
   // Keep api.ts token in sync
   useEffect(() => {
     setTokenProvider(() => jwtToken);
   }, [jwtToken]);
 
-  const signOutFn = useCallback(async () => {
-    try { await authClient.signOut(); } catch { /* ignore signout errors */ }
-    setAstrovaUser(null);
-    setJwtToken(null);
-    syncAttempts.current = 0;
-    clearUserData();
-  }, []);
-
+  // Sync astrova user from DB once we have session + JWT
   const syncAstrovaUser = useCallback(async () => {
     if (!sessionUser || !jwtToken) return;
-
-    // Don't retry more than 2 times — if API keeps failing, session is stale
-    if (syncAttempts.current >= 2) {
-      console.warn('[auth] API calls failed after sign-in. Clearing stale session.');
-      signOutFn();
-      return;
-    }
-    syncAttempts.current++;
-
     const au = await getOrCreateAstrovaUser(
       sessionUser.id,
       sessionUser.email ?? '',
       sessionUser.name ?? undefined,
       sessionUser.image ?? undefined,
     );
-
     if (au) {
       setAstrovaUser(au);
-      syncAttempts.current = 0;
-    } else if (syncAttempts.current >= 2) {
-      // Second failure — stale session, sign out
-      console.warn('[auth] Failed to sync user from API. Signing out.');
-      signOutFn();
     }
-  }, [sessionUser?.id, jwtToken, signOutFn]);
+  }, [sessionUser?.id, jwtToken]);
 
   useEffect(() => {
     if (isSignedIn) {
-      syncAttempts.current = 0;
       syncAstrovaUser();
-    } else if (isLoaded && !sessionUser) {
+    } else if (!sessionPending && !sessionUser) {
       setAstrovaUser(null);
-      syncAttempts.current = 0;
     }
-  }, [isSignedIn, isLoaded, syncAstrovaUser]);
+  }, [isSignedIn, sessionPending, sessionUser, syncAstrovaUser]);
 
+  const signOutFn = useCallback(async () => {
+    try { await authClient.signOut(); } catch { /* ignore */ }
+    setAstrovaUser(null);
+    setJwtToken(null);
+    clearUserData();
+  }, []);
+
+  // Simple signIn — no pre-signOut, just sign in directly
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      // Clear any existing session + data before signing in as a different user
-      try { await authClient.signOut(); } catch { /* ignore */ }
-      setAstrovaUser(null);
-      setJwtToken(null);
-      syncAttempts.current = 0;
-      clearUserData();
-
       const resp = await authClient.signIn.email({ email, password });
       if (resp.error) return { error: resp.error.message ?? 'Sign-in failed' };
       return {};
@@ -134,15 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, name?: string) => {
+  const signUp = useCallback(async (email: string, password: string, name?: string): Promise<{ error?: string; needsVerification?: boolean }> => {
     try {
-      // Clear any existing session + data before signing up as a new user
-      try { await authClient.signOut(); } catch { /* ignore */ }
-      setAstrovaUser(null);
-      setJwtToken(null);
-      syncAttempts.current = 0;
-      clearUserData();
-
       const resp = await authClient.signUp.email({
         email,
         password,
@@ -157,13 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      // Clear any existing session + data before starting Google OAuth
-      try { await authClient.signOut(); } catch { /* ignore */ }
-      setAstrovaUser(null);
-      setJwtToken(null);
-      syncAttempts.current = 0;
-      clearUserData();
-
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/chart',
@@ -175,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    syncAttempts.current = 0;
     await syncAstrovaUser();
   }, [syncAstrovaUser]);
 
@@ -184,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       astrovaUser,
       isLoaded,
       isSignedIn,
-      isSessionUser,
       signIn,
       signUp,
       signInWithGoogle,

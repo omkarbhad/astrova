@@ -16,15 +16,15 @@ const LoginPage = () => {
   const [focusedInput, setFocusedInput] = useState<'email' | 'password' | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { signIn, signInWithGoogle, isLoaded, isSessionUser } = useAuth();
+  const { signIn, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect when session is confirmed (already logged in, or just signed in)
+  // Already logged in → redirect to chart
   useEffect(() => {
-    if (isLoaded && isSessionUser) {
+    if (isLoaded && isSignedIn) {
       navigate('/chart', { replace: true });
     }
-  }, [isLoaded, isSessionUser, navigate]);
+  }, [isLoaded, isSignedIn, navigate]);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -59,8 +59,7 @@ const LoginPage = () => {
         setError(result.error);
         setLoading(false);
       }
-      // On success: keep loading=true. The useEffect watching isSessionUser
-      // will redirect to /chart once the session is confirmed.
+      // On success: keep loading=true. useEffect redirects once isSignedIn confirms.
     } catch {
       setError('Sign-in failed. Please check your credentials.');
       setLoading(false);

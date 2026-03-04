@@ -19,15 +19,15 @@ const RegisterPage = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [focusedInput, setFocusedInput] = useState<'name' | 'email' | 'password' | 'confirmPassword' | 'code' | null>(null);
 
-  const { signUp, signInWithGoogle, isLoaded, isSessionUser } = useAuth();
+  const { signUp, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect when session is confirmed (already logged in, or just signed up)
+  // Already logged in → redirect to chart
   useEffect(() => {
-    if (isLoaded && isSessionUser && !pendingVerification) {
+    if (isLoaded && isSignedIn && !pendingVerification) {
       navigate('/chart', { replace: true });
     }
-  }, [isLoaded, isSessionUser, pendingVerification, navigate]);
+  }, [isLoaded, isSignedIn, pendingVerification, navigate]);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -72,8 +72,7 @@ const RegisterPage = () => {
         setSuccessMessage('Check your email for a confirmation link!');
         setLoading(false);
       }
-      // On success: keep loading=true. The useEffect watching isSessionUser
-      // will redirect to /chart once the session is confirmed.
+      // On success: keep loading=true. useEffect redirects once isSignedIn confirms.
     } catch {
       setError('Sign-up failed. Please try again.');
       setLoading(false);

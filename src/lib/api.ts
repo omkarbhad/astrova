@@ -11,8 +11,10 @@ export function setTokenProvider(fn: () => string | null) {
 
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T | null> {
   const token = _getToken?.();
+  // All API endpoints require auth — skip the request if no token yet
+  if (!token) return null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  headers['Authorization'] = `Bearer ${token}`;
   try {
     const res = await fetch(path, {
       ...init,

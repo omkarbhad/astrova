@@ -7,8 +7,9 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isSessionUser, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
 
+  // Still loading session — show spinner
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[hsl(220,10%,6%)]">
@@ -20,7 +21,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!isSessionUser) {
+  // No session at all — redirect to login
+  if (!isSignedIn) {
     return <Navigate to="/login" replace />;
   }
 

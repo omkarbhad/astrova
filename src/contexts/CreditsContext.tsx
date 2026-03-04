@@ -29,7 +29,7 @@ const DEFAULT_CREDIT_COSTS: CreditCosts = {
 };
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
-  const { astrovaUser } = useAuth();
+  const { astrovaUser, isSignedIn } = useAuth();
   const [credits, setCredits] = useState<number>(() => {
     try {
       const stored = localStorage.getItem(CREDITS_STORAGE_KEY);
@@ -41,8 +41,9 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [creditCosts, setCreditCosts] = useState<CreditCosts>(DEFAULT_CREDIT_COSTS);
   const [showBuyModal, setShowBuyModal] = useState(false);
 
-  // Fetch credit costs from admin config
+  // Fetch credit costs from admin config (wait for auth)
   useEffect(() => {
+    if (!isSignedIn) return;
     (async () => {
       try {
         const costs = await getAdminConfig('credit_costs');
@@ -56,7 +57,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
         }
       } catch { /* use defaults */ }
     })();
-  }, []);
+  }, [isSignedIn]);
 
   // Sync credits from DB user on login, reset on sign-out
   useEffect(() => {

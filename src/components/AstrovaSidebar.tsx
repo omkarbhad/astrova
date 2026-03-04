@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from './ui/button';
 import { useCredits, CreditsDisplay } from '@/contexts/CreditsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { BuyCreditsModal } from './BuyCreditsModal';
 import type { KundaliResponse } from '../types/kundali';
 import { getAdminConfig, getUserEnabledModels, searchKnowledgeBase } from '../lib/api';
@@ -582,14 +583,16 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { credits, creditCosts, deductCredits, showBuyModal, setShowBuyModal } = useCredits();
+  const { isSignedIn } = useAuth();
 
   // Active model (configured by admin; no user-side selection here)
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load default model
+  // Load default model (wait for auth so JWT token is available)
   useEffect(() => {
+    if (!isSignedIn) return;
     async function loadModels() {
       const models = await getUserEnabledModels();
       const adminModel = await getAdminConfig('default_model');
@@ -604,7 +607,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
       }
     }
     loadModels();
-  }, []);
+  }, [isSignedIn]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
