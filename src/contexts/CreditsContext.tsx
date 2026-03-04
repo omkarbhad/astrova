@@ -58,11 +58,14 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  // Sync credits from DB user on login
+  // Sync credits from DB user on login, reset on sign-out
   useEffect(() => {
     if (astrovaUser) {
       setCredits(astrovaUser.credits);
       localStorage.setItem(CREDITS_STORAGE_KEY, astrovaUser.credits.toString());
+    } else {
+      setCredits(INITIAL_CREDITS);
+      localStorage.removeItem(CREDITS_STORAGE_KEY);
     }
   }, [astrovaUser?.id, astrovaUser?.credits]);
 

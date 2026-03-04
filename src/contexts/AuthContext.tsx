@@ -16,6 +16,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/** Remove all user-specific data from localStorage */
+function clearUserData() {
+  localStorage.removeItem('astrova_saved_charts');
+  localStorage.removeItem('astrova_dakshina_credits');
+  localStorage.removeItem('astrova_auth_token');
+  localStorage.removeItem('astrova_user_preferences');
+  localStorage.removeItem('astrova_chart_cache');
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
@@ -52,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAstrovaUser(null);
     setJwtToken(null);
     syncAttempts.current = 0;
+    clearUserData();
   }, []);
 
   const syncAstrovaUser = useCallback(async () => {
@@ -94,6 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Clear any existing session + data before signing in as a different user
+      try { await authClient.signOut(); } catch { /* ignore */ }
+      setAstrovaUser(null);
+      setJwtToken(null);
+      syncAttempts.current = 0;
+      clearUserData();
+
       const resp = await authClient.signIn.email({ email, password });
       if (resp.error) return { error: resp.error.message ?? 'Sign-in failed' };
       return {};
@@ -104,6 +121,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, name?: string) => {
     try {
+      // Clear any existing session + data before signing up as a new user
+      try { await authClient.signOut(); } catch { /* ignore */ }
+      setAstrovaUser(null);
+      setJwtToken(null);
+      syncAttempts.current = 0;
+      clearUserData();
+
       const resp = await authClient.signUp.email({
         email,
         password,
@@ -118,6 +142,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     try {
+      // Clear any existing session + data before starting Google OAuth
+      try { await authClient.signOut(); } catch { /* ignore */ }
+      setAstrovaUser(null);
+      setJwtToken(null);
+      syncAttempts.current = 0;
+      clearUserData();
+
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/chart',
