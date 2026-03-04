@@ -7,7 +7,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSessionUser, isLoaded } = useAuth();
 
   if (!isLoaded) {
     return (
@@ -20,7 +20,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  if (!isSignedIn) {
+  if (!isSessionUser) {
     return <Navigate to="/login" replace />;
   }
 
