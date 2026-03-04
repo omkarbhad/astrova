@@ -62,8 +62,6 @@ const LoginPage = () => {
         setError(result.error);
         setLoading(false);
       }
-      // On success, don't navigate here — the useEffect watching isSignedIn
-      // will redirect to /chart once the session hook updates.
     } catch {
       setError('Sign-in failed. Please check your credentials.');
       setLoading(false);

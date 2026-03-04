@@ -72,8 +72,6 @@ const RegisterPage = () => {
         setPendingVerification(true);
         setSuccessMessage('Check your email for a confirmation link!');
       }
-      // On success without verification, the useEffect watching isSignedIn
-      // will redirect to /chart once the session hook updates.
     } catch {
       setError('Sign-up failed. Please try again.');
       setLoading(false);
