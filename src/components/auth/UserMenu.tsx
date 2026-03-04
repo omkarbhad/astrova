@@ -36,7 +36,7 @@ export function UserMenu() {
     return <Loader2 className="w-5 h-5 animate-spin text-white/40" />;
   }
 
-  if (!isSignedIn || !astrovaUser) {
+  if (!isSignedIn) {
     return (
       <button
         onClick={() => window.location.href = '/login'}
@@ -44,6 +44,15 @@ export function UserMenu() {
       >
         Sign In
       </button>
+    );
+  }
+
+  // Signed in but astrovaUser not yet loaded from DB — show loader briefly, then sign-out fallback
+  if (!astrovaUser) {
+    return (
+      <div className="flex items-center gap-2">
+        <Loader2 className="w-5 h-5 animate-spin text-white/40" />
+      </div>
     );
   }
 

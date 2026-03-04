@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { useCredits, CreditsDisplay } from '@/contexts/CreditsContext';
 import { BuyCreditsModal } from './BuyCreditsModal';
 import type { KundaliResponse } from '../types/kundali';
-import { getAdminConfig, getUserEnabledModels, searchKnowledgeBase } from '../lib/supabase';
+import { getAdminConfig, getUserEnabledModels, searchKnowledgeBase } from '../lib/api';
 
 interface ChatMessage {
   id: string;

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Coins } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { deductUserCredits, supabase, getAdminConfig, updateUserCredits } from '@/lib/supabase';
+import { deductUserCredits, getAdminConfig, updateUserCredits, getAstrovaUserById } from '@/lib/api';
 
 interface CreditCosts {
   AI_MESSAGE: number;
@@ -58,7 +58,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  // Sync credits from Supabase user on login
+  // Sync credits from DB user on login
   useEffect(() => {
     if (astrovaUser) {
       setCredits(astrovaUser.credits);
@@ -79,15 +79,13 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     const newCredits = credits - amount;
     setCredits(newCredits);
     localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
-    // Deduct in Supabase and re-sync
+    // Deduct in DB and re-sync actual balance
     if (astrovaUser?.id) {
       deductUserCredits(astrovaUser.id, amount, action || 'ai_message').then(async () => {
-        if (supabase) {
-          const { data } = await supabase.from('astrova_users').select('credits').eq('id', astrovaUser.id).single();
-          if (data && typeof data.credits === 'number') {
-            setCredits(data.credits);
-            localStorage.setItem(CREDITS_STORAGE_KEY, data.credits.toString());
-          }
+        const fresh = await getAstrovaUserById(astrovaUser.id);
+        if (fresh && typeof fresh.credits === 'number') {
+          setCredits(fresh.credits);
+          localStorage.setItem(CREDITS_STORAGE_KEY, fresh.credits.toString());
         }
       }).catch(() => {});
     }
@@ -98,15 +96,13 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     const newCredits = credits + amount;
     setCredits(newCredits);
     localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
-    // Sync to Supabase and re-fetch actual balance
+    // Sync to DB and re-fetch actual balance
     if (astrovaUser?.id) {
       updateUserCredits(astrovaUser.id, amount, 'credit_purchase').then(async () => {
-        if (supabase) {
-          const { data } = await supabase.from('astrova_users').select('credits').eq('id', astrovaUser.id).single();
-          if (data && typeof data.credits === 'number') {
-            setCredits(data.credits);
-            localStorage.setItem(CREDITS_STORAGE_KEY, data.credits.toString());
-          }
+        const fresh = await getAstrovaUserById(astrovaUser.id);
+        if (fresh && typeof fresh.credits === 'number') {
+          setCredits(fresh.credits);
+          localStorage.setItem(CREDITS_STORAGE_KEY, fresh.credits.toString());
         }
       }).catch(() => {});
     }

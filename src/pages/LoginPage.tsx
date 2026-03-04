@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { authClient } from '@/lib/auth-client';
 import { Input } from '@/components/ui/input';
 import { StarsBackground, CosmicOrbs } from '@/components/landing/ui/stars-background';
 
@@ -18,11 +19,15 @@ const LoginPage = () => {
   const { signIn, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already signed in
-  if (isLoaded && isSignedIn) {
-    navigate('/chart', { replace: true });
-    return null;
-  }
+  // Redirect if already signed in (or just signed in successfully)
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate('/chart', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
+
+  // Don't render the login form if already authenticated — avoids flash
+  if (isSignedIn) return null;
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -55,12 +60,12 @@ const LoginPage = () => {
       const result = await signIn(email, password);
       if (result.error) {
         setError(result.error);
-      } else {
-        navigate('/chart');
+        setLoading(false);
       }
+      // On success, don't navigate here — the useEffect watching isSignedIn
+      // will redirect to /chart once the session hook updates.
     } catch {
       setError('Sign-in failed. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };
@@ -325,10 +330,8 @@ const LoginPage = () => {
                     type="button"
                     onClick={async () => {
                       if (!email.trim()) { setError('Enter your email first, then click Forgot Password'); return; }
-                      const { supabase } = await import('@/lib/supabase');
-                      if (!supabase) return;
-                      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login` });
-                      if (resetErr) setError(resetErr.message);
+                      const resp = await authClient.forgetPassword.emailOtp({ email });
+                      if (resp.error) setError(resp.error.message ?? 'Reset failed');
                       else setError('Password reset link sent! Check your email.');
                     }}
                     className="text-[10px] text-neutral-500 hover:text-amber-200 transition-colors"

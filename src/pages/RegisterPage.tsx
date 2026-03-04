@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
@@ -22,11 +22,14 @@ const RegisterPage = () => {
   const { signUp, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already signed in
-  if (isLoaded && isSignedIn) {
-    navigate('/chart', { replace: true });
-    return null;
-  }
+  // Redirect if already signed in (or just signed up successfully)
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate('/chart', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
+
+  if (isSignedIn) return null;
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -68,12 +71,11 @@ const RegisterPage = () => {
       } else if (result.needsVerification) {
         setPendingVerification(true);
         setSuccessMessage('Check your email for a confirmation link!');
-      } else {
-        navigate('/chart');
       }
+      // On success without verification, the useEffect watching isSignedIn
+      // will redirect to /chart once the session hook updates.
     } catch {
       setError('Sign-up failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -81,7 +83,7 @@ const RegisterPage = () => {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMessage('Supabase sends a confirmation link via email. Please check your inbox and click the link to verify.');
+    setSuccessMessage('Check your email for a confirmation link to verify your account.');
   };
 
   const handleGoogleSignUp = async () => {

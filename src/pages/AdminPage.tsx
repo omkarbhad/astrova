@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, ArrowLeft, BookOpen, Search, Settings, Database, RefreshCw, Cpu, Coins, ToggleLeft, ToggleRight, Loader2, Download, Zap, Check, Users, Ban, ShieldCheck, MessageSquare, ArrowUp, PanelRightClose, FileText, X, Copy, Check as CheckIcon, Link2, Paperclip, Globe } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
-import { getAllKBArticles, upsertKBArticle, deleteKBArticle, supabase, getEnabledModels, toggleModel, addModelFromOpenRouter, deleteModel, getAdminConfig, setAdminConfig, getAllAstrovaUsers, updateUserCredits, toggleUserBan, setUserRole } from '@/lib/supabase';
-import type { KBArticle, EnabledModel, AstrovaUser } from '@/lib/supabase';
+import { getAllKBArticles, upsertKBArticle, deleteKBArticle, getEnabledModels, toggleModel, addModelFromOpenRouter, deleteModel, getAdminConfig, setAdminConfig, getAllAstrovaUsers, updateUserCredits, toggleUserBan, setUserRole } from '@/lib/api';
+import type { KBArticle, EnabledModel, AstrovaUser } from '@/lib/api';
 import { buildSystemPrompt } from '@/components/AstrovaSidebar';
 
 export default function AdminPage() {
@@ -1263,9 +1263,9 @@ The admin can then save it directly. Be concise, factual, and use proper Vedic a
               </h3>
               <div className="space-y-3 text-xs">
                 {[
-                  { label: 'Supabase URL', value: import.meta.env.VITE_SUPABASE_URL || 'Not configured' },
-                  { label: 'Connection', value: supabase ? 'Connected' : 'Not Connected', status: supabase ? 'green' : 'red' },
-                  { label: 'Auth Provider', value: 'Supabase Auth' },
+                  { label: 'Database', value: 'Neon (PostgreSQL)' },
+                  { label: 'Connection', value: 'Edge Functions', status: 'green' },
+                  { label: 'Auth Provider', value: 'Neon Auth' },
                   { label: 'Active AI Model', value: selectedModel },
                   { label: 'Admin Email', value: astrovaUser?.email || '' },
                 ].map((item, i) => (

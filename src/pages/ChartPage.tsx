@@ -17,7 +17,7 @@ import { SEOHead } from '@/components/common/SEOHead';
 import { CreditsProvider, useCredits } from '@/contexts/CreditsContext';
 import { calculateKundali, estimateTimezone } from '@/lib/vedic-engine';
 import { CHART_CONSTANTS } from '@/constants';
-import { getUserSavedCharts, saveChartToSupabase, deleteChartFromSupabase } from '@/lib/supabase';
+import { getUserSavedCharts, saveChartToSupabase, deleteChartFromSupabase } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { KundaliRequest, KundaliResponse } from '@/types/kundali';
 
