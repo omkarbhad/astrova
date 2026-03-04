@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { authClient, neonAuth } from '@/lib/auth-client';
+import { authClient, getJWTToken } from '@/lib/auth-client';
 import { getOrCreateAstrovaUser, setTokenProvider, type AstrovaUser } from '@/lib/api';
 
 interface AuthContextType {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setJwtToken(null);
       return;
     }
-    neonAuth.getJWTToken().then((token: string | null) => {
+    getJWTToken().then((token: string | null) => {
       setJwtToken(token ?? null);
     }).catch(() => setJwtToken(null));
   }, [sessionUser?.id, session.data]);
