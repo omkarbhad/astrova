@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { authClient, neonAuth } from '@/lib/auth-client';
 import { getOrCreateAstrovaUser, setTokenProvider, type AstrovaUser } from '@/lib/api';
 
 interface AuthContextType {
@@ -18,72 +18,40 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
   const syncAttempts = useRef(0);
 
   const isLoaded = !session.isPending;
   const sessionUser = session.data?.user;
 
-  // Neon Auth: find the JWT (access_token) — check multiple possible locations
-  const rawData = session.data as Record<string, unknown> | null;
-  const sessionObj = rawData?.session as Record<string, unknown> | undefined;
-  const sessionToken = (
-    (sessionObj?.access_token as string) ??
-    (sessionObj?.accessToken as string) ??
-    (rawData?.accessToken as string) ??
-    (rawData?.access_token as string) ??
-    (sessionObj?.token as string) ??
-    null
-  );
-
-  // For debugging, let's also check if there are any JWT-like tokens in the session
-  const allTokens = [
-    sessionObj?.access_token,
-    sessionObj?.accessToken, 
-    rawData?.accessToken,
-    rawData?.access_token,
-    sessionObj?.token
-  ].filter(Boolean);
-
-  // Find if any token looks like a JWT (starts with eyJ)
-  const jwtToken = allTokens.find(token => 
-    typeof token === 'string' && token.startsWith('eyJ')
-  ) as string | undefined;
-
-  // Use JWT token if found, otherwise fall back to the regular token extraction
-  const finalToken = jwtToken || sessionToken;
-
-  // Debug: log session structure once on change (remove after confirming)
+  // Fetch JWT token whenever the session changes using getJWTToken()
   useEffect(() => {
-    if (rawData) {
-      console.log('[auth] session keys:', Object.keys(rawData));
-      if (sessionObj) console.log('[auth] session.session keys:', Object.keys(sessionObj));
-      console.log('[auth] token type:', finalToken?.substring(0, 4) === 'eyJ' ? 'JWT' : 'opaque', '| length:', finalToken?.length);
-      console.log('[auth] all tokens found:', allTokens.map(t => typeof t === 'string' ? `${t.substring(0, 4)}...(${t.length})` : 'invalid'));
-      
-      // Show warning if only opaque tokens are available
-      if (finalToken && !finalToken.startsWith('eyJ')) {
-        console.warn('[auth] WARNING: Only opaque token available. JWT tokens required for API access.');
-        // You could also show a user-friendly message here
-      }
+    if (!sessionUser) {
+      setJwtToken(null);
+      return;
     }
-  }, [finalToken]);
+    neonAuth.getJWTToken().then((token: string | null) => {
+      setJwtToken(token ?? null);
+    }).catch(() => setJwtToken(null));
+  }, [sessionUser?.id, session.data]);
 
-  // A user is truly signed in only when we have both a user AND a valid token
-  const isSignedIn = !!sessionUser && !!finalToken;
+  // A user is truly signed in only when we have both a user AND a JWT token
+  const isSignedIn = !!sessionUser && !!jwtToken;
 
-  // Keep api.ts token in sync with Neon Auth session
+  // Keep api.ts token in sync
   useEffect(() => {
-    setTokenProvider(() => finalToken ?? null);
-  }, [finalToken]);
+    setTokenProvider(() => jwtToken);
+  }, [jwtToken]);
 
   const signOutFn = useCallback(async () => {
     try { await authClient.signOut(); } catch { /* ignore signout errors */ }
     setAstrovaUser(null);
+    setJwtToken(null);
     syncAttempts.current = 0;
   }, []);
 
   const syncAstrovaUser = useCallback(async () => {
-    if (!sessionUser || !finalToken) return;
+    if (!sessionUser || !jwtToken) return;
 
     // Don't retry more than 2 times — if API keeps failing, session is stale
     if (syncAttempts.current >= 2) {
@@ -108,13 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn('[auth] Failed to sync user from API. Signing out.');
       signOutFn();
     }
-  }, [sessionUser?.id, finalToken, signOutFn]);
+  }, [sessionUser?.id, jwtToken, signOutFn]);
 
   useEffect(() => {
     if (isSignedIn) {
       syncAttempts.current = 0;
       syncAstrovaUser();
-    } else if (isLoaded) {
+    } else if (isLoaded && !sessionUser) {
       setAstrovaUser(null);
       syncAttempts.current = 0;
     }
