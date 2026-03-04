@@ -23,38 +23,29 @@ async function verifyOpaqueToken(token: string): Promise<AuthPayload | null> {
   if (!baseUrl) return null;
   
   try {
-    // Try to get session info using the token as session ID
-    const response = await fetch(`${baseUrl}/sessions/${token}`, {
+    // For Neon Auth opaque tokens, we need to use the token as a Bearer token
+    // to get the current session info
+    const response = await fetch(`${baseUrl}/session`, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
       },
     });
     
     if (!response.ok) {
-      // Try alternative endpoint
-      const altResponse = await fetch(`${baseUrl}/session`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-      
-      if (!altResponse.ok) return null;
-      const session = await altResponse.json();
-      if (!session.user) return null;
-      
-      return {
-        sub: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        picture: session.user.image,
-      };
+      console.error(`[auth] Session endpoint returned ${response.status}`);
+      return null;
     }
     
     const session = await response.json();
-    if (!session.user) return null;
+    console.log('[auth] Session response:', session);
+    
+    // The session structure should have user data
+    if (!session || !session.user) {
+      console.error('[auth] No user data in session response');
+      return null;
+    }
     
     return {
       sub: session.user.id,
