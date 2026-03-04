@@ -7,9 +7,16 @@ export interface AuthPayload {
   picture?: string;
 }
 
-const JWKS = createRemoteJWKSet(
-  new URL(`${process.env.NEON_AUTH_BASE_URL}/.well-known/jwks.json`)
-);
+let _jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function getJWKS() {
+  if (!_jwks) {
+    const base = process.env.NEON_AUTH_BASE_URL;
+    if (!base) throw new Error('NEON_AUTH_BASE_URL not set');
+    _jwks = createRemoteJWKSet(new URL(`${base}/.well-known/jwks.json`));
+  }
+  return _jwks;
+}
 
 export async function requireAuth(req: Request): Promise<AuthPayload> {
   const authHeader = req.headers.get('Authorization') ?? '';
@@ -17,7 +24,7 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
   if (!token) throw new Response('Unauthorized', { status: 401 });
 
   try {
-    const { payload } = await jwtVerify(token, JWKS);
+    const { payload } = await jwtVerify(token, getJWKS());
 
     if (!payload.sub) throw new Error('No sub in token');
 
@@ -27,7 +34,8 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
       name: payload.name as string | undefined,
       picture: payload.picture as string | undefined,
     };
-  } catch {
+  } catch (e) {
+    console.error('[auth] JWT verify failed:', e instanceof Error ? e.message : e);
     throw new Response('Unauthorized', { status: 401 });
   }
 }
