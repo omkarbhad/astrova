@@ -85,11 +85,11 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       const result = await signInWithGoogle();
+      // Google OAuth triggers a full-page redirect — callbackURL handles navigation.
+      // Only handle errors here; don't navigate manually.
       if (result.error) {
         setError(result.error);
         setLoading(false);
-      } else {
-        navigate('/chart', { replace: true });
       }
     } catch {
       setError('Google sign-up failed.');

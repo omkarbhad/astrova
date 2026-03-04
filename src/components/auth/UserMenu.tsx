@@ -105,7 +105,7 @@ export function UserMenu() {
           </div>
           <div className="p-1.5">
             <button
-              onClick={() => { signOut(); setOpen(false); nav('/'); }}
+              onClick={async () => { setOpen(false); await signOut(); nav('/'); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-neutral-800/80 transition-colors"
             >
               <LogOut className="w-4 h-4" />
