@@ -35,7 +35,8 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
       picture: payload.picture as string | undefined,
     };
   } catch (e) {
-    console.error('[auth] JWT verify failed:', e instanceof Error ? e.message : e);
+    const prefix = token.substring(0, 10);
+    console.error(`[auth] JWT verify failed | token_prefix="${prefix}" | error:`, e instanceof Error ? e.message : String(e));
     throw new Response('Unauthorized', { status: 401 });
   }
 }
