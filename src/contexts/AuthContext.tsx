@@ -22,9 +22,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isLoaded = !session.isPending;
   const sessionUser = session.data?.user;
-  // Neon Auth stores the JWT in session.access_token (not session.token which is opaque)
-  const sessionData = session.data as { session?: { token?: string; access_token?: string } } | null;
-  const sessionToken = sessionData?.session?.access_token ?? sessionData?.session?.token;
+
+  // Neon Auth: find the JWT (access_token) — check multiple possible locations
+  const rawData = session.data as Record<string, unknown> | null;
+  const sessionObj = rawData?.session as Record<string, unknown> | undefined;
+  const sessionToken = (
+    (sessionObj?.access_token as string) ??
+    (sessionObj?.accessToken as string) ??
+    (rawData?.accessToken as string) ??
+    (rawData?.access_token as string) ??
+    (sessionObj?.token as string) ??
+    null
+  );
+
+  // Debug: log session structure once on change (remove after confirming)
+  useEffect(() => {
+    if (rawData) {
+      console.log('[auth] session keys:', Object.keys(rawData));
+      if (sessionObj) console.log('[auth] session.session keys:', Object.keys(sessionObj));
+      console.log('[auth] token type:', sessionToken?.substring(0, 4) === 'eyJ' ? 'JWT' : 'opaque', '| length:', sessionToken?.length);
+    }
+  }, [sessionToken]);
 
   // A user is truly signed in only when we have both a user AND a valid token
   const isSignedIn = !!sessionUser && !!sessionToken;
