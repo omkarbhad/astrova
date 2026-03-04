@@ -20,14 +20,20 @@ const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL;
  * that the backend can verify via JWKS.
  */
 export async function getJWTToken(): Promise<string | null> {
+  // [FIX #2] Add 8s timeout to prevent hanging forever
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const resp = await fetch(`${NEON_AUTH_URL}/token`, {
       credentials: 'include',
+      signal: controller.signal,
     });
     if (!resp.ok) return null;
     const data = await resp.json();
     return data.token ?? data.jwt ?? data.access_token ?? null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }

@@ -1,18 +1,18 @@
-import { getDb, json } from '../_lib/db.js';
-import { requireAuth } from '../_lib/auth.js';
+import { getDb, json, jsonError, parseBody } from '../_lib/db.js';
+import { requireAuth, requireAdmin } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+const MAX_KEY_LEN = 100;
+const MAX_VALUE_SIZE = 50_000;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
     const auth = await requireAuth(req);
     const sql = getDb();
 
-    // All admin config operations require admin role
-    const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${auth.sub} LIMIT 1`;
-    if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-      return new Response('Forbidden', { status: 403 });
-    }
+    // [FIX #39] Use reusable admin check
+    await requireAdmin(sql, auth);
 
     if (req.method === 'GET') {
       const url = new URL(req.url);
@@ -38,10 +38,21 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      const { key, value } = await req.json() as { key: string; value: unknown };
+      // [FIX #21] Safe JSON parsing
+      const { key, value } = await parseBody<{ key: string; value: unknown }>(req);
+
+      // Validate key and value
+      if (!key || typeof key !== 'string' || key.length > MAX_KEY_LEN) {
+        return jsonError(`Config key must be a string (max ${MAX_KEY_LEN} chars)`);
+      }
+      const serialized = JSON.stringify(value);
+      if (serialized.length > MAX_VALUE_SIZE) {
+        return jsonError('Config value too large');
+      }
+
       await sql`
         INSERT INTO astrova_admin_config (config_key, config_value, updated_at)
-        VALUES (${key}, ${JSON.stringify(value)}::jsonb, now())
+        VALUES (${key}, ${serialized}::jsonb, now())
         ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = excluded.updated_at`;
       return json({ ok: true });
     }

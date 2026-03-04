@@ -1,7 +1,10 @@
-import { getDb, json } from '../_lib/db.js';
-import { requireAuth } from '../_lib/auth.js';
+import { getDb, json, jsonError, parseBody } from '../_lib/db.js';
+import { requireAuth, requireAdmin, requireOwnership } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+// [FIX #27] Valid role values
+const VALID_ROLES = ['user', 'admin'] as const;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -11,46 +14,53 @@ export default async function handler(req: Request): Promise<Response> {
     const id = url.pathname.split('/').pop()!;
 
     if (req.method === 'GET') {
+      // [FIX #25] Require ownership — users can only GET their own profile, admins can GET any
+      await requireOwnership(sql, payload, id);
       const rows = await sql`SELECT * FROM astrova_users WHERE id = ${id} LIMIT 1`;
       return json(rows[0] ?? null);
     }
 
     if (req.method === 'PATCH') {
-      // Verify requester is admin
-      const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${payload.sub} LIMIT 1`;
-      if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-        return new Response('Forbidden', { status: 403 });
-      }
+      // [FIX #39] Use reusable admin check
+      await requireAdmin(sql, payload);
 
-      const body = await req.json() as Record<string, unknown>;
-      const allowedFields = ['is_banned', 'role', 'credits'];
-      const setClauses: string[] = [];
-      const values: unknown[] = [];
+      // [FIX #21] Safe JSON parsing
+      const body = await parseBody<Record<string, unknown>>(req);
 
-      for (const field of allowedFields) {
-        if (field in body) {
-          setClauses.push(field);
-          values.push(body[field]);
-        }
-      }
-      if (setClauses.length === 0) return json({ ok: false }, 400);
+      // [FIX #26] Removed dead setClauses/values code. Validate each field inline.
+      // [FIX #29] Validate is_banned is boolean
+      const isBanned = 'is_banned' in body ? Boolean(body.is_banned) : undefined;
+      // [FIX #27] Validate role is one of allowed values
+      const role = 'role' in body
+        ? (VALID_ROLES.includes(body.role as typeof VALID_ROLES[number]) ? body.role as string : undefined)
+        : undefined;
+      // [FIX #28] Validate credits is a non-negative finite number
+      const credits = 'credits' in body
+        ? (typeof body.credits === 'number' && Number.isFinite(body.credits) && body.credits >= 0
+            ? Math.floor(body.credits) : undefined)
+        : undefined;
 
-      // Build dynamic update — neon tagged template can't do dynamic column names,
-      // so we handle each allowed field explicitly
-      if ('is_banned' in body && 'role' in body && 'credits' in body) {
-        await sql`UPDATE astrova_users SET is_banned = ${body.is_banned}, role = ${body.role}, credits = ${body.credits}, updated_at = now() WHERE id = ${id}`;
-      } else if ('is_banned' in body && 'role' in body) {
-        await sql`UPDATE astrova_users SET is_banned = ${body.is_banned}, role = ${body.role}, updated_at = now() WHERE id = ${id}`;
-      } else if ('is_banned' in body && 'credits' in body) {
-        await sql`UPDATE astrova_users SET is_banned = ${body.is_banned}, credits = ${body.credits}, updated_at = now() WHERE id = ${id}`;
-      } else if ('role' in body && 'credits' in body) {
-        await sql`UPDATE astrova_users SET role = ${body.role}, credits = ${body.credits}, updated_at = now() WHERE id = ${id}`;
-      } else if ('is_banned' in body) {
-        await sql`UPDATE astrova_users SET is_banned = ${body.is_banned}, updated_at = now() WHERE id = ${id}`;
-      } else if ('role' in body) {
-        await sql`UPDATE astrova_users SET role = ${body.role}, updated_at = now() WHERE id = ${id}`;
-      } else if ('credits' in body) {
-        await sql`UPDATE astrova_users SET credits = ${body.credits}, updated_at = now() WHERE id = ${id}`;
+      if ('role' in body && role === undefined) return jsonError('Invalid role. Must be "user" or "admin"');
+      if ('credits' in body && credits === undefined) return jsonError('Invalid credits. Must be a non-negative number');
+
+      const hasUpdate = isBanned !== undefined || role !== undefined || credits !== undefined;
+      if (!hasUpdate) return jsonError('No valid fields to update');
+
+      // Build update — explicit branches for neon tagged templates
+      if (isBanned !== undefined && role !== undefined && credits !== undefined) {
+        await sql`UPDATE astrova_users SET is_banned = ${isBanned}, role = ${role}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
+      } else if (isBanned !== undefined && role !== undefined) {
+        await sql`UPDATE astrova_users SET is_banned = ${isBanned}, role = ${role}, updated_at = now() WHERE id = ${id}`;
+      } else if (isBanned !== undefined && credits !== undefined) {
+        await sql`UPDATE astrova_users SET is_banned = ${isBanned}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
+      } else if (role !== undefined && credits !== undefined) {
+        await sql`UPDATE astrova_users SET role = ${role}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
+      } else if (isBanned !== undefined) {
+        await sql`UPDATE astrova_users SET is_banned = ${isBanned}, updated_at = now() WHERE id = ${id}`;
+      } else if (role !== undefined) {
+        await sql`UPDATE astrova_users SET role = ${role}, updated_at = now() WHERE id = ${id}`;
+      } else if (credits !== undefined) {
+        await sql`UPDATE astrova_users SET credits = ${credits}, updated_at = now() WHERE id = ${id}`;
       }
 
       return json({ ok: true });

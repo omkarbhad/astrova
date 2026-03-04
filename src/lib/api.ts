@@ -9,22 +9,37 @@ export function setTokenProvider(fn: () => string | null) {
   _getToken = fn;
 }
 
+// [FIX #4, #5, #45] Improved apiFetch with 401 handling, timeout, and better error info
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T | null> {
   const token = _getToken?.();
   // All API endpoints require auth — skip the request if no token yet
   if (!token) return null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   headers['Authorization'] = `Bearer ${token}`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const res = await fetch(path, {
       ...init,
       headers: { ...headers, ...(init.headers as Record<string, string> || {}) },
+      signal: controller.signal,
     });
+    if (res.status === 401) {
+      console.warn(`[api] 401 on ${path} — token may be expired`);
+      return null;
+    }
     if (!res.ok) { console.error(`[api] ${path} ${res.status}`); return null; }
     return res.json() as Promise<T>;
   } catch (e) {
-    console.error(`[api] ${path}`, e);
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      console.error(`[api] ${path} timed out`);
+    } else {
+      console.error(`[api] ${path}`, e);
+    }
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -136,7 +151,7 @@ export async function getUserCreditLog(
 export async function toggleUserBan(userId: string, banned: boolean): Promise<boolean> {
   const res = await apiFetch<{ ok: boolean }>(`/api/users/${userId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ is_banned: banned ? 1 : 0 }),
+    body: JSON.stringify({ is_banned: banned }),
   });
   return !!res?.ok;
 }
@@ -208,7 +223,7 @@ export async function getUserEnabledModels(): Promise<EnabledModel[]> {
 export async function toggleModel(id: string, enabled: boolean): Promise<boolean> {
   const res = await apiFetch<{ ok: boolean }>(`/api/models/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ is_enabled: enabled ? 1 : 0 }),
+    body: JSON.stringify({ is_enabled: enabled }),
   });
   return !!res?.ok;
 }

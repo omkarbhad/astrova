@@ -1,5 +1,5 @@
-import { getDb, json } from '../_lib/db.js';
-import { requireAuth } from '../_lib/auth.js';
+import { getDb, json, jsonError, parseBody } from '../_lib/db.js';
+import { requireAuth, requireAdmin } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -10,19 +10,21 @@ export default async function handler(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const id = url.pathname.split('/').pop()!;
 
-    // Only admins can modify models
-    const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${auth.sub} LIMIT 1`;
-    if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-      return new Response('Forbidden', { status: 403 });
-    }
+    // [FIX #39] Use reusable admin check
+    await requireAdmin(sql, auth);
 
     if (req.method === 'PATCH') {
-      const { is_enabled } = await req.json() as { is_enabled: boolean };
-      await sql`UPDATE enabled_models SET is_enabled = ${is_enabled} WHERE id = ${id}`;
+      // [FIX #21] Safe JSON parsing
+      const { is_enabled } = await parseBody<{ is_enabled: boolean }>(req);
+      await sql`UPDATE enabled_models SET is_enabled = ${Boolean(is_enabled)} WHERE id = ${id}`;
       return json({ ok: true });
     }
 
     if (req.method === 'DELETE') {
+      // [FIX #38] Verify model exists
+      const existing = await sql`SELECT id FROM enabled_models WHERE id = ${id} LIMIT 1`;
+      if (!existing[0]) return jsonError('Model not found', 404);
+
       await sql`DELETE FROM enabled_models WHERE id = ${id}`;
       return json({ ok: true });
     }

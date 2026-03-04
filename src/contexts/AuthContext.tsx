@@ -15,13 +15,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/** Remove all user-specific data from localStorage */
+// [FIX #11] Centralized localStorage keys — prevents missed cleanup on logout
+const USER_STORAGE_KEYS = [
+  'astrova_saved_charts',
+  'astrova_dakshina_credits',
+  'astrova_auth_token',
+  'astrova_user_preferences',
+  'astrova_chart_cache',
+  'astrova_charts',
+] as const;
+
 function clearUserData() {
-  localStorage.removeItem('astrova_saved_charts');
-  localStorage.removeItem('astrova_dakshina_credits');
-  localStorage.removeItem('astrova_auth_token');
-  localStorage.removeItem('astrova_user_preferences');
-  localStorage.removeItem('astrova_chart_cache');
+  for (const key of USER_STORAGE_KEYS) {
+    try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -29,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const prevSessionUserId = useRef<string | undefined>(undefined);
+  // [FIX #48] Track initial mount to avoid double-fetch during hydration
+  const hasMounted = useRef(false);
 
   const sessionPending = session.isPending;
   const sessionUser = session.data?.user;
@@ -40,10 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Signed in = session exists + JWT token ready
   const isSignedIn = !!sessionUser && !!jwtToken;
 
-  // When session user changes (different account or sign-out), clear old data
+  // [FIX #1] When session user changes OR signs out, clear old data immediately
   useEffect(() => {
     if (sessionUser?.id !== prevSessionUserId.current) {
-      if (prevSessionUserId.current && sessionUser?.id) {
+      // Clear data when transitioning from any previous user (including to signed-out)
+      if (prevSessionUserId.current !== undefined) {
         setAstrovaUser(null);
         setJwtToken(null);
         clearUserData();
@@ -52,14 +62,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [sessionUser?.id]);
 
-  // Fetch JWT token whenever session changes
+  // [FIX #3] Fetch JWT token only when session user ID changes (removed session.data dep)
   useEffect(() => {
     if (!sessionUser) {
       setJwtToken(null);
       return;
     }
-    getJWTToken().then((token) => setJwtToken(token ?? null)).catch(() => setJwtToken(null));
-  }, [sessionUser?.id, session.data]);
+    if (!hasMounted.current) hasMounted.current = true;
+    let cancelled = false;
+    getJWTToken().then((token) => {
+      if (!cancelled) setJwtToken(token ?? null);
+    }).catch(() => {
+      if (!cancelled) setJwtToken(null);
+    });
+    return () => { cancelled = true; };
+  }, [sessionUser?.id]);
 
   // Keep api.ts token in sync
   useEffect(() => {
@@ -88,11 +105,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [isSignedIn, sessionPending, sessionUser, syncAstrovaUser]);
 
+  // [FIX #47] Properly clear state in finally — works even if signOut throws
   const signOutFn = useCallback(async () => {
-    try { await authClient.signOut(); } catch { /* ignore */ }
-    setAstrovaUser(null);
-    setJwtToken(null);
-    clearUserData();
+    try {
+      await authClient.signOut();
+    } catch {
+      // Sign out may fail if session already expired — still clear local state
+    } finally {
+      setAstrovaUser(null);
+      setJwtToken(null);
+      clearUserData();
+    }
   }, []);
 
   // Simple signIn — no pre-signOut, just sign in directly

@@ -1,7 +1,9 @@
-import { getDb, json } from '../_lib/db.js';
+import { getDb, json, jsonError, parseBody } from '../_lib/db.js';
 import { requireAuth, requireOwnership } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+const MAX_NAME_LEN = 200;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -16,7 +18,13 @@ export default async function handler(req: Request): Promise<Response> {
     await requireOwnership(sql, auth, chart[0].user_id as string);
 
     if (req.method === 'PATCH') {
-      const { name, kundali_data } = await req.json() as { name?: string; kundali_data?: unknown };
+      // [FIX #21] Safe JSON parsing
+      const { name, kundali_data } = await parseBody<{ name?: string; kundali_data?: unknown }>(req);
+
+      // [FIX #31] Validate name length
+      if (name !== undefined && (typeof name !== 'string' || name.length > MAX_NAME_LEN)) {
+        return jsonError(`Chart name max ${MAX_NAME_LEN} chars`);
+      }
 
       if (name !== undefined && kundali_data !== undefined) {
         await sql`

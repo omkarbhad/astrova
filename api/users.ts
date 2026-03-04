@@ -1,4 +1,4 @@
-import { getDb, json } from './_lib/db.js';
+import { getDb, json, jsonError, parseBody } from './_lib/db.js';
 import { requireAuth } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
@@ -14,15 +14,19 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      const { email, displayName, avatarUrl } = await req.json() as {
+      // [FIX #21] Safe JSON parsing
+      const { email, displayName, avatarUrl } = await parseBody<{
         email: string; displayName?: string; avatarUrl?: string;
-      };
+      }>(req);
 
-      // Try to find existing user
+      // [FIX #8] Basic email validation
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        return jsonError('Valid email is required');
+      }
+
       const existing = await sql`SELECT * FROM astrova_users WHERE auth_id = ${payload.sub} LIMIT 1`;
 
       if (existing[0]) {
-        // Refresh profile from auth provider on each login
         const updated = await sql`
           UPDATE astrova_users
           SET email = COALESCE(${email}, email),
@@ -32,14 +36,18 @@ export default async function handler(req: Request): Promise<Response> {
               updated_at = now()
           WHERE auth_id = ${payload.sub}
           RETURNING *`;
+        // [FIX #40] Null check on returned data
+        if (!updated[0]) return jsonError('User update failed', 500);
         return json(updated[0]);
       }
 
-      // Create new user
+      // Safely extract display name from email
+      const safeName = displayName ?? (email.includes('@') ? email.split('@')[0] : 'User');
       const newUser = await sql`
         INSERT INTO astrova_users (auth_id, email, display_name, avatar_url, credits)
-        VALUES (${payload.sub}, ${email}, ${displayName ?? email.split('@')[0]}, ${avatarUrl ?? null}, 20)
+        VALUES (${payload.sub}, ${email}, ${safeName}, ${avatarUrl ?? null}, 20)
         RETURNING *`;
+      if (!newUser[0]) return jsonError('User creation failed', 500);
       return json(newUser[0], 201);
     }
 

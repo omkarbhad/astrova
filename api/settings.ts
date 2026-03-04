@@ -1,7 +1,16 @@
-import { getDb, json } from './_lib/db.js';
+import { getDb, json, jsonError, parseBody } from './_lib/db.js';
 import { requireAuth, requireOwnership } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+// [FIX #34] Allowed settings keys
+const ALLOWED_SETTINGS_KEYS = [
+  'theme', 'language', 'notifications', 'default_model',
+  'birth_data', 'chart_preferences', 'ai_preferences',
+] as const;
+const MAX_KEY_LEN = 100;
+// [FIX #35] Max value size (50KB serialized)
+const MAX_VALUE_SIZE = 50_000;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -23,12 +32,23 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      const { userId, key, value } = await req.json() as { userId: string; key: string; value: unknown };
+      // [FIX #21] Safe JSON parsing
+      const { userId, key, value } = await parseBody<{ userId: string; key: string; value: unknown }>(req);
       await requireOwnership(sql, auth, userId);
+
+      // [FIX #34] Validate key
+      if (!key || typeof key !== 'string' || key.length > MAX_KEY_LEN) {
+        return jsonError(`Setting key must be a string (max ${MAX_KEY_LEN} chars)`);
+      }
+      // [FIX #35] Validate value size
+      const serialized = JSON.stringify(value);
+      if (serialized.length > MAX_VALUE_SIZE) {
+        return jsonError('Setting value too large');
+      }
 
       await sql`
         INSERT INTO astrova_user_settings (user_id, setting_key, setting_value, updated_at)
-        VALUES (${userId}, ${key}, ${JSON.stringify(value)}::jsonb, now())
+        VALUES (${userId}, ${key}, ${serialized}::jsonb, now())
         ON CONFLICT(user_id, setting_key)
         DO UPDATE SET setting_value = excluded.setting_value, updated_at = excluded.updated_at`;
       return json({ ok: true });

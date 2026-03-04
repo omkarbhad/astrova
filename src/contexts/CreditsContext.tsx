@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Coins } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { deductUserCredits, getAdminConfig, updateUserCredits, getAstrovaUserById } from '@/lib/api';
@@ -40,13 +40,21 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   });
   const [creditCosts, setCreditCosts] = useState<CreditCosts>(DEFAULT_CREDIT_COSTS);
   const [showBuyModal, setShowBuyModal] = useState(false);
+  // [FIX #15] Track mounted state to prevent setState after unmount
+  const mountedRef = useRef(true);
+  // [FIX #16] Store userId in ref so callbacks don't recreate on every credit change
+  const userIdRef = useRef<string | null>(null);
+  useEffect(() => { userIdRef.current = astrovaUser?.id ?? null; }, [astrovaUser?.id]);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   // Fetch credit costs from admin config (wait for auth)
   useEffect(() => {
     if (!isSignedIn) return;
+    let cancelled = false;
     (async () => {
       try {
         const costs = await getAdminConfig('credit_costs');
+        if (cancelled) return;
         if (costs && typeof costs === 'object') {
           const c = costs as Record<string, number>;
           setCreditCosts({
@@ -57,23 +65,28 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
         }
       } catch { /* use defaults */ }
     })();
+    return () => { cancelled = true; };
   }, [isSignedIn]);
 
-  // Sync credits from DB user on login, reset on sign-out
+  // [FIX #12] Sync credits from DB user on login, reset on sign-out
   useEffect(() => {
     if (astrovaUser) {
       setCredits(astrovaUser.credits);
       localStorage.setItem(CREDITS_STORAGE_KEY, astrovaUser.credits.toString());
     } else {
-      setCredits(INITIAL_CREDITS);
-      localStorage.removeItem(CREDITS_STORAGE_KEY);
+      // Don't flash INITIAL_CREDITS when signed in but user not yet loaded
+      if (!isSignedIn) {
+        setCredits(INITIAL_CREDITS);
+        localStorage.removeItem(CREDITS_STORAGE_KEY);
+      }
     }
-  }, [astrovaUser?.id, astrovaUser?.credits]);
+  }, [astrovaUser?.id, astrovaUser?.credits, isSignedIn]);
 
   useEffect(() => {
     localStorage.setItem(CREDITS_STORAGE_KEY, credits.toString());
   }, [credits]);
 
+  // [FIX #13, #15, #16] Deduct with proper error handling and unmount safety
   const deductCredits = useCallback((amount: number, action?: string): boolean => {
     if (amount <= 0) return true;
     if (credits < amount) {
@@ -83,34 +96,47 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     const newCredits = credits - amount;
     setCredits(newCredits);
     localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
-    // Deduct in DB and re-sync actual balance
-    if (astrovaUser?.id) {
-      deductUserCredits(astrovaUser.id, amount, action || 'ai_message').then(async () => {
-        const fresh = await getAstrovaUserById(astrovaUser.id);
-        if (fresh && typeof fresh.credits === 'number') {
+    const uid = userIdRef.current;
+    if (uid) {
+      deductUserCredits(uid, amount, action || 'ai_message').then(async () => {
+        const fresh = await getAstrovaUserById(uid);
+        if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
           setCredits(fresh.credits);
           localStorage.setItem(CREDITS_STORAGE_KEY, fresh.credits.toString());
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[credits] deduct sync failed:', err);
+        // Revert optimistic update on failure
+        if (mountedRef.current) {
+          setCredits(prev => prev + amount);
+        }
+      });
     }
     return true;
-  }, [credits, astrovaUser?.id]);
+  }, [credits]);
 
+  // [FIX #14, #15, #16] Add credits with proper error handling and unmount safety
   const addCredits = useCallback((amount: number) => {
+    if (amount <= 0) return;
     const newCredits = credits + amount;
     setCredits(newCredits);
     localStorage.setItem(CREDITS_STORAGE_KEY, newCredits.toString());
-    // Sync to DB and re-fetch actual balance
-    if (astrovaUser?.id) {
-      updateUserCredits(astrovaUser.id, amount, 'credit_purchase').then(async () => {
-        const fresh = await getAstrovaUserById(astrovaUser.id);
-        if (fresh && typeof fresh.credits === 'number') {
+    const uid = userIdRef.current;
+    if (uid) {
+      updateUserCredits(uid, amount, 'credit_purchase').then(async () => {
+        const fresh = await getAstrovaUserById(uid);
+        if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
           setCredits(fresh.credits);
           localStorage.setItem(CREDITS_STORAGE_KEY, fresh.credits.toString());
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[credits] add sync failed:', err);
+        if (mountedRef.current) {
+          setCredits(prev => prev - amount);
+        }
+      });
     }
-  }, [credits, astrovaUser?.id]);
+  }, [credits]);
 
   return (
     <CreditsContext.Provider value={{ credits, creditCosts, deductCredits, addCredits, showBuyModal, setShowBuyModal }}>

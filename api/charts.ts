@@ -1,7 +1,9 @@
-import { getDb, json } from './_lib/db.js';
+import { getDb, json, jsonError, parseBody } from './_lib/db.js';
 import { requireAuth, requireOwnership } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+const MAX_NAME_LEN = 200;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -22,11 +24,17 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      const { userId, name, birth_data, kundali_data, location_name, coordinates } = await req.json() as {
+      // [FIX #21] Safe JSON parsing
+      const { userId, name, birth_data, kundali_data, location_name, coordinates } = await parseBody<{
         userId: string; name: string; birth_data: unknown;
         kundali_data?: unknown; location_name?: string; coordinates?: unknown;
-      };
+      }>(req);
       await requireOwnership(sql, auth, userId);
+
+      // [FIX #31] Validate name length
+      if (!name || typeof name !== 'string' || name.length > MAX_NAME_LEN) {
+        return jsonError(`Chart name required (max ${MAX_NAME_LEN} chars)`);
+      }
 
       const inserted = await sql`
         INSERT INTO astrova_saved_charts

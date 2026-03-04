@@ -12,9 +12,10 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // [FIX #6] Separate success message from error
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<'email' | 'password' | null>(null);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const { signIn, signInWithGoogle, isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const LoginPage = () => {
     e.preventDefault();
     if (!isLoaded) return;
     setError(null);
+    setSuccessMsg(null);
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
@@ -58,8 +60,15 @@ const LoginPage = () => {
       if (result.error) {
         setError(result.error);
         setLoading(false);
+      } else {
+        // [FIX #7] Set a timeout — if JWT never arrives, stop loading
+        setTimeout(() => {
+          setLoading((prev) => {
+            if (prev) setError('Sign-in timed out. Please try again.');
+            return false;
+          });
+        }, 12000);
       }
-      // On success: keep loading=true. useEffect redirects once isSignedIn confirms.
     } catch {
       setError('Sign-in failed. Please check your credentials.');
       setLoading(false);
@@ -209,6 +218,16 @@ const LoginPage = () => {
                 </motion.p>
               </div>
 
+              {/* [FIX #6] Separate success message with green styling */}
+              {successMsg && (
+                <div className="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-xs text-green-200 flex items-center justify-between gap-2">
+                  <span>{successMsg}</span>
+                  <button onClick={() => setSuccessMsg(null)} className="text-green-200/60 hover:text-green-100 transition-colors shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               {error && (
                 <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 flex items-center justify-between gap-2">
                   <span>{error}</span>
@@ -297,40 +316,26 @@ const LoginPage = () => {
                   </motion.div>
                 </motion.div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2 flex-1">
-                    <div className="relative">
-                      <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={() => setRememberMe((v) => !v)}
-                        className="appearance-none h-4 w-4 rounded border border-amber-500/30 bg-[hsl(24,18%,9%)] checked:bg-amber-400 checked:border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500/40 transition-all duration-200"
-                      />
-                      {rememberMe ? (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="absolute inset-0 flex items-center justify-center text-black pointer-events-none"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </motion.div>
-                      ) : null}
-                    </div>
-                    <label htmlFor="remember-me" className="text-xs text-neutral-400 hover:text-amber-100 transition-colors duration-200 leading-none -translate-y-0.5">
-                      Remember me
-                    </label>
-                  </div>
+                {/* [FIX #19] Removed non-functional "Remember me" checkbox */}
+                <div className="flex items-center justify-end pt-2">
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!email.trim()) { setError('Enter your email first, then click Forgot Password'); return; }
-                      const resp = await authClient.forgetPassword.emailOtp({ email });
-                      if (resp.error) setError(resp.error.message ?? 'Reset failed');
-                      else setError('Password reset link sent! Check your email.');
+                      // [FIX #8] Validate email format, not just empty check
+                      const trimmed = email.trim();
+                      if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+                        setError('Enter a valid email first, then click Forgot Password');
+                        return;
+                      }
+                      setError(null);
+                      try {
+                        const resp = await authClient.forgetPassword.emailOtp({ email: trimmed });
+                        // [FIX #6] Use success message, not error
+                        if (resp.error) setError(resp.error.message ?? 'Reset failed');
+                        else setSuccessMsg('Password reset link sent! Check your email.');
+                      } catch {
+                        setError('Failed to send reset email. Try again.');
+                      }
                     }}
                     className="text-[10px] text-neutral-500 hover:text-amber-200 transition-colors"
                   >

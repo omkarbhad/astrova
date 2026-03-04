@@ -1,7 +1,11 @@
-import { getDb, json } from './_lib/db.js';
-import { requireAuth } from './_lib/auth.js';
+import { getDb, json, jsonError, parseBody } from './_lib/db.js';
+import { requireAuth, requireAdmin } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
+
+// [FIX #36] Max model ID/name length
+const MAX_MODEL_ID = 200;
+const MAX_MODEL_NAME = 200;
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -24,13 +28,20 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      // Only admins can add models
-      const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${auth.sub} LIMIT 1`;
-      if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-        return new Response('Forbidden', { status: 403 });
+      // [FIX #39] Use reusable admin check
+      await requireAdmin(sql, auth);
+
+      // [FIX #21] Safe JSON parsing
+      const { modelId, modelName } = await parseBody<{ modelId: string; modelName: string }>(req);
+
+      // [FIX #36] Validate model ID and name
+      if (!modelId || typeof modelId !== 'string' || modelId.length > MAX_MODEL_ID) {
+        return jsonError(`Model ID required (max ${MAX_MODEL_ID} chars)`);
+      }
+      if (!modelName || typeof modelName !== 'string' || modelName.length > MAX_MODEL_NAME) {
+        return jsonError(`Model name required (max ${MAX_MODEL_NAME} chars)`);
       }
 
-      const { modelId, modelName } = await req.json() as { modelId: string; modelName: string };
       const provider = modelId.includes('/') ? modelId.split('/')[0] : 'openrouter';
 
       await sql`

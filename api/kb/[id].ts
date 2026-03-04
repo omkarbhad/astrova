@@ -1,5 +1,5 @@
-import { getDb, json } from '../_lib/db.js';
-import { requireAuth } from '../_lib/auth.js';
+import { getDb, json, jsonError } from '../_lib/db.js';
+import { requireAuth, requireAdmin } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -11,11 +11,11 @@ export default async function handler(req: Request): Promise<Response> {
     const id = url.pathname.split('/').pop()!;
 
     if (req.method === 'DELETE') {
-      // Only admins can delete KB articles
-      const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${auth.sub} LIMIT 1`;
-      if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-        return new Response('Forbidden', { status: 403 });
-      }
+      await requireAdmin(sql, auth);
+
+      // Verify article exists before deleting
+      const existing = await sql`SELECT id FROM astrova_knowledge_base WHERE id = ${id} LIMIT 1`;
+      if (!existing[0]) return jsonError('Article not found', 404);
 
       await sql`DELETE FROM astrova_knowledge_base WHERE id = ${id}`;
       return json({ ok: true });

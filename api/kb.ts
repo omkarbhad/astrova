@@ -1,5 +1,5 @@
-import { getDb, json } from './_lib/db.js';
-import { requireAuth } from './_lib/auth.js';
+import { getDb, json, jsonError, parseBody } from './_lib/db.js';
+import { requireAuth, requireAdmin } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -28,7 +28,10 @@ export default async function handler(req: Request): Promise<Response> {
           if (ftsRows.length > 0) {
             return json(ftsRows);
           }
-        } catch { /* FTS unavailable, fall through */ }
+        } catch (ftsErr) {
+          // [FIX #37] Log FTS error instead of silently swallowing
+          console.warn('[kb] FTS search failed, falling back to tags:', ftsErr instanceof Error ? ftsErr.message : 'unknown');
+        }
 
         // Tag fallback using PostgreSQL array overlap
         const tagRows = await sql`
@@ -49,29 +52,33 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (req.method === 'POST') {
-      // Only admins can create/update KB articles
-      const adminCheck = await sql`SELECT role FROM astrova_users WHERE auth_id = ${auth.sub} LIMIT 1`;
-      if (!adminCheck[0] || adminCheck[0].role !== 'admin') {
-        return new Response('Forbidden', { status: 403 });
-      }
+      // [FIX #39] Use reusable admin check
+      await requireAdmin(sql, auth);
 
-      const article = await req.json() as {
+      // [FIX #21] Safe JSON parsing
+      const article = await parseBody<{
         id?: string; title: string; category: string; content: string; tags?: string[];
-      };
-      const tags = article.tags ?? [];
+      }>(req);
+
+      // [FIX #31, #32] Validate field lengths
+      if (!article.title || article.title.length > 500) return jsonError('Title required (max 500 chars)');
+      if (!article.category || article.category.length > 200) return jsonError('Category required (max 200 chars)');
+      if (!article.content || article.content.length > 100000) return jsonError('Content required (max 100k chars)');
+
+      const tags = (article.tags ?? []).slice(0, 20);
 
       if (article.id) {
-        // Update existing
         const updated = await sql`
           UPDATE astrova_knowledge_base
           SET title = ${article.title}, category = ${article.category}, content = ${article.content},
               tags = ${tags}::text[], updated_at = now()
           WHERE id = ${article.id}
           RETURNING *`;
+        // [FIX #40] Null check
+        if (!updated[0]) return jsonError('Article not found', 404);
         return json(updated[0]);
       }
 
-      // Insert new
       const inserted = await sql`
         INSERT INTO astrova_knowledge_base (title, category, content, tags)
         VALUES (${article.title}, ${article.category}, ${article.content}, ${tags}::text[])
