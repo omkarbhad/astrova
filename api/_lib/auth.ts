@@ -121,42 +121,28 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
 
   console.log(`[auth] Received token: prefix="${token.substring(0, 10)}", length=${token.length}, startsWith_eyJ=${token.startsWith('eyJ')}`);
 
-  // Check if it's a JWT token (starts with eyJ) or opaque token
-  if (token.startsWith('eyJ')) {
-    console.log('[auth] Attempting JWT verification');
-    try {
-      const { payload } = await jwtVerify(token, getJWKS());
-      console.log('[auth] JWT verification successful:', payload);
-      
-      if (!payload.sub) throw new Error('No sub in token');
-      return {
-        sub: payload.sub,
-        email: payload.email as string | undefined,
-        name: payload.name as string | undefined,
-        picture: payload.picture as string | undefined,
-      };
-    } catch (e) {
-      const prefix = token.substring(0, 10);
-      console.error(`[auth] JWT verify failed | token_prefix="${prefix}" | error:`, e instanceof Error ? e.message : String(e));
-      
-      // Try opaque token verification as fallback
-      console.log('[auth] Falling back to opaque token verification');
-      const payload = await verifyOpaqueToken(token);
-      if (!payload) {
-        console.error(`[auth] Both JWT and opaque token verification failed`);
-        throw new Response('Unauthorized', { status: 401 });
-      }
-      return payload;
-    }
-  } else {
-    // Handle opaque token
-    console.log('[auth] Attempting opaque token verification');
-    const payload = await verifyOpaqueToken(token);
-    if (!payload) {
-      console.error(`[auth] Opaque token verification failed | token_prefix="${token.substring(0, 10)}"`);
-      throw new Response('Unauthorized', { status: 401 });
-    }
-    return payload;
+  // For now, only accept JWT tokens - opaque tokens are not working with Neon Auth
+  if (!token.startsWith('eyJ')) {
+    console.error(`[auth] Opaque tokens not supported - only JWT tokens allowed. Token prefix: ${token.substring(0, 10)}`);
+    throw new Response('Unauthorized - JWT token required', { status: 401 });
+  }
+
+  console.log('[auth] Attempting JWT verification');
+  try {
+    const { payload } = await jwtVerify(token, getJWKS());
+    console.log('[auth] JWT verification successful:', payload);
+    
+    if (!payload.sub) throw new Error('No sub in token');
+    return {
+      sub: payload.sub,
+      email: payload.email as string | undefined,
+      name: payload.name as string | undefined,
+      picture: payload.picture as string | undefined,
+    };
+  } catch (e) {
+    const prefix = token.substring(0, 10);
+    console.error(`[auth] JWT verify failed | token_prefix="${prefix}" | error:`, e instanceof Error ? e.message : String(e));
+    throw new Response('Unauthorized', { status: 401 });
   }
 }
 

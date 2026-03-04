@@ -59,6 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sessionObj) console.log('[auth] session.session keys:', Object.keys(sessionObj));
       console.log('[auth] token type:', finalToken?.substring(0, 4) === 'eyJ' ? 'JWT' : 'opaque', '| length:', finalToken?.length);
       console.log('[auth] all tokens found:', allTokens.map(t => typeof t === 'string' ? `${t.substring(0, 4)}...(${t.length})` : 'invalid'));
+      
+      // Show warning if only opaque tokens are available
+      if (finalToken && !finalToken.startsWith('eyJ')) {
+        console.warn('[auth] WARNING: Only opaque token available. JWT tokens required for API access.');
+        // You could also show a user-friendly message here
+      }
     }
   }, [finalToken]);
 
