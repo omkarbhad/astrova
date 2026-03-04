@@ -30,9 +30,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const syncAttempts = useRef(0);
+  const prevSessionUserId = useRef<string | undefined>(undefined);
 
   const isLoaded = !session.isPending;
   const sessionUser = session.data?.user;
+
+  // When session user changes (different account), clear old user data immediately
+  useEffect(() => {
+    if (sessionUser?.id !== prevSessionUserId.current) {
+      if (prevSessionUserId.current && sessionUser?.id) {
+        // User switched accounts — wipe old data
+        setAstrovaUser(null);
+        setJwtToken(null);
+        syncAttempts.current = 0;
+        clearUserData();
+      }
+      prevSessionUserId.current = sessionUser?.id;
+    }
+  }, [sessionUser?.id]);
 
   // Fetch JWT token whenever the session changes using getJWTToken()
   useEffect(() => {
