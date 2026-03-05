@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { authClient } from '@/lib/auth-client';
+import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 import { StarsBackground, CosmicOrbs } from '@/components/landing/ui/stars-background';
 
@@ -329,9 +329,10 @@ const LoginPage = () => {
                       }
                       setError(null);
                       try {
-                        const resp = await authClient.forgetPassword.emailOtp({ email: trimmed });
-                        // [FIX #6] Use success message, not error
-                        if (resp.error) setError(resp.error.message ?? 'Reset failed');
+                        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+                          redirectTo: `${window.location.origin}/login`,
+                        });
+                        if (error) setError(error.message);
                         else setSuccessMsg('Password reset link sent! Check your email.');
                       } catch {
                         setError('Failed to send reset email. Try again.');

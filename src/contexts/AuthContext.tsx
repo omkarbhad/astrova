@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { authClient, getJWTToken } from '@/lib/auth-client';
+import { supabase } from '@/lib/supabase';
 import { getOrCreateAstrovaUser, setTokenProvider, type AstrovaUser } from '@/lib/api';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   astrovaUser: AstrovaUser | null;
@@ -15,97 +16,75 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const session = authClient.useSession();
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [astrovaUser, setAstrovaUser] = useState<AstrovaUser | null>(null);
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
-  const prevSessionUserId = useRef<string | undefined>(undefined);
-  // [FIX #48] Track initial mount to avoid double-fetch during hydration
-  const hasMounted = useRef(false);
+  const prevUserId = useRef<string | undefined>(undefined);
 
-  const sessionPending = session.isPending;
-  const sessionUser = session.data?.user;
+  // With Supabase, session.access_token IS the JWT — no separate fetch needed
+  const isLoaded = !sessionLoading;
+  const isSignedIn = !!session?.user;
 
-  // isLoaded = fully resolved: session check done AND (no user OR JWT fetched)
-  // This prevents AuthGuard from redirecting while JWT is still loading
-  const isLoaded = !sessionPending && (!sessionUser || !!jwtToken);
-
-  // Signed in = session exists + JWT token ready
-  const isSignedIn = !!sessionUser && !!jwtToken;
-
-  // [FIX #1] When session user changes OR signs out, clear old data immediately
+  // Bootstrap: get initial session + subscribe to auth changes
   useEffect(() => {
-    if (sessionUser?.id !== prevSessionUserId.current) {
-      // Clear data when transitioning from any previous user (including to signed-out)
-      if (prevSessionUserId.current !== undefined) {
-        setAstrovaUser(null);
-        setJwtToken(null);
-      }
-      prevSessionUserId.current = sessionUser?.id;
-    }
-  }, [sessionUser?.id]);
-
-  // [FIX #3] Fetch JWT token only when session user ID changes (removed session.data dep)
-  useEffect(() => {
-    if (!sessionUser) {
-      setJwtToken(null);
-      return;
-    }
-    if (!hasMounted.current) hasMounted.current = true;
-    let cancelled = false;
-    getJWTToken().then((token) => {
-      if (!cancelled) setJwtToken(token ?? null);
-    }).catch(() => {
-      if (!cancelled) setJwtToken(null);
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setSessionLoading(false);
     });
-    return () => { cancelled = true; };
-  }, [sessionUser?.id]);
 
-  // Keep api.ts token in sync
-  useEffect(() => {
-    setTokenProvider(() => jwtToken);
-  }, [jwtToken]);
-
-  // Sync astrova user from DB once we have session + JWT
-  const syncAstrovaUser = useCallback(async () => {
-    if (!sessionUser || !jwtToken) return;
-    const au = await getOrCreateAstrovaUser(
-      sessionUser.id,
-      sessionUser.email ?? '',
-      sessionUser.name ?? undefined,
-      sessionUser.image ?? undefined,
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+        setSessionLoading(false);
+      },
     );
-    if (au) {
-      setAstrovaUser(au);
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // When session user changes, clear stale data
+  useEffect(() => {
+    const currentUserId = session?.user?.id;
+    if (currentUserId !== prevUserId.current) {
+      if (prevUserId.current !== undefined) {
+        setAstrovaUser(null);
+      }
+      prevUserId.current = currentUserId;
     }
-  }, [sessionUser?.id, jwtToken]);
+  }, [session?.user?.id]);
+
+  // Keep api.ts token provider in sync with the Supabase access_token
+  useEffect(() => {
+    setTokenProvider(() => session?.access_token ?? null);
+  }, [session?.access_token]);
+
+  // Sync astrova user from Neon DB once we have a valid session
+  const syncAstrovaUser = useCallback(async () => {
+    const user = session?.user;
+    if (!user || !session?.access_token) return;
+    const au = await getOrCreateAstrovaUser(
+      user.id,
+      user.email ?? '',
+      user.user_metadata?.name ?? user.user_metadata?.full_name ?? undefined,
+      user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? undefined,
+    );
+    if (au) setAstrovaUser(au);
+  }, [session?.user?.id, session?.access_token]);
 
   useEffect(() => {
     if (isSignedIn) {
       syncAstrovaUser();
-    } else if (!sessionPending && !sessionUser) {
+    } else if (isLoaded && !session) {
       setAstrovaUser(null);
     }
-  }, [isSignedIn, sessionPending, sessionUser, syncAstrovaUser]);
+  }, [isSignedIn, isLoaded, session, syncAstrovaUser]);
 
-  // [FIX #47] Properly clear state in finally — works even if signOut throws
-  const signOutFn = useCallback(async () => {
-    try {
-      await authClient.signOut();
-    } catch {
-      // Sign out may fail if session already expired — still clear local state
-    } finally {
-      setAstrovaUser(null);
-      setJwtToken(null);
-    }
-  }, []);
-
-  // Simple signIn — no pre-signOut, just sign in directly
+  // Auth methods
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const resp = await authClient.signIn.email({ email, password });
-      if (resp.error) return { error: resp.error.message ?? 'Sign-in failed' };
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
       return {};
     } catch (e) {
       return { error: (e as Error).message };
@@ -114,12 +93,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, name?: string): Promise<{ error?: string; needsVerification?: boolean }> => {
     try {
-      const resp = await authClient.signUp.email({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        name: name ?? email.split('@')[0],
+        options: {
+          data: { name: name ?? email.split('@')[0] },
+        },
       });
-      if (resp.error) return { error: resp.error.message ?? 'Sign-up failed' };
+      if (error) return { error: error.message };
+      // Supabase returns user with identities=[] when email already exists
+      if (data.user && data.user.identities?.length === 0) {
+        return { error: 'An account with this email already exists.' };
+      }
+      // Email confirmation required — session is null
+      if (data.user && !data.session) {
+        return { needsVerification: true };
+      }
       return {};
     } catch (e) {
       return { error: (e as Error).message };
@@ -128,18 +117,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      const data = await authClient.signIn.social({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        callbackURL: '/chart',
+        options: {
+          redirectTo: `${window.location.origin}/chart`,
+        },
       });
-      // Better Auth's redirectPlugin normally handles this, but if the redirect
-      // didn't fire (e.g. plugin mismatch), handle it explicitly.
-      if (data?.data?.url) {
-        window.location.href = data.data.url;
-      }
+      if (error) return { error: error.message };
       return {};
     } catch (e) {
       return { error: (e as Error).message };
+    }
+  }, []);
+
+  const signOutFn = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Sign out may fail if session already expired
+    } finally {
+      setAstrovaUser(null);
+      setSession(null);
     }
   }, []);
 
