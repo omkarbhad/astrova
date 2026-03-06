@@ -21,9 +21,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // No session at all — redirect to login
+  // No session — redirect to centralized Magnova auth
   if (!isSignedIn) {
-    return <Navigate to="/login" replace />;
+    const redirect = encodeURIComponent(window.location.href);
+    window.location.href = `https://auth.magnova.ai/astrova?redirect=${redirect}`;
+    return null;
   }
 
   return <>{children}</>;

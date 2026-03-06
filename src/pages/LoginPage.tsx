@@ -1,40 +1,41 @@
+import { useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { Loader2 } from 'lucide-react';
 
+/**
+ * Auth is now handled centrally at auth.magnova.ai.
+ * This page redirects unauthenticated users there and handles the return.
+ */
 export default function LoginPage() {
   const { isSignedIn, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect');
 
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-    </div>
-  );
+  useEffect(() => {
+    if (!loading && !isSignedIn) {
+      const returnUrl = redirectTo ?? window.location.origin + '/chart';
+      window.location.href = `https://auth.magnova.ai/astrova?redirect=${encodeURIComponent(returnUrl)}`;
+    }
+  }, [loading, isSignedIn, redirectTo]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
+      </div>
+    );
+  }
 
   if (isSignedIn) {
     if (redirectTo) { window.location.href = decodeURIComponent(redirectTo); return null; }
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/chart" replace />;
   }
 
+  // Redirecting to auth.magnova.ai — show brief loading state
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-zinc-950 px-4">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[120px]" />
-      </div>
-
-      {/* Stars/particles visual hint */}
-      <div className="pointer-events-none absolute inset-0 opacity-30"
-        style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
-      />
-
-      <LoginForm className="relative z-10" />
-
-      <p className="mt-6 text-xs text-zinc-600">
-        Secure login powered by Firebase × Magnova
-      </p>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
     </div>
   );
 }
