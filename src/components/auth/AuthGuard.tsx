@@ -6,9 +6,9 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-function hasMagnovaCookie(): boolean {
+function hasMagnovaAuth(): boolean {
   if (typeof document === 'undefined') return false;
-  return document.cookie.split(';').some(c => c.trim().startsWith('magnova_session='));
+  return document.cookie.split(';').some(c => c.trim().startsWith('magnova_auth='));
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
@@ -16,7 +16,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [hasSessionCookie, setHasSessionCookie] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setHasSessionCookie(hasMagnovaCookie());
+    setHasSessionCookie(hasMagnovaAuth());
   }, []);
 
   // Still checking cookie
