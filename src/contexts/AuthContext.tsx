@@ -88,7 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const hasAuthCookie = document.cookie.includes('magnova_auth=1');
         if (hasAuthCookie) {
-          const res = await fetch('/api/auth/session', { method: 'GET', credentials: 'include' });
+          // Session API is on auth.magnova.ai, not local
+          const res = await fetch('https://auth.magnova.ai/api/auth/session', { 
+            method: 'GET', 
+            credentials: 'include' 
+          });
           if (res.ok) {
             const data = await res.json();
             if (data.user) {
