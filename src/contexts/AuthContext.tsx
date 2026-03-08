@@ -7,7 +7,7 @@ import {
   signUpWithEmail,
   signOutUser,
 } from '@/lib/firebase';
-import { setTokenProvider, type AstrovaUser } from '@/lib/api';
+import { type AstrovaUser } from '@/lib/api';
 
 export interface AuthContextType {
   astrovaUser: AstrovaUser | null;
@@ -30,15 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const prevUserId = useRef<string | undefined>(undefined);
-  const tokenRef = useRef<string | null>(null);
   const sessionSyncTokenRef = useRef<string | null>(null);
 
   const isLoaded = !loading;
   const isSignedIn = !!firebaseUser;
-
-  useEffect(() => {
-    setTokenProvider(() => tokenRef.current);
-  }, []);
 
   const syncServerSession = useCallback(async (idToken: string, force = false) => {
     if (!force && sessionSyncTokenRef.current === idToken) return null;
@@ -87,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onIdTokenChanged(auth, async (nextUser) => {
       setFirebaseUser(nextUser);
       if (!nextUser) {
-        tokenRef.current = null;
         sessionSyncTokenRef.current = null;
         setToken(null);
         setAstrovaUser(null);
@@ -97,12 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const idToken = await nextUser.getIdToken();
-        tokenRef.current = idToken;
         setToken(idToken);
         await syncServerSession(idToken);
       } catch (error) {
         console.error('[auth] failed to refresh token', error);
-        tokenRef.current = null;
         setToken(null);
       } finally {
         setLoading(false);
@@ -160,7 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('[auth] sign out failed', error);
     } finally {
-      tokenRef.current = null;
       sessionSyncTokenRef.current = null;
       setToken(null);
       setAstrovaUser(null);

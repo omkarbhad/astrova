@@ -51,10 +51,10 @@ const LandingHeader = () => {
                             size="sm"
                             className="text-neutral-400 hover:text-amber-200 hover:bg-amber-500/10"
                         >
-                            <Link to="/login">Login</Link>
+                            <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">Login</a>
                         </Button>
                         <Button asChild size="sm" className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500">
-                            <Link to="/register">Get Started</Link>
+                            <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">Get Started</a>
                         </Button>
                     </div>
                 </div>

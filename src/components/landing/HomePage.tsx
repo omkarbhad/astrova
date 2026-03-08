@@ -53,17 +53,17 @@ const HomePage = () => {
                                     Generate accurate kundali birth charts and unlock insights into your life's journey.
                                 </p>
                                 <div className="flex flex-row items-center justify-center mt-6 sm:mt-8 gap-4">
-                                    <Link to="/register">
+                                    <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">
                                         <Button className="h-10 px-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-medium hover:from-amber-500 hover:to-yellow-500 transition-colors" aria-label="Create account and get started">
                                             Get Started
                                             <ArrowRight className="w-4 h-4 ml-2" />
                                         </Button>
-                                    </Link>
-                                    <Link to="/login">
+                                    </a>
+                                    <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">
                                         <Button className="h-10 px-6 bg-transparent border border-amber-500/30 text-amber-100 font-medium hover:bg-amber-500/10 hover:border-amber-500/45 transition-all" aria-label="Log into Astrova">
                                             Login
                                         </Button>
-                                    </Link>
+                                    </a>
                                 </div>
                             </div>
 
@@ -420,20 +420,20 @@ function Header() {
 
                     {/* CTA Buttons */}
                     <div className="flex items-center gap-3">
-                        <Link to="/login" aria-label="Go to login page">
+                        <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart" aria-label="Go to login page">
                             <Button variant="ghost" size="sm" className={`transition-all duration-500 h-8 px-3 text-sm ${
-                                scrolled 
-                                    ? 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-100' 
+                                scrolled
+                                    ? 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-100'
                                     : 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-90'
                             }`}>
                                 Log in
                             </Button>
-                        </Link>
-                        <Link to="/register" aria-label="Go to registration page">
+                        </a>
+                        <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart" aria-label="Go to registration page">
                             <Button size="sm" className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white h-8 px-4 text-sm font-medium rounded-lg transition-all duration-500 opacity-100">
                                 Get Started
                             </Button>
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </div>

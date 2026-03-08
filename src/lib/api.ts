@@ -1,36 +1,31 @@
 // Frontend API client — replaces supabase.ts
 // All DB operations go through Vercel Edge Functions at /api/*
-// Auth token is injected by AuthContext via setTokenProvider()
-
-// ─── Token Provider ──────────────────────────────────────────────
-let _getToken: (() => string | null) | null = null;
-
-export function setTokenProvider(fn: () => string | null) {
-  _getToken = fn;
-}
 
 // [FIX #4, #5, #45] Improved apiFetch with 401 handling, timeout, and better error info
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T | null> {
-  const token = _getToken?.();
-  // All API endpoints require auth — skip the request if no token yet
-  if (!token) return null;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  headers['Authorization'] = `Bearer ${token}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((init.headers as Record<string, string>) ?? {}),
+  };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(path, {
+    const response = await fetch(path, {
       ...init,
-      headers: { ...headers, ...(init.headers as Record<string, string> || {}) },
       signal: controller.signal,
+      headers,
+      credentials: init.credentials ?? 'include',
     });
-    if (res.status === 401) {
-      console.warn(`[api] 401 on ${path} — token may be expired`);
+    if (response.status === 401) {
+      console.warn(`[api] 401 on ${path} — unauthorized`);
       return null;
     }
-    if (!res.ok) { console.error(`[api] ${path} ${res.status}`); return null; }
-    return res.json() as Promise<T>;
+    if (!response.ok) {
+      console.error(`[api] ${path} ${response.status}`);
+      return null;
+    }
+    return response.json() as Promise<T>;
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') {
       console.error(`[api] ${path} timed out`);

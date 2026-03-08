@@ -16,19 +16,14 @@ const APP_NAME = 'astrova';
 
 function extractSessionToken(req: Request): string | null {
   const cookieHeader = req.headers.get('cookie');
-  if (cookieHeader) {
-    const parts = cookieHeader.split(';');
-    for (const part of parts) {
-      const [name, ...valueParts] = part.trim().split('=');
-      if (name === SESSION_COOKIE_NAME) {
-        return decodeURIComponent(valueParts.join('='));
-      }
-    }
-  }
+  if (!cookieHeader) return null;
 
-  const authHeader = req.headers.get('authorization') ?? '';
-  if (authHeader.toLowerCase().startsWith('bearer ')) {
-    return authHeader.slice(7).trim();
+  const parts = cookieHeader.split(';');
+  for (const part of parts) {
+    const [name, ...valueParts] = part.trim().split('=');
+    if (name === SESSION_COOKIE_NAME) {
+      return decodeURIComponent(valueParts.join('='));
+    }
   }
 
   return null;
