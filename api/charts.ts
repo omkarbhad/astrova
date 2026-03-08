@@ -17,7 +17,7 @@ export default async function handler(req: Request): Promise<Response> {
       await requireOwnership(sql, auth, userId);
 
       const rows = await sql`
-        SELECT * FROM astrova_saved_charts
+        SELECT * FROM saved_charts
         WHERE user_id = ${userId}
         ORDER BY created_at DESC`;
       return json(rows);
@@ -37,7 +37,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       const inserted = await sql`
-        INSERT INTO astrova_saved_charts
+        INSERT INTO saved_charts
         (user_id, name, birth_data, kundali_data, location_name, coordinates)
         VALUES (
           ${userId},
