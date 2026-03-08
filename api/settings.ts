@@ -25,7 +25,7 @@ export default async function handler(req: Request): Promise<Response> {
       await requireOwnership(sql, auth, userId);
 
       const rows = await sql`
-        SELECT setting_value FROM astrova_user_settings
+        SELECT setting_value FROM user_settings
         WHERE user_id = ${userId} AND setting_key = ${key} LIMIT 1`;
       if (!rows[0]) return json({ value: null });
       return json({ value: rows[0].setting_value });
@@ -47,7 +47,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       await sql`
-        INSERT INTO astrova_user_settings (user_id, setting_key, setting_value, updated_at)
+        INSERT INTO user_settings (user_id, setting_key, setting_value, updated_at)
         VALUES (${userId}, ${key}, ${serialized}::jsonb, now())
         ON CONFLICT(user_id, setting_key)
         DO UPDATE SET setting_value = excluded.setting_value, updated_at = excluded.updated_at`;

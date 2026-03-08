@@ -11,12 +11,12 @@ export default async function handler(req: Request): Promise<Response> {
     const id = url.pathname.split('/').pop()!;
 
     // Verify the session belongs to the authenticated user
-    const session = await sql`SELECT user_id FROM astrova_chat_sessions WHERE id = ${id} LIMIT 1`;
+    const session = await sql`SELECT user_id FROM chat_sessions WHERE id = ${id} LIMIT 1`;
     if (!session[0]) return json({ error: 'Not found' }, 404);
     await requireOwnership(sql, auth, session[0].user_id as string);
 
     if (req.method === 'DELETE') {
-      await sql`DELETE FROM astrova_chat_sessions WHERE id = ${id}`;
+      await sql`DELETE FROM chat_sessions WHERE id = ${id}`;
       return json({ ok: true });
     }
 

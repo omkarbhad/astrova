@@ -20,7 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
       const key = url.searchParams.get('key');
 
       if (all) {
-        const rows = await sql`SELECT config_key, config_value FROM astrova_admin_config`;
+        const rows = await sql`SELECT config_key, config_value FROM admin_config`;
         const cfg: Record<string, unknown> = {};
         for (const row of rows) {
           cfg[row.config_key as string] = row.config_value;
@@ -29,7 +29,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       if (key) {
-        const rows = await sql`SELECT config_value FROM astrova_admin_config WHERE config_key = ${key} LIMIT 1`;
+        const rows = await sql`SELECT config_value FROM admin_config WHERE config_key = ${key} LIMIT 1`;
         if (!rows[0]) return json({ value: null });
         return json({ value: rows[0].config_value });
       }
@@ -51,7 +51,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       await sql`
-        INSERT INTO astrova_admin_config (config_key, config_value, updated_at)
+        INSERT INTO admin_config (config_key, config_value, updated_at)
         VALUES (${key}, ${serialized}::jsonb, now())
         ON CONFLICT(config_key) DO UPDATE SET config_value = excluded.config_value, updated_at = excluded.updated_at`;
       return json({ ok: true });

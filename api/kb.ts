@@ -20,7 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
         try {
           const ftsRows = await sql`
             SELECT id, title, category, content, tags
-            FROM astrova_knowledge_base
+            FROM knowledge_base
             WHERE is_active = true
               AND to_tsvector('english', title || ' ' || content) @@ websearch_to_tsquery('english', ${search})
             ORDER BY ts_rank(to_tsvector('english', title || ' ' || content), websearch_to_tsquery('english', ${search})) DESC
@@ -36,7 +36,7 @@ export default async function handler(req: Request): Promise<Response> {
         // Tag fallback using PostgreSQL array overlap
         const tagRows = await sql`
           SELECT DISTINCT id, title, category, content, tags
-          FROM astrova_knowledge_base
+          FROM knowledge_base
           WHERE is_active = true AND tags && ${keywords}::text[]
           LIMIT 5`;
         return json(tagRows);
@@ -45,7 +45,7 @@ export default async function handler(req: Request): Promise<Response> {
       // List all active
       const rows = await sql`
         SELECT id, title, category, content, tags
-        FROM astrova_knowledge_base
+        FROM knowledge_base
         WHERE is_active = true
         ORDER BY category ASC`;
       return json(rows);
@@ -69,7 +69,7 @@ export default async function handler(req: Request): Promise<Response> {
 
       if (article.id) {
         const updated = await sql`
-          UPDATE astrova_knowledge_base
+          UPDATE knowledge_base
           SET title = ${article.title}, category = ${article.category}, content = ${article.content},
               tags = ${tags}::text[], updated_at = now()
           WHERE id = ${article.id}
@@ -80,7 +80,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       const inserted = await sql`
-        INSERT INTO astrova_knowledge_base (title, category, content, tags)
+        INSERT INTO knowledge_base (title, category, content, tags)
         VALUES (${article.title}, ${article.category}, ${article.content}, ${tags}::text[])
         RETURNING *`;
       return json(inserted[0], 201);

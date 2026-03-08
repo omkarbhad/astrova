@@ -17,11 +17,11 @@ export default async function handler(req: Request): Promise<Response> {
 
       const rows = type
         ? await sql`
-            SELECT * FROM astrova_chat_sessions
+            SELECT * FROM chat_sessions
             WHERE user_id = ${userId} AND session_type = ${type}
             ORDER BY updated_at DESC LIMIT 50`
         : await sql`
-            SELECT * FROM astrova_chat_sessions
+            SELECT * FROM chat_sessions
             WHERE user_id = ${userId}
             ORDER BY updated_at DESC LIMIT 50`;
 
@@ -43,26 +43,26 @@ export default async function handler(req: Request): Promise<Response> {
 
       if (session.id) {
         // Verify the session belongs to this user before updating
-        const existing = await sql`SELECT user_id FROM astrova_chat_sessions WHERE id = ${session.id} LIMIT 1`;
+        const existing = await sql`SELECT user_id FROM chat_sessions WHERE id = ${session.id} LIMIT 1`;
         if (existing[0] && existing[0].user_id !== session.user_id) {
           throw new Response('Forbidden', { status: 403 });
         }
 
         await sql`
-          UPDATE astrova_chat_sessions
+          UPDATE chat_sessions
           SET title = ${title},
               messages = ${JSON.stringify(messages)}::jsonb,
               model_used = ${session.model_used ?? null},
               updated_at = now()
           WHERE id = ${session.id} AND user_id = ${session.user_id}`;
-        const rows = await sql`SELECT * FROM astrova_chat_sessions WHERE id = ${session.id} LIMIT 1`;
+        const rows = await sql`SELECT * FROM chat_sessions WHERE id = ${session.id} LIMIT 1`;
         if (!rows[0]) return jsonError('Session not found', 404);
         return json(rows[0]);
       }
 
       // Insert new
       const inserted = await sql`
-        INSERT INTO astrova_chat_sessions
+        INSERT INTO chat_sessions
         (user_id, title, messages, model_used, session_type)
         VALUES (
           ${session.user_id},

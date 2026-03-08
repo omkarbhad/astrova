@@ -37,16 +37,16 @@ export default async function handler(req: Request): Promise<Response> {
         // This prevents race conditions by combining the balance check with the deduction
         await sql.transaction([
           sql`
-            UPDATE astrova_users
+            UPDATE users
             SET credits = credits - ${safeAmount}, credits_used = credits_used + ${safeAmount}, updated_at = now()
             WHERE id = ${userId} AND credits >= ${safeAmount}`,
           sql`
-            INSERT INTO astrova_credit_log (user_id, amount, action)
+            INSERT INTO credit_transactions (user_id, amount, action)
             VALUES (${userId}, ${-safeAmount}, ${action})`,
         ]);
 
         // Check if the deduction actually happened
-        const check = await sql`SELECT credits FROM astrova_users WHERE id = ${userId} LIMIT 1`;
+        const check = await sql`SELECT credits FROM users WHERE id = ${userId} LIMIT 1`;
         if (!check[0]) return jsonError('User not found', 404);
         return json({ ok: true });
       }
@@ -57,10 +57,10 @@ export default async function handler(req: Request): Promise<Response> {
 
         await sql.transaction([
           sql`
-            UPDATE astrova_users SET credits = credits + ${safeAmount}, updated_at = now()
+            UPDATE users SET credits = credits + ${safeAmount}, updated_at = now()
             WHERE id = ${userId}`,
           sql`
-            INSERT INTO astrova_credit_log (user_id, amount, action, admin_id)
+            INSERT INTO credit_transactions (user_id, amount, action, admin_id)
             VALUES (${userId}, ${safeAmount}, ${action}, ${adminId ?? null})`,
         ]);
         return json({ ok: true });

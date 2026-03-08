@@ -14,10 +14,10 @@ export default async function handler(req: Request): Promise<Response> {
       await requireAdmin(sql, auth);
 
       // Verify article exists before deleting
-      const existing = await sql`SELECT id FROM astrova_knowledge_base WHERE id = ${id} LIMIT 1`;
+      const existing = await sql`SELECT id FROM knowledge_base WHERE id = ${id} LIMIT 1`;
       if (!existing[0]) return jsonError('Article not found', 404);
 
-      await sql`DELETE FROM astrova_knowledge_base WHERE id = ${id}`;
+      await sql`DELETE FROM knowledge_base WHERE id = ${id}`;
       return json({ ok: true });
     }
 

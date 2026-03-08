@@ -12,7 +12,7 @@ export default async function handler(req: Request): Promise<Response> {
     await requireAdmin(sql, payload);
 
     if (req.method === 'GET') {
-      const rows = await sql`SELECT * FROM astrova_users ORDER BY created_at DESC`;
+      const rows = await sql`SELECT * FROM users ORDER BY created_at DESC`;
       return json(rows);
     }
 

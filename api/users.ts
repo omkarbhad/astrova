@@ -9,7 +9,7 @@ export default async function handler(req: Request): Promise<Response> {
     const sql = getDb();
 
     if (req.method === 'GET') {
-      const rows = await sql`SELECT * FROM astrova_users WHERE auth_id = ${payload.sub} LIMIT 1`;
+      const rows = await sql`SELECT * FROM users WHERE auth_id = ${payload.sub} LIMIT 1`;
       return json(rows[0] ?? null);
     }
 
@@ -24,11 +24,11 @@ export default async function handler(req: Request): Promise<Response> {
         return jsonError('Valid email is required');
       }
 
-      const existing = await sql`SELECT * FROM astrova_users WHERE auth_id = ${payload.sub} LIMIT 1`;
+      const existing = await sql`SELECT * FROM users WHERE auth_id = ${payload.sub} LIMIT 1`;
 
       if (existing[0]) {
         const updated = await sql`
-          UPDATE astrova_users
+          UPDATE users
           SET email = COALESCE(${email}, email),
               display_name = COALESCE(${displayName ?? null}, display_name),
               avatar_url = COALESCE(${avatarUrl ?? null}, avatar_url),
@@ -44,7 +44,7 @@ export default async function handler(req: Request): Promise<Response> {
       // Safely extract display name from email
       const safeName = displayName ?? (email.includes('@') ? email.split('@')[0] : 'User');
       const newUser = await sql`
-        INSERT INTO astrova_users (auth_id, email, display_name, avatar_url, credits)
+        INSERT INTO users (auth_id, email, display_name, avatar_url, credits)
         VALUES (${payload.sub}, ${email}, ${safeName}, ${avatarUrl ?? null}, 20)
         RETURNING *`;
       if (!newUser[0]) return jsonError('User creation failed', 500);
