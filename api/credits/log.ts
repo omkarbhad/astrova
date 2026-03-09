@@ -16,7 +16,7 @@ export default async function handler(req: Request): Promise<Response> {
 
       const rows = await sql`
         SELECT id, amount, action, created_at
-        FROM credit_transactions
+        FROM astrova_credit_log
         WHERE user_id = ${userId}
         ORDER BY created_at DESC
         LIMIT 50`;

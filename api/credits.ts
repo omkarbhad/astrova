@@ -9,7 +9,6 @@ export default async function handler(req: Request): Promise<Response> {
     const sql = getDb();
 
     if (req.method === 'POST') {
-      // [FIX #21] Safe JSON parsing
       const { userId, amount, action, adminId, type } = await parseBody<{
         userId: string;
         amount: number;
@@ -18,14 +17,12 @@ export default async function handler(req: Request): Promise<Response> {
         type: 'deduct' | 'add';
       }>(req);
 
-      // [FIX #22] Validate amount is a positive finite integer
       if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
         return jsonError('Amount must be a positive number');
       }
-      const safeAmount = Math.floor(amount); // No fractional credits
+      const safeAmount = Math.floor(amount);
       if (safeAmount > 100000) return jsonError('Amount exceeds maximum');
 
-      // [FIX #31] Validate action string length
       if (!action || typeof action !== 'string' || action.length > 100) {
         return jsonError('Action must be a non-empty string (max 100 chars)');
       }
@@ -33,37 +30,34 @@ export default async function handler(req: Request): Promise<Response> {
       if (type === 'deduct') {
         await requireOwnership(sql, auth, userId);
 
-        // [FIX #24] Atomic check-and-deduct in a single UPDATE with WHERE clause
-        // This prevents race conditions by combining the balance check with the deduction
         await sql.transaction([
           sql`
-            UPDATE users
+            UPDATE astrova_users
             SET credits = credits - ${safeAmount}, credits_used = credits_used + ${safeAmount}, updated_at = now()
             WHERE id = ${userId} AND credits >= ${safeAmount}`,
           sql`
-            INSERT INTO credit_transactions (user_id, amount, action)
+            INSERT INTO astrova_credit_log (user_id, amount, action)
             VALUES (${userId}, ${-safeAmount}, ${action})`,
         ]);
 
-        // Check if the deduction actually happened
-        const check = await sql`SELECT credits FROM users WHERE id = ${userId} LIMIT 1`;
-        if (!check[0]) return jsonError('User not found', 404);
-        return json({ ok: true });
+        const fresh = await sql`SELECT credits FROM astrova_users WHERE id = ${userId} LIMIT 1`;
+        if (!fresh[0]) return jsonError('User not found', 404);
+        return json({ ok: true, credits: Number(fresh[0].credits ?? 0) });
       }
 
       if (type === 'add') {
-        // [FIX #23] Only admins can add credits
         await requireAdmin(sql, auth);
 
         await sql.transaction([
           sql`
-            UPDATE users SET credits = credits + ${safeAmount}, updated_at = now()
+            UPDATE astrova_users SET credits = credits + ${safeAmount}, updated_at = now()
             WHERE id = ${userId}`,
           sql`
-            INSERT INTO credit_transactions (user_id, amount, action, admin_id)
+            INSERT INTO astrova_credit_log (user_id, amount, action, admin_id)
             VALUES (${userId}, ${safeAmount}, ${action}, ${adminId ?? null})`,
         ]);
-        return json({ ok: true });
+        const fresh = await sql`SELECT credits FROM astrova_users WHERE id = ${userId} LIMIT 1`;
+        return json({ ok: true, credits: Number(fresh[0]?.credits ?? 0) });
       }
 
       return jsonError('Invalid type. Must be "deduct" or "add"');

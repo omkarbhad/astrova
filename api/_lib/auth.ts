@@ -1,6 +1,5 @@
 import type { Sql } from './db.js';
 import { sql } from './db.js';
-// verifyToken no longer needed - magnova_session cookie contains Firebase UID directly
 
 export interface AuthPayload {
   id: string;
@@ -12,7 +11,6 @@ export interface AuthPayload {
 }
 
 const SESSION_COOKIE_NAME = 'magnova_session';
-const APP_NAME = 'astrova';
 
 function extractSessionToken(req: Request): string | null {
   const cookieHeader = req.headers.get('cookie');
@@ -30,35 +28,31 @@ function extractSessionToken(req: Request): string | null {
 }
 
 export async function requireAuth(req: Request): Promise<AuthPayload> {
-  // magnova_session cookie contains the Firebase UID directly (set by auth.magnova.ai)
-  // Since it's httpOnly and set by our trusted auth service, we can use it directly
   const firebaseUid = extractSessionToken(req);
   if (!firebaseUid) throw new Response('Unauthorized', { status: 401 });
 
-  // Query the astrova-db users table (not magnova_users)
   const rows = await sql`
-    SELECT id, email, name, credits
-    FROM users
-    WHERE firebase_uid = ${firebaseUid}
+    SELECT id, auth_id, email, display_name, avatar_url, credits
+    FROM astrova_users
+    WHERE auth_id = ${firebaseUid}
     LIMIT 1`;
   const row = rows[0] as
-    | { id: string; email: string; name: string | null; credits: number }
+    | { id: string; auth_id: string; email: string; display_name: string | null; avatar_url: string | null; credits: number }
     | undefined;
-  
+
   if (!row) {
-    // User exists in magnova-auth but not in astrova yet - create them
-    // This happens on first use of astrova after signing in via auth.magnova.ai
+    // User exists in magnova-auth but not in astrova yet — create on first use
     const newUser = await sql`
-      INSERT INTO users (firebase_uid, email, credits)
+      INSERT INTO astrova_users (auth_id, email, credits)
       VALUES (${firebaseUid}, '', 100)
-      RETURNING id, email, name, credits`;
-    const created = newUser[0] as { id: string; email: string; name: string | null; credits: number };
+      RETURNING id, auth_id, email, display_name, avatar_url, credits`;
+    const created = newUser[0] as { id: string; auth_id: string; email: string; display_name: string | null; avatar_url: string | null; credits: number };
     return {
       id: created.id,
       firebase_uid: firebaseUid,
       email: created.email || '',
-      display_name: created.name,
-      avatar_url: null,
+      display_name: created.display_name,
+      avatar_url: created.avatar_url,
       credits: created.credits,
     };
   }
@@ -67,34 +61,35 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
     id: row.id,
     firebase_uid: firebaseUid,
     email: row.email || '',
-    display_name: row.name,
-    avatar_url: null,
+    display_name: row.display_name,
+    avatar_url: row.avatar_url,
     credits: row.credits,
   };
 }
 
 export async function requireAdmin(sqlClient: Sql, authPayload: AuthPayload): Promise<{ id: string; role: string }> {
-  // Simplified: no role column in users table yet - just check if user exists
-  // TODO: add role column if needed
-  const rows = await sqlClient`SELECT id FROM users WHERE firebase_uid = ${authPayload.firebase_uid} LIMIT 1`;
-  const me = rows[0] as { id: string } | undefined;
-  if (!me) throw new Response('Forbidden', { status: 403 });
-  // For now, no admin check - return with empty role
-  return { id: me.id, role: 'user' };
+  const rows = await sqlClient`SELECT id, role FROM astrova_users WHERE auth_id = ${authPayload.firebase_uid} LIMIT 1`;
+  const me = rows[0] as { id: string; role: string } | undefined;
+  if (!me || me.role !== 'admin') throw new Response('Forbidden', { status: 403 });
+  return me;
 }
 
 export async function requireNotBanned(sqlClient: Sql, authPayload: AuthPayload): Promise<void> {
-  // Simplified: no is_banned column yet - just verify user exists
-  const rows = await sqlClient`SELECT id FROM users WHERE firebase_uid = ${authPayload.firebase_uid} LIMIT 1`;
-  if (!rows[0]) throw new Response('Forbidden', { status: 403 });
+  const rows = await sqlClient`SELECT is_banned FROM astrova_users WHERE auth_id = ${authPayload.firebase_uid} LIMIT 1`;
+  const user = rows[0] as { is_banned: boolean } | undefined;
+  if (user?.is_banned) throw new Response('Account suspended', { status: 403 });
 }
 
-export async function requireOwnership(sqlClient: Sql, authPayload: AuthPayload, requestedUserId: string): Promise<void> {
-  // Check if the authenticated user owns the requested resource
-  const rows = await sqlClient`SELECT id FROM users WHERE firebase_uid = ${authPayload.firebase_uid} LIMIT 1`;
-  const me = rows[0] as { id: string } | undefined;
+export async function requireOwnership(
+  sqlClient: Sql,
+  authPayload: AuthPayload,
+  requestedUserId: string,
+): Promise<void> {
+  const rows = await sqlClient`SELECT id, role, is_banned FROM astrova_users WHERE auth_id = ${authPayload.firebase_uid} LIMIT 1`;
+  const me = rows[0] as { id: string; role: string; is_banned: boolean } | undefined;
   if (!me) throw new Response('Forbidden', { status: 403 });
-  if (me.id !== requestedUserId) {
+  if (me.is_banned) throw new Response('Account suspended', { status: 403 });
+  if (me.id !== requestedUserId && me.role !== 'admin') {
     throw new Response('Forbidden', { status: 403 });
   }
 }

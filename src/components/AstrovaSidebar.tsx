@@ -280,7 +280,8 @@ const GENERAL_PROMPTS = [
 
 const LOGO_SRC = '/Logo.png';
 const THINKING_ICON_SRC = '/star.png';
-const FALLBACK_MODEL = 'stepfun/step-3.5-flash:free';
+const PRIMARY_MODEL = 'stepfun/step-3.5-flash:free';
+const FALLBACK_MODELS = ['stepfun/step-3.5-flash:free', 'arcee-ai/trinity-large-preview:free'];
 
 function extractThinkingDelta(delta: unknown): string {
   if (!delta || typeof delta !== 'object') return '';
@@ -603,7 +604,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
       } else if (models.length > 0) {
         setSelectedModel(models[0].model_id);
       } else {
-        setSelectedModel('stepfun/step-3.5-flash:free');
+        setSelectedModel(FALLBACK_MODELS[0]);
       }
     }
     loadModels();
@@ -705,7 +706,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
       if (!apiKey) {
         throw new Error('OpenRouter API key not configured.');
       }
-      const modelToUse = selectedModel || FALLBACK_MODEL;
+      const modelToUse = selectedModel || PRIMARY_MODEL;
 
       const kbResults = await searchKnowledgeBase(messageText.trim()).catch(() => []);
       if (kbResults.length > 0) {
@@ -904,7 +905,7 @@ export function AstrovaSidebar({ kundaliData, chartName, isOpen, onToggle, onGen
     try {
       const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
       if (!apiKey) throw new Error('OpenRouter API key not configured.');
-      const modelToUse = selectedModel || FALLBACK_MODEL;
+      const modelToUse = selectedModel || PRIMARY_MODEL;
       const kbResults = await searchKnowledgeBase(messageText.trim()).catch(() => []);
       const systemPrompt = `${buildSystemPrompt(kundaliData, chartName, !!matchData)}${buildMatchContextPrompt(matchData)}${buildKbContextPrompt(messageText.trim(), kbResults)}`;
       const conversationMessages = [

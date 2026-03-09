@@ -13,7 +13,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'GET') {
       // Always use the authenticated user's ID from astrova-db
       const rows = await sql`
-        SELECT * FROM saved_charts
+        SELECT * FROM astrova_saved_charts
         WHERE user_id = ${auth.id}
         ORDER BY created_at DESC`;
       return json(rows);
@@ -33,7 +33,7 @@ export default async function handler(req: Request): Promise<Response> {
 
       // Use auth.id (astrova-db user ID) instead of client-provided userId
       const inserted = await sql`
-        INSERT INTO saved_charts
+        INSERT INTO astrova_saved_charts
         (user_id, name, birth_data, kundali_data, location_name, coordinates)
         VALUES (
           ${auth.id},

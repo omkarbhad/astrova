@@ -19,7 +19,12 @@ interface CreditsContextType {
 }
 
 const CreditsContext = createContext<CreditsContextType | null>(null);
-const INITIAL_CREDITS = 20;
+const INITIAL_CREDITS = 0;
+
+function toNumberSafe(v: unknown, fallback = 0): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
 
 const DEFAULT_CREDIT_COSTS: CreditCosts = {
   AI_MESSAGE: 1,
@@ -62,7 +67,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   // Sync credits from DB user — no localStorage
   useEffect(() => {
     if (astrovaUser) {
-      setCredits(astrovaUser.credits);
+      setCredits(toNumberSafe(astrovaUser.credits));
     } else if (!isSignedIn) {
       setCredits(INITIAL_CREDITS);
     }
@@ -152,7 +157,7 @@ export function CreditsDisplay({ compact = false }: { compact?: boolean }) {
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 hover:from-amber-500/30 hover:to-yellow-500/30 transition-all ${compact ? 'text-xs' : 'text-sm'}`}
     >
       <Coins className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-amber-400`} />
-      <span className="font-semibold text-amber-200">{credits}</span>
+      <span className="font-semibold text-amber-200">{Number.isFinite(credits) ? credits : 0}</span>
     </button>
   );
 }

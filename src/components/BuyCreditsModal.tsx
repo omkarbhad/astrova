@@ -56,7 +56,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
             <p className="text-sm text-neutral-400">Current Balance</p>
             <p className="text-3xl font-bold text-amber-400 flex items-center justify-center gap-2">
               <Coins className="w-6 h-6" />
-              {credits}
+              {Number.isFinite(credits) ? credits : 0}
             </p>
           </div>
 
