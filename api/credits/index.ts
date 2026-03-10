@@ -10,12 +10,12 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (req.method === 'POST') {
       // [FIX #21] Safe JSON parsing
-      const { userId, amount, action, adminId, type } = await parseBody<{
+      const { userId, amount, action, type, description } = await parseBody<{
         userId: string;
         amount: number;
         action: string;
-        adminId?: string;
         type: 'deduct' | 'add';
+        description?: string;
       }>(req);
 
       // [FIX #22] Validate amount is a positive finite integer
@@ -47,8 +47,8 @@ export default async function handler(req: Request): Promise<Response> {
 
         try {
           await sql`
-            INSERT INTO credit_transactions (user_id, amount, action)
-            VALUES (${userId}, ${-safeAmount}, ${action})`;
+            INSERT INTO credit_transactions (user_id, amount, type, description)
+            VALUES (${userId}, ${-safeAmount}, ${action}, ${description ?? null})`;
         } catch { /* log table may not exist */ }
 
         return json({ ok: true, credits: (result[0] as { credits: number }).credits });
@@ -66,8 +66,8 @@ export default async function handler(req: Request): Promise<Response> {
 
         try {
           await sql`
-            INSERT INTO credit_transactions (user_id, amount, action, admin_id)
-            VALUES (${userId}, ${safeAmount}, ${action}, ${adminId ?? null})`;
+            INSERT INTO credit_transactions (user_id, amount, type, description)
+            VALUES (${userId}, ${safeAmount}, ${action}, ${description ?? null})`;
         } catch { /* log table may not exist */ }
 
         return json({ ok: true, credits: (result[0] as { credits: number }).credits });

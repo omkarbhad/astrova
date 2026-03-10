@@ -27,9 +27,6 @@ export default async function handler(req: Request): Promise<Response> {
       // [FIX #21] Safe JSON parsing
       const body = await parseBody<Record<string, unknown>>(req);
 
-      // [FIX #26] Removed dead setClauses/values code. Validate each field inline.
-      // [FIX #29] Validate is_banned is boolean
-      const isBanned = 'is_banned' in body ? Boolean(body.is_banned) : undefined;
       // [FIX #27] Validate role is one of allowed values
       const role = 'role' in body
         ? (VALID_ROLES.includes(body.role as typeof VALID_ROLES[number]) ? body.role as string : undefined)
@@ -43,20 +40,12 @@ export default async function handler(req: Request): Promise<Response> {
       if ('role' in body && role === undefined) return jsonError('Invalid role. Must be "user" or "admin"');
       if ('credits' in body && credits === undefined) return jsonError('Invalid credits. Must be a non-negative number');
 
-      const hasUpdate = isBanned !== undefined || role !== undefined || credits !== undefined;
+      const hasUpdate = role !== undefined || credits !== undefined;
       if (!hasUpdate) return jsonError('No valid fields to update');
 
       // Build update — explicit branches for neon tagged templates
-      if (isBanned !== undefined && role !== undefined && credits !== undefined) {
-        await sql`UPDATE users SET is_banned = ${isBanned}, role = ${role}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
-      } else if (isBanned !== undefined && role !== undefined) {
-        await sql`UPDATE users SET is_banned = ${isBanned}, role = ${role}, updated_at = now() WHERE id = ${id}`;
-      } else if (isBanned !== undefined && credits !== undefined) {
-        await sql`UPDATE users SET is_banned = ${isBanned}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
-      } else if (role !== undefined && credits !== undefined) {
+      if (role !== undefined && credits !== undefined) {
         await sql`UPDATE users SET role = ${role}, credits = ${credits}, updated_at = now() WHERE id = ${id}`;
-      } else if (isBanned !== undefined) {
-        await sql`UPDATE users SET is_banned = ${isBanned}, updated_at = now() WHERE id = ${id}`;
       } else if (role !== undefined) {
         await sql`UPDATE users SET role = ${role}, updated_at = now() WHERE id = ${id}`;
       } else if (credits !== undefined) {

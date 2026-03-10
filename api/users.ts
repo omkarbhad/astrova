@@ -9,14 +9,14 @@ export default async function handler(req: Request): Promise<Response> {
     const sql = getDb();
 
     if (req.method === 'GET') {
-      const rows = await sql`SELECT * FROM users WHERE auth_id = ${payload.firebase_uid} LIMIT 1`;
+      const rows = await sql`SELECT * FROM users WHERE firebase_uid = ${payload.firebase_uid} LIMIT 1`;
       return json(rows[0] ?? null);
     }
 
     if (req.method === 'POST') {
       // [FIX #21] Safe JSON parsing
-      const { email, displayName, avatarUrl } = await parseBody<{
-        email: string; displayName?: string; avatarUrl?: string;
+      const { email, displayName } = await parseBody<{
+        email: string; displayName?: string;
       }>(req);
 
       // [FIX #8] Basic email validation
@@ -24,17 +24,15 @@ export default async function handler(req: Request): Promise<Response> {
         return jsonError('Valid email is required');
       }
 
-      const existing = await sql`SELECT * FROM users WHERE auth_id = ${payload.firebase_uid} LIMIT 1`;
+      const existing = await sql`SELECT * FROM users WHERE firebase_uid = ${payload.firebase_uid} LIMIT 1`;
 
       if (existing[0]) {
         const updated = await sql`
           UPDATE users
           SET email = COALESCE(${email}, email),
-              display_name = COALESCE(${displayName ?? null}, display_name),
-              avatar_url = COALESCE(${avatarUrl ?? null}, avatar_url),
-              last_login_at = now(),
+              name = COALESCE(${displayName ?? null}, name),
               updated_at = now()
-          WHERE auth_id = ${payload.firebase_uid}
+          WHERE firebase_uid = ${payload.firebase_uid}
           RETURNING *`;
         // [FIX #40] Null check on returned data
         if (!updated[0]) return jsonError('User update failed', 500);
@@ -44,8 +42,8 @@ export default async function handler(req: Request): Promise<Response> {
       // Safely extract display name from email
       const safeName = displayName ?? (email.includes('@') ? email.split('@')[0] : 'User');
       const newUser = await sql`
-        INSERT INTO users (auth_id, email, display_name, avatar_url, credits)
-        VALUES (${payload.firebase_uid}, ${email}, ${safeName}, ${avatarUrl ?? null}, 20)
+        INSERT INTO users (firebase_uid, email, name, credits)
+        VALUES (${payload.firebase_uid}, ${email}, ${safeName}, 20)
         RETURNING *`;
       if (!newUser[0]) return jsonError('User creation failed', 500);
       return json(newUser[0], 201);

@@ -6,8 +6,7 @@ export interface AuthPayload {
   id: string;
   firebase_uid: string;
   email: string;
-  display_name: string | null;
-  avatar_url: string | null;
+  name: string | null;
   credits: number;
 }
 
@@ -57,8 +56,7 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
       id: created.id,
       firebase_uid: firebaseUid,
       email: created.email || '',
-      display_name: created.name,
-      avatar_url: null,
+      name: created.name,
       credits: created.credits,
     };
   }
@@ -67,8 +65,7 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
     id: row.id,
     firebase_uid: firebaseUid,
     email: row.email || '',
-    display_name: row.name,
-    avatar_url: null,
+    name: row.name,
     credits: row.credits,
   };
 }

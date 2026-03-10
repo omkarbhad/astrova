@@ -15,7 +15,7 @@ export default async function handler(req: Request): Promise<Response> {
       await requireOwnership(sql, auth, userId);
 
       const rows = await sql`
-        SELECT id, amount, action, created_at
+        SELECT id, amount, type, description, created_at
         FROM credit_transactions
         WHERE user_id = ${userId}
         ORDER BY created_at DESC

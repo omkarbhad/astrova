@@ -17,7 +17,7 @@ export default async function handler(req: Request): Promise<Response> {
     try {
       const log = await sql`
         SELECT id FROM credit_transactions
-        WHERE user_id = ${auth.id} AND action = 'free_claim'
+        WHERE user_id = ${auth.id} AND type = 'free_claim'
         LIMIT 1`;
       alreadyClaimed = log.length > 0;
     } catch { /* credit_transactions may not exist — allow claim */ }
@@ -36,8 +36,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     try {
       await sql`
-        INSERT INTO credit_transactions (user_id, amount, action)
-        VALUES (${auth.id}, ${FREE_CREDITS}, 'free_claim')`;
+        INSERT INTO credit_transactions (user_id, amount, type, description)
+        VALUES (${auth.id}, ${FREE_CREDITS}, 'free_claim', 'Free credits claimed')`;
     } catch { /* log table may not exist — credits still added */ }
 
     return json({ ok: true, credits: (result[0] as { credits: number }).credits });
