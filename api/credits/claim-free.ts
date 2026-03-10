@@ -16,12 +16,14 @@ export default async function handler(req: Request): Promise<Response> {
     let alreadyClaimed = false;
     try {
       const log = await sql`
-        SELECT id FROM credit_transactions
-        WHERE user_id = ${auth.id} AND type = 'free_claim'
+        SELECT 1 FROM credit_transactions
+        WHERE user_id = ${auth.id} AND type = ${'free_claim'}
         LIMIT 1`;
-      alreadyClaimed = log.length > 0;
-    } catch {
-      // credit_transactions table may not exist or query failed - proceed with claim
+      alreadyClaimed = log && log.length > 0;
+    } catch (e) {
+      // credit_transactions table may not exist or query failed
+      // If table doesn't exist, proceed anyway - user can claim
+      console.log('[claim-free] TX check error (ok):', e instanceof Error ? e.message : String(e));
     }
 
     if (alreadyClaimed) {
