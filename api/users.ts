@@ -15,9 +15,18 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (req.method === 'POST') {
       // [FIX #21] Safe JSON parsing
-      const { email, displayName } = await parseBody<{
-        email: string; displayName?: string;
-      }>(req);
+      let email: string;
+      let displayName: string | undefined;
+      try {
+        const body = await parseBody<{
+          email?: string; displayName?: string;
+        }>(req);
+        email = body.email || '';
+        displayName = body.displayName;
+      } catch (parseErr) {
+        console.error('[users] Parse error:', parseErr);
+        return jsonError('Invalid request body', 400);
+      }
 
       // [FIX #8] Basic email validation
       if (!email || typeof email !== 'string' || !email.includes('@')) {
