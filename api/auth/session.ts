@@ -57,33 +57,43 @@ export default async function handler(req: Request): Promise<Response> {
       throw new Response('Failed to upsert user', { status: 500 });
     }
 
-    const userId = userRow.id;
+    const magnovaUserId = userRow.id;
 
     await sql`
       INSERT INTO app_access (user_id, app)
-      VALUES (${userId}, ${APP_NAME})
+      VALUES (${magnovaUserId}, ${APP_NAME})
       ON CONFLICT (user_id, app) DO NOTHING`;
 
     if (isNewUser) {
       await sql`
         INSERT INTO user_credits (user_id, app, balance)
-        VALUES (${userId}, ${APP_NAME}, 100)
+        VALUES (${magnovaUserId}, ${APP_NAME}, 100)
         ON CONFLICT (user_id, app) DO NOTHING`;
     }
 
     await sql`
       INSERT INTO auth_events (user_id, event, app)
-      VALUES (${userId}, 'login', ${APP_NAME})`;
+      VALUES (${magnovaUserId}, 'login', ${APP_NAME})`;
 
-    const [creditRow] = await sql`
-      SELECT balance FROM user_credits
-      WHERE user_id = ${userId} AND app = ${APP_NAME}
-      LIMIT 1`;
-    const credits = creditRow?.balance ?? 0;
+    // Look up the astrova-specific users record (keyed by firebase_uid).
+    // This is the table all credit/user endpoints use — its id and credits
+    // must be returned so the frontend uses the correct userId for API calls.
+    let [astrovaRow] = await sql`
+      SELECT id, credits FROM users WHERE firebase_uid = ${decoded.uid} LIMIT 1`;
+    if (!astrovaRow) {
+      // First time using Astrova — auto-create the record
+      const inserted = await sql`
+        INSERT INTO users (firebase_uid, email, credits)
+        VALUES (${decoded.uid}, ${email}, 100)
+        RETURNING id, credits`;
+      astrovaRow = inserted[0];
+    }
+    const astrovaUserId = (astrovaRow as { id: string; credits: number }).id;
+    const credits = (astrovaRow as { id: string; credits: number }).credits ?? 0;
 
     const response = json({
       user: {
-        id: userId,
+        id: astrovaUserId,
         email: userRow.email,
         displayName: userRow.display_name ?? '',
         credits,
