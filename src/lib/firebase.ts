@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import {
+  type Auth,
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
@@ -20,50 +21,66 @@ const requiredKeys = [
 
 type EnvKey = (typeof requiredKeys)[number];
 
-function readEnv(key: EnvKey): string {
-  const value = import.meta.env[key];
-  if (!value) {
-    throw new Error(`${key} is required to initialize Firebase`);
+function getEnv(key: EnvKey): string | undefined {
+  return import.meta.env[key] as string | undefined;
+}
+
+const hasFirebaseConfig = requiredKeys.every((key) => Boolean(getEnv(key)));
+let authInstance: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
+
+if (hasFirebaseConfig) {
+  const firebaseConfig = {
+    apiKey: getEnv('VITE_FIREBASE_API_KEY')!,
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN')!,
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID')!,
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET')!,
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID')!,
+    appId: getEnv('VITE_FIREBASE_APP_ID')!,
+  };
+
+  let app: FirebaseApp;
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApps()[0];
   }
-  return value;
+  authInstance = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
 }
 
-const firebaseConfig = {
-  apiKey: readEnv('VITE_FIREBASE_API_KEY'),
-  authDomain: readEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: readEnv('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: readEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: readEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: readEnv('VITE_FIREBASE_APP_ID'),
-};
-
-let app: FirebaseApp;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+function requireFirebaseAuth(): Auth {
+  if (!authInstance) {
+    throw new Error('Firebase Auth is not configured. Set VITE_FIREBASE_* vars or use Magnova centralized auth.');
+  }
+  return authInstance;
 }
 
-export const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+export const auth = authInstance;
+export const isFirebaseConfigured = hasFirebaseConfig;
 
 export function signInWithGoogle() {
-  return signInWithPopup(auth, googleProvider);
+  const currentAuth = requireFirebaseAuth();
+  return signInWithPopup(currentAuth, googleProvider!);
 }
 
 export function signInWithEmail(email: string, password: string) {
-  return signInWithEmailAndPassword(auth, email, password);
+  const currentAuth = requireFirebaseAuth();
+  return signInWithEmailAndPassword(currentAuth, email, password);
 }
 
 export function signUpWithEmail(email: string, password: string) {
-  return createUserWithEmailAndPassword(auth, email, password);
+  const currentAuth = requireFirebaseAuth();
+  return createUserWithEmailAndPassword(currentAuth, email, password);
 }
 
 export function resetPassword(email: string, redirectUrl?: string) {
+  const currentAuth = requireFirebaseAuth();
   const options = redirectUrl ? { url: redirectUrl } : undefined;
-  return sendPasswordResetEmail(auth, email, options);
+  return sendPasswordResetEmail(currentAuth, email, options);
 }
 
 export function signOutUser() {
-  return firebaseSignOut(auth);
+  if (!authInstance) return Promise.resolve();
+  return firebaseSignOut(authInstance);
 }

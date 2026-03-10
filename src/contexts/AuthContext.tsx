@@ -105,7 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Continue to Firebase
       }
       
-      // Also listen to Firebase for direct sign-ins
+      // Also listen to Firebase for direct sign-ins when configured
+      if (!auth) {
+        setFirebaseUser(null);
+        setLoading(false);
+        return;
+      }
+
       unsubscribe = onIdTokenChanged(auth, async (nextUser) => {
         setFirebaseUser(nextUser);
         if (!nextUser) {

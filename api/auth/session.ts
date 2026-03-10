@@ -58,7 +58,7 @@ export default async function handler(req: Request): Promise<Response> {
         const magnovaUserId = (userRow as { id: string }).id;
         await sql`INSERT INTO app_access (user_id, app) VALUES (${magnovaUserId}, ${APP_NAME}) ON CONFLICT (user_id, app) DO NOTHING`;
         if (isNewUser) {
-          await sql`INSERT INTO user_credits (user_id, app, balance) VALUES (${magnovaUserId}, ${APP_NAME}, 100) ON CONFLICT (user_id, app) DO NOTHING`;
+          await sql`INSERT INTO user_credits (user_id, app, balance) VALUES (${magnovaUserId}, ${APP_NAME}, 10) ON CONFLICT (user_id, app) DO NOTHING`;
         }
         await sql`INSERT INTO auth_events (user_id, event, app) VALUES (${magnovaUserId}, 'login', ${APP_NAME})`;
       }

@@ -16,7 +16,7 @@ export default async function handler(req: Request): Promise<Response> {
         const keywords = search.toLowerCase().split(/\s+/).filter(w => w.length > 2);
         if (keywords.length === 0) return json([]);
 
-        // PostgreSQL full-text search
+        // FTS path (works if the backing DB supports these functions).
         try {
           const ftsRows = await sql`
             SELECT id, title, category, content, tags
@@ -29,17 +29,40 @@ export default async function handler(req: Request): Promise<Response> {
             return json(ftsRows);
           }
         } catch (ftsErr) {
-          // [FIX #37] Log FTS error instead of silently swallowing
-          console.warn('[kb] FTS search failed, falling back to tags:', ftsErr instanceof Error ? ftsErr.message : 'unknown');
+          console.warn('[kb] FTS search failed, falling back to keyword scan:', ftsErr instanceof Error ? ftsErr.message : 'unknown');
         }
 
-        // Tag fallback using PostgreSQL array overlap
-        const tagRows = await sql`
-          SELECT DISTINCT id, title, category, content, tags
+        // Cross-DB fallback: scan active articles in memory and score by keyword hits.
+        const allRows = await sql`
+          SELECT id, title, category, content, tags
           FROM knowledge_base
-          WHERE is_active = true AND tags && ${keywords}::text[]
-          LIMIT 5`;
-        return json(tagRows);
+          WHERE is_active = true
+          ORDER BY updated_at DESC
+          LIMIT 200`;
+
+        const scored = allRows.map((row) => {
+          const title = String(row.title ?? '').toLowerCase();
+          const category = String(row.category ?? '').toLowerCase();
+          const content = String(row.content ?? '').toLowerCase();
+          const tags = Array.isArray(row.tags) ? row.tags.map((t) => String(t).toLowerCase()) : [];
+
+          let score = 0;
+          for (const keyword of keywords) {
+            if (title.includes(keyword)) score += 4;
+            if (category.includes(keyword)) score += 2;
+            if (content.includes(keyword)) score += 1;
+            if (tags.some((tag) => tag.includes(keyword))) score += 3;
+          }
+          return { score, row };
+        });
+
+        return json(
+          scored
+            .filter((item) => item.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5)
+            .map((item) => item.row),
+        );
       }
 
       // List all active
