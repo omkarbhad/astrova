@@ -1,5 +1,5 @@
 import { getDb, json, jsonError, parseBody } from './_lib/db.js';
-import { requireAuth, requireOwnership } from './_lib/auth.js';
+import { requireAuth, requireOwnership, requireAdmin } from './_lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -55,9 +55,8 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       if (type === 'add') {
-        // Users can add credits to their own account (demo mode — payment gateway pending legal setup)
-        // TODO: Replace with Razorpay/Stripe webhook verification once payment is integrated
-        await requireOwnership(sql, auth, userId);
+        // Admin-only: add credits to any user (used from AdminPage or future payment webhook)
+        await requireAdmin(sql, auth);
 
         const result = await sql`
           UPDATE users SET credits = credits + ${safeAmount}

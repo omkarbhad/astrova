@@ -309,3 +309,7 @@ export async function deleteChartFromSupabase(id: string): Promise<boolean> {
   const res = await apiFetch<{ ok: boolean }>(`/api/charts/${id}`, { method: 'DELETE' });
   return !!res?.ok;
 }
+
+export async function claimFreeCredits(): Promise<{ ok: boolean; credits: number } | null> {
+  return apiFetch<{ ok: boolean; credits: number }>('/api/credits/claim-free', { method: 'POST' });
+}

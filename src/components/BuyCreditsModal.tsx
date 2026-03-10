@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Coins, Check, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useCredits } from '@/contexts/CreditsContext';
+import { claimFreeCredits } from '@/lib/api';
 
 interface BuyCreditsModalProps {
   isOpen: boolean;
@@ -11,20 +12,34 @@ interface BuyCreditsModalProps {
 const FREE_CREDITS = 20;
 
 export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
-  const { addCredits, credits } = useCredits();
+  const { credits, addCredits } = useCredits();
   const [claimed, setClaimed] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
-  const handleClaimFree = () => {
+  const handleClaimFree = async () => {
     if (isClaiming || claimed) return;
     setIsClaiming(true);
-    addCredits(FREE_CREDITS);
-    setClaimed(true);
-    timeoutRef.current = window.setTimeout(() => {
+    setClaimError(null);
+    try {
+      const res = await claimFreeCredits();
+      if (res?.ok) {
+        // Sync local state with server-confirmed value
+        addCredits(res.credits - credits);
+        setClaimed(true);
+        timeoutRef.current = window.setTimeout(() => {
+          setIsClaiming(false);
+          onClose();
+        }, 1400);
+      } else {
+        setClaimError('Could not claim credits. Try again later.');
+        setIsClaiming(false);
+      }
+    } catch {
+      setClaimError('Could not claim credits. Try again later.');
       setIsClaiming(false);
-      onClose();
-    }, 1400);
+    }
   };
 
   useEffect(() => {
@@ -98,6 +113,9 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
                 </div>
               </button>
 
+              {claimError && (
+                <p className="mt-2 text-xs text-red-400 text-center">{claimError}</p>
+              )}
               <p className="mt-4 text-xs text-neutral-500 text-center">
                 Credits are used for AI readings, chart analysis, and interpretations.
               </p>

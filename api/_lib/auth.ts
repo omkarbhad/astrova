@@ -74,13 +74,11 @@ export async function requireAuth(req: Request): Promise<AuthPayload> {
 }
 
 export async function requireAdmin(sqlClient: Sql, authPayload: AuthPayload): Promise<{ id: string; role: string }> {
-  // Simplified: no role column in users table yet - just check if user exists
-  // TODO: add role column if needed
-  const rows = await sqlClient`SELECT id FROM users WHERE firebase_uid = ${authPayload.firebase_uid} LIMIT 1`;
-  const me = rows[0] as { id: string } | undefined;
+  const rows = await sqlClient`SELECT id, role FROM users WHERE firebase_uid = ${authPayload.firebase_uid} LIMIT 1`;
+  const me = rows[0] as { id: string; role: string } | undefined;
   if (!me) throw new Response('Forbidden', { status: 403 });
-  // For now, no admin check - return with empty role
-  return { id: me.id, role: 'user' };
+  if (me.role !== 'admin') throw new Response('Forbidden', { status: 403 });
+  return { id: me.id, role: me.role };
 }
 
 export async function requireNotBanned(sqlClient: Sql, authPayload: AuthPayload): Promise<void> {
