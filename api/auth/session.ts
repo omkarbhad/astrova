@@ -75,16 +75,16 @@ export default async function handler(req: Request): Promise<Response> {
       INSERT INTO auth_events (user_id, event, app)
       VALUES (${magnovaUserId}, 'login', ${APP_NAME})`;
 
-    // Look up the astrova-specific users record (keyed by firebase_uid).
+    // Look up the astrova_users record (keyed by auth_id = Firebase UID).
     // This is the table all credit/user endpoints use — its id and credits
     // must be returned so the frontend uses the correct userId for API calls.
     let [astrovaRow] = await sql`
-      SELECT id, credits FROM users WHERE firebase_uid = ${decoded.uid} LIMIT 1`;
+      SELECT id, credits FROM astrova_users WHERE auth_id = ${decoded.uid} LIMIT 1`;
     if (!astrovaRow) {
       // First time using Astrova — auto-create the record
       const inserted = await sql`
-        INSERT INTO users (firebase_uid, email, credits)
-        VALUES (${decoded.uid}, ${email}, 100)
+        INSERT INTO astrova_users (auth_id, email, display_name, avatar_url, credits)
+        VALUES (${decoded.uid}, ${email}, ${displayName}, ${avatarUrl}, 100)
         RETURNING id, credits`;
       astrovaRow = inserted[0];
     }
@@ -99,7 +99,8 @@ export default async function handler(req: Request): Promise<Response> {
         credits,
       },
     });
-    response.headers.set('Set-Cookie', buildCookie(token));
+    // Store the Firebase UID (not the JWT) — requireAuth reads this directly
+    response.headers.set('Set-Cookie', buildCookie(decoded.uid));
     return response;
   } catch (error) {
     console.error('[auth][session]', error);
