@@ -15,7 +15,7 @@ function getJWKS() {
   return jwks;
 }
 
-export async function verifyToken(token: string): Promise<{ uid: string; email?: string }> {
+export async function verifyToken(token: string): Promise<{ uid: string; email?: string; name?: string; picture?: string }> {
   const { payload } = await jwtVerify(token, getJWKS(), {
     issuer: ISSUER,
     audience: FIREBASE_PROJECT_ID,
@@ -23,5 +23,7 @@ export async function verifyToken(token: string): Promise<{ uid: string; email?:
   return {
     uid: payload.sub as string,
     email: payload.email as string | undefined,
+    name: payload.name as string | undefined,
+    picture: payload.picture as string | undefined,
   };
 }

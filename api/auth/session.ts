@@ -41,39 +41,28 @@ export default async function handler(req: Request): Promise<Response> {
     const displayName = decoded.name ?? null;
     const avatarUrl = decoded.picture ?? null;
 
-    const existing = await sql`SELECT id FROM magnova_users WHERE firebase_uid = ${decoded.uid} LIMIT 1`;
-    const isNewUser = !existing[0];
-
-    const [userRow] = await sql`
-      INSERT INTO magnova_users (firebase_uid, email, display_name, avatar_url)
-      VALUES (${decoded.uid}, ${email}, ${displayName}, ${avatarUrl})
-      ON CONFLICT(firebase_uid)
-      DO UPDATE SET
-        email = EXCLUDED.email,
-        display_name = EXCLUDED.display_name,
-        avatar_url = EXCLUDED.avatar_url
-      RETURNING id, email, display_name`;
-    if (!userRow) {
-      throw new Response('Failed to upsert user', { status: 500 });
-    }
-
-    const magnovaUserId = userRow.id;
-
-    await sql`
-      INSERT INTO app_access (user_id, app)
-      VALUES (${magnovaUserId}, ${APP_NAME})
-      ON CONFLICT (user_id, app) DO NOTHING`;
-
-    if (isNewUser) {
-      await sql`
-        INSERT INTO user_credits (user_id, app, balance)
-        VALUES (${magnovaUserId}, ${APP_NAME}, 100)
-        ON CONFLICT (user_id, app) DO NOTHING`;
-    }
-
-    await sql`
-      INSERT INTO auth_events (user_id, event, app)
-      VALUES (${magnovaUserId}, 'login', ${APP_NAME})`;
+    // Legacy Magnova cross-app tracking (optional — fail gracefully if tables don't exist)
+    try {
+      const existing = await sql`SELECT id FROM magnova_users WHERE firebase_uid = ${decoded.uid} LIMIT 1`;
+      const isNewUser = !existing[0];
+      const [userRow] = await sql`
+        INSERT INTO magnova_users (firebase_uid, email, display_name, avatar_url)
+        VALUES (${decoded.uid}, ${email}, ${displayName}, ${avatarUrl})
+        ON CONFLICT(firebase_uid)
+        DO UPDATE SET
+          email = EXCLUDED.email,
+          display_name = EXCLUDED.display_name,
+          avatar_url = EXCLUDED.avatar_url
+        RETURNING id`;
+      if (userRow) {
+        const magnovaUserId = (userRow as { id: string }).id;
+        await sql`INSERT INTO app_access (user_id, app) VALUES (${magnovaUserId}, ${APP_NAME}) ON CONFLICT (user_id, app) DO NOTHING`;
+        if (isNewUser) {
+          await sql`INSERT INTO user_credits (user_id, app, balance) VALUES (${magnovaUserId}, ${APP_NAME}, 100) ON CONFLICT (user_id, app) DO NOTHING`;
+        }
+        await sql`INSERT INTO auth_events (user_id, event, app) VALUES (${magnovaUserId}, 'login', ${APP_NAME})`;
+      }
+    } catch { /* legacy tables may not exist in this DB */ }
 
     // Look up the users record (keyed by firebase_uid).
     // This is the table all credit/user endpoints use — its id and credits
@@ -94,8 +83,8 @@ export default async function handler(req: Request): Promise<Response> {
     const response = json({
       user: {
         id: astrovaUserId,
-        email: userRow.email,
-        displayName: userRow.display_name ?? '',
+        email,
+        displayName: displayName ?? '',
         credits,
       },
     });
