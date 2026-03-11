@@ -73,8 +73,10 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   }, [astrovaUser?.id, astrovaUser?.credits, isSignedIn]);
 
   const deductCredits = useCallback((amount: number, action?: string): boolean => {
+    console.log('[credits] deductCredits called:', { amount, action, currentCredits: credits });
     if (amount <= 0) return true;
     if (credits < amount) {
+      console.log('[credits] insufficient credits:', { credits, amount });
       setShowBuyModal(true);
       return false;
     }
@@ -82,8 +84,11 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     setCredits(newCredits);
     const uid = userIdRef.current;
     if (uid) {
-      deductUserCredits(uid, amount, action || 'ai_message').then(async () => {
+      console.log('[credits] calling deductUserCredits API:', { uid, amount, action });
+      deductUserCredits(uid, amount, action || 'ai_message').then(async (result) => {
+        console.log('[credits] deductUserCredits result:', result);
         const fresh = await getAstrovaUserById(uid);
+        console.log('[credits] fresh user data:', fresh);
         if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
           setCredits(fresh.credits);
         }
@@ -93,6 +98,8 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
           setCredits(prev => prev + amount);
         }
       });
+    } else {
+      console.log('[credits] no user ID, skipping API call');
     }
     return true;
   }, [credits]);
