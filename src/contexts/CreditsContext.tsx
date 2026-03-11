@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Coins } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { deductUserCredits, getAdminConfig, updateUserCredits, getAstrovaUserById } from '@/lib/api';
+import { deductUserCredits, updateUserCredits, getAstrovaUserById, getCreditCosts } from '@/lib/api';
 
 interface CreditCosts {
   AI_MESSAGE: number;
@@ -43,20 +43,19 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { userIdRef.current = astrovaUser?.id ?? null; }, [astrovaUser?.id]);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
-  // Fetch credit costs from admin config (wait for auth)
+  // Fetch credit costs from public API (wait for auth)
   useEffect(() => {
     if (!isSignedIn) return;
     let cancelled = false;
     (async () => {
       try {
-        const costs = await getAdminConfig('credit_costs');
+        const costs = await getCreditCosts();
         if (cancelled) return;
         if (costs && typeof costs === 'object') {
-          const c = costs as Record<string, number>;
           setCreditCosts({
-            AI_MESSAGE: c.ai_message ?? DEFAULT_CREDIT_COSTS.AI_MESSAGE,
-            CHART_GENERATION: c.chart_generation ?? DEFAULT_CREDIT_COSTS.CHART_GENERATION,
-            MATCHING: c.matching ?? DEFAULT_CREDIT_COSTS.MATCHING,
+            AI_MESSAGE: costs.ai_message ?? DEFAULT_CREDIT_COSTS.AI_MESSAGE,
+            CHART_GENERATION: costs.chart_generation ?? DEFAULT_CREDIT_COSTS.CHART_GENERATION,
+            MATCHING: costs.matching ?? DEFAULT_CREDIT_COSTS.MATCHING,
           });
         }
       } catch { /* use defaults */ }

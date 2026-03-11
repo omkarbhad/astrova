@@ -363,6 +363,11 @@ export async function deleteChartFromSupabase(id: string): Promise<boolean> {
   return !!res?.ok;
 }
 
+export async function getCreditCosts(): Promise<{ ai_message: number; chart_generation: number; matching: number }> {
+  const data = await apiFetch<{ ai_message: number; chart_generation: number; matching: number }>('/api/credit-costs');
+  return data ?? { ai_message: 2, chart_generation: 1, matching: 3 };
+}
+
 export async function claimFreeCredits(): Promise<{ ok: boolean; credits: number } | null> {
   return apiFetch<{ ok: boolean; credits: number }>('/api/credits/claim-free', { method: 'POST' });
 }
