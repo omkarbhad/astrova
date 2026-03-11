@@ -14,6 +14,7 @@ const FREE_CREDITS = 20;
 export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
   const { credits, addCredits } = useCredits();
   const [claimed, setClaimed] = useState(false);
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -32,7 +33,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
           onClose();
         }, 1400);
       } else {
-        setClaimError('Could not claim credits. Try again later.');
+        setAlreadyClaimed(true);
         setIsClaiming(false);
       }
     } catch {
@@ -44,6 +45,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
   useEffect(() => {
     if (!isOpen) {
       setClaimed(false);
+      setAlreadyClaimed(false);
       setIsClaiming(false);
     }
   }, [isOpen]);
@@ -78,6 +80,14 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
               </div>
               <p className="text-lg font-bold text-white">+{FREE_CREDITS} Credits Added!</p>
               <p className="text-sm text-neutral-400 mt-1">Your balance has been updated</p>
+            </div>
+          ) : alreadyClaimed ? (
+            <div className="text-center py-6">
+              <div className="w-14 h-14 rounded-full bg-zinc-700/40 border border-zinc-600/40 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-7 h-7 text-zinc-400" />
+              </div>
+              <p className="text-lg font-bold text-white">Already Claimed</p>
+              <p className="text-sm text-neutral-400 mt-1">You've already claimed your free credits.</p>
             </div>
           ) : (
             <>
