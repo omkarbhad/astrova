@@ -36,7 +36,8 @@ export default async function handler(req: Request): Promise<Response> {
 
         const result = await sql`
           UPDATE users
-          SET credits = credits - ${safeAmount}
+          SET credits = credits - ${safeAmount},
+              credits_used = credits_used + ${safeAmount}
           WHERE id = ${userId} AND credits >= ${safeAmount}
           RETURNING credits`;
 

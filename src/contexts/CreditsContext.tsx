@@ -27,9 +27,9 @@ function toNumberSafe(v: unknown, fallback = 0): number {
 }
 
 const DEFAULT_CREDIT_COSTS: CreditCosts = {
-  AI_MESSAGE: 1,
-  CHART_GENERATION: 0,
-  MATCHING: 0,
+  AI_MESSAGE: 2,
+  CHART_GENERATION: 1,
+  MATCHING: 3,
 };
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
@@ -144,9 +144,9 @@ export const CREDIT_PACKAGES = [
 
 // Fallback credit costs (overridden by admin config at runtime)
 export const CREDIT_COSTS = {
-  AI_MESSAGE: 1,
-  CHART_GENERATION: 0,
-  MATCHING: 0,
+  AI_MESSAGE: 2,
+  CHART_GENERATION: 1,
+  MATCHING: 3,
 };
 
 export function CreditsDisplay({ compact = false }: { compact?: boolean }) {

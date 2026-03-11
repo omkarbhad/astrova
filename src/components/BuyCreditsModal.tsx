@@ -26,7 +26,7 @@ export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
     try {
       const res = await claimFreeCredits();
       if (res?.ok) {
-        addCredits(res.credits - credits, false);
+        addCredits(FREE_CREDITS, false);
         setClaimed(true);
         timeoutRef.current = window.setTimeout(() => {
           setIsClaiming(false);
