@@ -77,32 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check existing session first (for cross-subdomain SSO), then listen to Firebase
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    let sessionChecked = false;
-    
+
     async function init() {
-      // Check if magnova_auth cookie exists (set by auth.magnova.ai)
-      try {
-        const hasAuthCookie = document.cookie.includes('magnova_auth=1');
-        if (hasAuthCookie) {
-          // Session API is on auth.magnova.ai, not local
-          const res = await fetch('https://auth.magnova.ai/api/auth/session', { 
-            method: 'GET', 
-            credentials: 'include' 
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const user = normalizeAstrovaUser(data?.user ?? null);
-            if (user) {
-              setAstrovaUser(user);
-              sessionChecked = true;
-            }
-          }
-        }
-      } catch {
-        // Continue to Firebase
-      }
-      
-      // Also listen to Firebase for direct sign-ins when configured
+      // User identity is established via Firebase → /api/auth/session only.
+      // auth.magnova.ai returns magnova user IDs (different from Astrova DB IDs).
       if (!auth) {
         setFirebaseUser(null);
         setLoading(false);
@@ -114,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!nextUser) {
           sessionSyncTokenRef.current = null;
           setToken(null);
-          if (!sessionChecked) setAstrovaUser(null);
+          setAstrovaUser(null);
           setLoading(false);
           return;
         }
