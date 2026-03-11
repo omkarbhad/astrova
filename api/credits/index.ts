@@ -7,6 +7,7 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const auth = await requireAuth(req);
     const sql = getDb();
+    console.log('[credits] API call:', { method: req.method, userId: auth.id });
 
     if (req.method === 'POST') {
       const { userId, amount, action, type, description } = await parseBody<{
@@ -16,6 +17,8 @@ export default async function handler(req: Request): Promise<Response> {
         type: 'deduct' | 'add';
         description?: string;
       }>(req);
+
+      console.log('[credits] POST request:', { userId, amount, action, type });
 
       if (typeof amount !== 'number' || !Number.isFinite(amount) || amount === 0) {
         return jsonError('Amount must be a non-zero number');
@@ -34,6 +37,8 @@ export default async function handler(req: Request): Promise<Response> {
           await requireAdmin(sql, auth);
         }
 
+        console.log('[credits] deducting credits:', { userId, safeAmount });
+
         const result = await sql`
           UPDATE users
           SET credits = credits - ${safeAmount},
@@ -41,8 +46,11 @@ export default async function handler(req: Request): Promise<Response> {
           WHERE id = ${userId} AND credits >= ${safeAmount}
           RETURNING credits`;
 
+        console.log('[credits] deduction result:', result);
+
         if (!result[0]) {
           const check = await sql`SELECT credits FROM users WHERE id = ${userId} LIMIT 1`;
+          console.log('[credits] user credits check:', check);
           if (!check[0]) return jsonError('User not found', 404);
           return jsonError('Insufficient credits', 400);
         }
