@@ -1,5 +1,5 @@
 import { getDb, json, jsonError, parseBody } from '../_lib/db.js';
-import { requireAuth, requireOwnership, requireAdmin } from '../_lib/auth.js';
+import { requireAuth, requireAdmin } from '../_lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -31,9 +31,7 @@ export default async function handler(req: Request): Promise<Response> {
       }
 
       if (type === 'deduct') {
-        if (auth.id === userId) {
-          await requireOwnership(sql, auth, userId);
-        } else {
+        if (auth.id !== userId) {
           await requireAdmin(sql, auth);
         }
 

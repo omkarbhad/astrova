@@ -87,6 +87,14 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       console.log('[credits] calling deductUserCredits API:', { uid, amount, action });
       deductUserCredits(uid, amount, action || 'ai_message').then(async (result) => {
         console.log('[credits] deductUserCredits result:', result);
+        if (!result) {
+          // API deduction failed — roll back optimistic update
+          console.warn('[credits] deduct API returned false, rolling back');
+          if (mountedRef.current) {
+            setCredits(prev => prev + amount);
+          }
+          return;
+        }
         const fresh = await getAstrovaUserById(uid);
         console.log('[credits] fresh user data:', fresh);
         if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
