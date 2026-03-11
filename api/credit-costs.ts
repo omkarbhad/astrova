@@ -39,6 +39,12 @@ export default async function handler(req: Request): Promise<Response> {
     return json(costs);
   } catch (e) {
     console.error('[credit-costs]', e);
-    return new Response('Internal Server Error', { status: 500 });
+    // Return defaults if database fails
+    const costs = {
+      ai_message: 2,
+      chart_generation: 1, 
+      matching: 3
+    };
+    return json(costs);
   }
 }
