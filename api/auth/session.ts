@@ -2,7 +2,7 @@ import { json, parseBody, sql } from '../_lib/db.js';
 import { verifyToken } from '../_lib/firebaseAdmin.js';
 
 const COOKIE_NAME = 'magnova_session';
-const COOKIE_MAX_AGE = 3600;
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export const config = { runtime: 'edge' };
 
