@@ -64,14 +64,20 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [isSignedIn]);
 
-  // Sync credits from DB user
+  // Initialize credits when user loads/switches — after this, CreditsContext owns the value.
+  // Do NOT include astrovaUser?.credits in deps: the stale AuthContext value would
+  // overwrite locally-tracked credits after deductions.
+  const syncedUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (astrovaUser) {
+    const uid = astrovaUser?.id ?? null;
+    if (astrovaUser && uid !== syncedUserIdRef.current) {
       setCredits(toNumberSafe(astrovaUser.credits));
-    } else if (!isSignedIn) {
+      syncedUserIdRef.current = uid;
+    } else if (!isSignedIn && syncedUserIdRef.current !== null) {
       setCredits(INITIAL_CREDITS);
+      syncedUserIdRef.current = null;
     }
-  }, [astrovaUser?.id, astrovaUser?.credits, isSignedIn]);
+  }, [astrovaUser?.id, isSignedIn]);
 
   const deductCredits = useCallback((amount: number, action?: string): boolean => {
     const current = creditsRef.current;
