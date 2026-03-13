@@ -1,36 +1,32 @@
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-function hasMagnovaAuth(): boolean {
-  if (typeof document === 'undefined') return false;
-  return document.cookie.split(';').some(c => c.trim().startsWith('magnova_auth='));
-}
-
 export function AuthGuard({ children }: AuthGuardProps) {
-  const [checked, setChecked] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { loading, isSignedIn } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const has = hasMagnovaAuth();
-    setAuthenticated(has);
-    setChecked(true);
-
-    if (!has) {
-      const redirect = encodeURIComponent(window.location.href);
-      window.location.href = `https://auth.magnova.ai/astrova?redirect=${redirect}`;
+    if (!loading && !isSignedIn) {
+      navigate('/', { replace: true });
     }
-  }, []);
+  }, [loading, isSignedIn, navigate]);
 
-  if (!checked || !authenticated) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[hsl(24,16%,6%)]">
         <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
       </div>
     );
+  }
+
+  if (!isSignedIn) {
+    return null;
   }
 
   return <>{children}</>;

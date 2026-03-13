@@ -6,8 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 export function UserMenu() {
   const { isLoaded, isSignedIn, astrovaUser, signOut } = useAuth();
-  let liveCredits: number | null = null;
-  try { const ctx = useCredits(); liveCredits = ctx.credits; } catch { /* CreditsProvider may not be mounted */ }
+  const { credits: liveCredits } = useCredits();
   const [open, setOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -99,7 +98,7 @@ export function UserMenu() {
             </div>
             <div className="flex items-center gap-1.5 mt-2 px-0.5">
               <Coins className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-amber-300 text-xs font-semibold">{liveCredits ?? astrovaUser.credits}</span>
+              <span className="text-amber-300 text-xs font-semibold">{liveCredits}</span>
               <span className="text-neutral-500 text-[10px]">credits</span>
             </div>
           </div>

@@ -34,13 +34,14 @@ const DEFAULT_CREDIT_COSTS: CreditCosts = {
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const { astrovaUser, isSignedIn } = useAuth();
-  // No localStorage — credits come from DB only
   const [credits, setCredits] = useState<number>(INITIAL_CREDITS);
   const [creditCosts, setCreditCosts] = useState<CreditCosts>(DEFAULT_CREDIT_COSTS);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const mountedRef = useRef(true);
   const userIdRef = useRef<string | null>(null);
+  const creditsRef = useRef(credits);
   useEffect(() => { userIdRef.current = astrovaUser?.id ?? null; }, [astrovaUser?.id]);
+  useEffect(() => { creditsRef.current = credits; }, [credits]);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   // Fetch credit costs from public API (wait for auth)
@@ -63,7 +64,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [isSignedIn]);
 
-  // Sync credits from DB user — no localStorage
+  // Sync credits from DB user
   useEffect(() => {
     if (astrovaUser) {
       setCredits(toNumberSafe(astrovaUser.credits));
@@ -73,49 +74,35 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   }, [astrovaUser?.id, astrovaUser?.credits, isSignedIn]);
 
   const deductCredits = useCallback((amount: number, action?: string): boolean => {
-    console.log('[credits] deductCredits called:', { amount, action, currentCredits: credits });
+    const current = creditsRef.current;
     if (amount <= 0) return true;
-    if (credits < amount) {
-      console.log('[credits] insufficient credits:', { credits, amount });
+    if (current < amount) {
       setShowBuyModal(true);
       return false;
     }
-    const newCredits = credits - amount;
-    setCredits(newCredits);
+    setCredits(current - amount);
     const uid = userIdRef.current;
     if (uid) {
-      console.log('[credits] calling deductUserCredits API:', { uid, amount, action });
       deductUserCredits(uid, amount, action || 'ai_message').then(async (result) => {
-        console.log('[credits] deductUserCredits result:', result);
         if (!result) {
-          // API deduction failed — roll back optimistic update
-          console.warn('[credits] deduct API returned false, rolling back');
-          if (mountedRef.current) {
-            setCredits(prev => prev + amount);
-          }
+          if (mountedRef.current) setCredits(prev => prev + amount);
           return;
         }
+        // Refresh from DB to get authoritative value
         const fresh = await getAstrovaUserById(uid);
-        console.log('[credits] fresh user data:', fresh);
         if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
           setCredits(fresh.credits);
         }
-      }).catch((err) => {
-        console.error('[credits] deduct sync failed:', err);
-        if (mountedRef.current) {
-          setCredits(prev => prev + amount);
-        }
+      }).catch(() => {
+        if (mountedRef.current) setCredits(prev => prev + amount);
       });
-    } else {
-      console.log('[credits] no user ID, skipping API call');
     }
     return true;
-  }, [credits]);
+  }, []);
 
   const addCredits = useCallback((amount: number, syncWithServer = true) => {
     if (amount <= 0) return;
-    const newCredits = credits + amount;
-    setCredits(newCredits);
+    setCredits(prev => prev + amount);
     if (!syncWithServer) return;
     const uid = userIdRef.current;
     if (uid) {
@@ -124,14 +111,11 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
         if (mountedRef.current && fresh && typeof fresh.credits === 'number') {
           setCredits(fresh.credits);
         }
-      }).catch((err) => {
-        console.error('[credits] add sync failed:', err);
-        if (mountedRef.current) {
-          setCredits(prev => prev - amount);
-        }
+      }).catch(() => {
+        if (mountedRef.current) setCredits(prev => prev - amount);
       });
     }
-  }, [credits]);
+  }, []);
 
   return (
     <CreditsContext.Provider value={{ credits, creditCosts, deductCredits, addCredits, showBuyModal, setShowBuyModal }}>

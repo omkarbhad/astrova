@@ -14,7 +14,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ChartSkeleton } from '@/components/common/LoadingSkeleton';
 import { SEOHead } from '@/components/common/SEOHead';
-import { CreditsProvider, useCredits } from '@/contexts/CreditsContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { calculateKundali, estimateTimezone } from '@/lib/vedic-engine';
 import { CHART_CONSTANTS } from '@/constants';
 import { getUserSavedCharts, saveChartToSupabase, deleteChartFromSupabase } from '@/lib/api';
@@ -504,7 +504,6 @@ function ChartPage() {
     <ErrorBoundary>
       <SEOHead />
       <AuthGuard>
-        <CreditsProvider>
           <div className="min-h-screen flex flex-col bg-[hsl(220,10%,6%)]">
           {/* Background gradient */}
           <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(245,158,11,0.06),transparent)] pointer-events-none" />
@@ -1220,8 +1219,7 @@ function ChartPage() {
             </div>
           )}
         </div>
-      </CreditsProvider>
-    </AuthGuard>
+      </AuthGuard>
     </ErrorBoundary>
   );
 }
