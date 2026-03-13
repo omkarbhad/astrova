@@ -78,7 +78,7 @@ export default async function handler(req: Request): Promise<Response> {
         name = COALESCE(EXCLUDED.name, users.name),
         display_name = COALESCE(EXCLUDED.display_name, users.display_name, users.name),
         avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
-        credits = GREATEST(users.credits, 10),
+        credits = users.credits,
         last_login_at = now(),
         updated_at = now()
       RETURNING

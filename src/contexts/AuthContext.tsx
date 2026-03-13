@@ -53,18 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAstrovaUser(user);
       sessionSyncTokenRef.current = idToken;
 
-      // Sync shared Magnova session cookie (.magnova.ai) for cross-app SSO
-      try {
-        await fetch('https://auth.magnova.ai/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ token: idToken }),
-        });
-      } catch {
-        // Non-fatal — Astrova still works, cross-app SSO won't be set
-      }
-
       return user;
     } catch (error) {
       console.error('[auth] session sync error', error);
