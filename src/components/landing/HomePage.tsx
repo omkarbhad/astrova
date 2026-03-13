@@ -1,15 +1,24 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, UserIcon, Settings, Zap, DollarSign, MessageSquare } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Container } from './global/container';
-import { Wrapper } from './global/wrapper';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Marquee from './ui/marquee';
 import { StarsBackground, CosmicOrbs } from './ui/stars-background';
-import { features, perks, pricingCards, reviews } from './constants';
+import { pricingCards, reviews } from './constants';
+
+// Inject fonts
+const fontLink = document.createElement('link');
+fontLink.rel = 'stylesheet';
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
+if (!document.querySelector('link[href*="Cormorant+Garamond"]')) {
+    document.head.appendChild(fontLink);
+}
+
+const serif = "font-['Cormorant_Garamond',serif]";
+const mono = "font-['JetBrains_Mono',monospace]";
 
 const HomePage = () => {
     const { isSignedIn, signInWithGoogle } = useAuth();
@@ -19,421 +28,850 @@ const HomePage = () => {
 
     const handleLogin = async () => {
         if (isSignedIn) { navigate('/chart'); return; }
-        const result = await signInWithGoogle();
-        if (!result.error) navigate('/chart');
+        const { error } = await signInWithGoogle();
+        if (!error) navigate('/chart');
     };
 
     return (
-        <div className="min-h-screen bg-[hsl(24,16%,6%)]">
-            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:bg-[hsl(24,20%,10%)] focus:text-white focus:rounded-md">
+        <div className="min-h-screen bg-[#06020a] font-['DM_Sans',system-ui,sans-serif] text-white selection:bg-purple-500/30 selection:text-white">
+            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:bg-[#0d0a12] focus:text-white focus:rounded-md">
                 Skip to content
             </a>
-            {/* Header */}
-            <Header onLogin={handleLogin} />
-            
-            <section id="main-content" className="w-full relative flex items-center justify-center flex-col px-4 sm:px-6 md:px-8 py-8 sm:py-10 lg:py-12 min-h-screen">
-                {/* Cosmic Background */}
-                <StarsBackground />
-                <CosmicOrbs />
-                
-                {/* Main gradient overlay */}
-                <div className="fixed inset-0 bg-[hsl(24,16%,6%)] -z-20" />
-                <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(245,158,11,0.08),transparent)] -z-10" />
-                
-                {/* Subtle cosmic glow orbs - Warm amber */}
-                <div className="fixed inset-0 pointer-events-none -z-30">
-                    <div className="absolute top-[40%] left-1/2 w-3/4 -translate-x-1/2 h-1/4 md:h-1/3 inset-0 bg-gradient-to-r from-amber-600/12 to-amber-400/6 blur-[5rem] animate-image-glow" />
-                    <div className="absolute top-[30%] left-1/4 w-96 h-96 bg-amber-600/8 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute top-[50%] right-1/4 w-72 h-72 bg-orange-600/6 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-                    <div className="absolute top-[70%] left-1/3 w-80 h-80 bg-amber-500/5 rounded-full blur-[110px] animate-pulse" style={{ animationDelay: '1.5s' }} />
-                </div>
 
-                {/* hero */}
-                <Wrapper>
-                    <Container>
-                        <div className="flex flex-col items-center justify-center py-10 sm:py-14 md:py-16 lg:py-20 h-full relative">
-                            <div className="flex flex-col items-center max-w-3xl w-full">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center leading-tight tracking-tight">
-                                    <span className="bg-gradient-to-b from-white via-white to-neutral-400 bg-clip-text text-transparent">Discover Your Cosmic Destiny</span>
-                                    <br />
-                                    <span className="bg-gradient-to-r from-amber-500 via-amber-300 to-amber-500 bg-clip-text text-transparent">with Ancient Vedic Wisdom</span>
-                                </h1>
-                                <p className="text-neutral-400 mt-3 sm:mt-4 text-center text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-                                    Generate accurate kundali birth charts and unlock insights into your life's journey.
-                                </p>
-                                <div className="flex flex-row items-center justify-center mt-6 sm:mt-8 gap-4">
-                                    <Button onClick={handleLogin} className="h-10 px-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-medium hover:from-amber-500 hover:to-yellow-500 transition-colors" aria-label="Create account and get started">
-                                        Get Started
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                    <Button onClick={handleLogin} className="h-10 px-6 bg-transparent border border-amber-500/30 text-amber-100 font-medium hover:bg-amber-500/10 hover:border-amber-500/45 transition-all" aria-label="Log into Astrova">
-                                        Login
-                                    </Button>
+            {/* Grain Texture Overlay */}
+            <div className="fixed inset-0 pointer-events-none z-[60] opacity-[0.022] mix-blend-overlay"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")` }}
+            />
+
+            <Header onLogin={handleLogin} />
+
+            <main id="main-content">
+                {/* ── HERO ── */}
+                <section className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden text-center px-4 sm:px-6 pt-24 pb-20">
+                    <StarsBackground />
+                    <CosmicOrbs />
+
+                    {/* Radial glows */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_30%,rgba(168,85,247,0.09),transparent_70%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(245,158,11,0.04),transparent_50%)]" />
+
+                    {/* Horizontal light streak */}
+                    <div className="absolute top-[45%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+
+                    <div className="relative z-10 max-w-5xl mx-auto">
+                        {/* Badge */}
+                        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/7 mb-8 ${mono} text-[0.7rem] tracking-[0.1em] text-amber-300 uppercase`}
+                            style={{ animation: 'fadeUp 0.8s ease-out both' }}>
+                            <span className="w-[5px] h-[5px] rounded-full bg-amber-400"
+                                style={{ boxShadow: '0 0 8px #f59e0b', animation: 'badgePulse 2s ease-in-out infinite' }} />
+                            Vedic · Jyotish · AI-Powered
+                        </div>
+
+                        {/* Headline */}
+                        <h1
+                            className={`${serif} text-[clamp(3.5rem,8vw,7.5rem)] font-semibold leading-[0.93] tracking-[-0.025em] mb-6`}
+                            style={{ animation: 'fadeUp 0.8s ease-out 0.1s both' }}
+                        >
+                            <span className="block text-white">Your Stars,</span>
+                            <span className="block italic"
+                                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #f59e0b 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                Decoded
+                            </span>
+                            <span className="block text-white/50 not-italic font-normal text-[0.52em] tracking-[0.02em] italic mt-2">
+                                Ancient Vedic wisdom meets modern intelligence
+                            </span>
+                        </h1>
+
+                        {/* Sub */}
+                        <p className="text-neutral-400 text-base sm:text-lg max-w-[510px] mx-auto leading-[1.75] mb-10"
+                            style={{ animation: 'fadeUp 0.8s ease-out 0.2s both' }}>
+                            Astrova calculates your precise Vedic birth chart, reveals personality insights, analyses couple compatibility, and lets you ask an AI astrologer anything — anytime.
+                        </p>
+
+                        {/* CTAs */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+                            style={{ animation: 'fadeUp 0.8s ease-out 0.3s both' }}>
+                            <Button
+                                onClick={handleLogin}
+                                className="h-12 px-7 text-sm font-semibold text-white border-none rounded-lg transition-all"
+                                style={{
+                                    background: 'linear-gradient(135deg, #7c3aed, #d97706)',
+                                    boxShadow: '0 0 30px rgba(168,85,247,0.3), 0 0 60px rgba(245,158,11,0.1)',
+                                }}
+                                aria-label="Read your birth chart"
+                            >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Read My Chart
+                            </Button>
+                            <Button
+                                onClick={handleLogin}
+                                variant="ghost"
+                                className="h-12 px-7 text-sm font-medium text-neutral-400 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-all"
+                                aria-label="Chat with AI Astrologer"
+                            >
+                                Chat with AI Astrologer
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </div>
+
+                        {/* Trust */}
+                        <p className={`text-[0.75rem] text-neutral-600 tracking-[0.05em]`}
+                            style={{ animation: 'fadeUp 0.8s ease-out 0.4s both' }}>
+                            Trusted by <span className="text-neutral-400">8,400+</span> seekers · Free birth chart · No credit card
+                        </p>
+                    </div>
+
+                    {/* Scroll indicator */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+                        style={{ animation: 'fadeUp 1s ease-out 1s both' }}>
+                        <span className={`${mono} text-[0.65rem] text-neutral-600 tracking-[0.15em] uppercase`}>Explore</span>
+                        <div className="w-px h-10 bg-gradient-to-b from-neutral-700 to-transparent"
+                            style={{ animation: 'scrollLine 2s ease-in-out infinite' }} />
+                    </div>
+
+                    {/* Bottom fade */}
+                    <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#06020a] to-transparent" />
+                </section>
+
+                {/* Section divider */}
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent via-30%" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.3), rgba(245,158,11,0.3), transparent)' }} />
+
+                {/* ── FAUX UI SECTION ── */}
+                <section className="relative z-10 py-24 px-4 sm:px-6 flex flex-col items-center gap-12">
+                    {/* Section label */}
+                    <div className={`${mono} text-[0.7rem] tracking-[0.2em] uppercase text-amber-400 flex items-center gap-3`}>
+                        <span className="w-8 h-px bg-amber-500/35" />
+                        Your Dashboard
+                        <span className="w-8 h-px bg-amber-500/35" />
+                    </div>
+
+                    <div className="text-center">
+                        <h2 className={`${serif} text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.1]`}>
+                            Everything the cosmos<br />
+                            <em className="not-italic italic"
+                                style={{ background: 'linear-gradient(90deg, #a855f7, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontStyle: 'italic' }}>
+                                reveals about you
+                            </em>
+                        </h2>
+                        <p className="text-neutral-500 max-w-[460px] mx-auto text-[0.9375rem] mt-4">
+                            Your Vedic chart, personality profile, and AI astrologer — all in one place.
+                        </p>
+                    </div>
+
+                    {/* App frame */}
+                    <div className="w-full max-w-[1080px] rounded-2xl overflow-hidden"
+                        style={{
+                            border: '1px solid rgba(168,85,247,0.18)',
+                            boxShadow: '0 0 0 1px rgba(245,158,11,0.04), 0 50px 120px rgba(0,0,0,0.75), 0 0 80px rgba(168,85,247,0.1), 0 0 120px rgba(245,158,11,0.05)',
+                            background: '#130e08',
+                        }}>
+
+                        {/* Top bar */}
+                        <div className="h-[52px] flex items-center px-5 gap-0"
+                            style={{ background: '#0e0a05', borderBottom: '1px solid rgba(245,158,11,0.12)' }}>
+
+                            {/* Logo area */}
+                            <div className="flex items-center gap-2 min-w-[170px]">
+                                <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-sm flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg,rgba(245,158,11,0.4),rgba(245,158,11,0.15))', border: '1px solid rgba(245,158,11,0.3)' }}>
+                                    ✦
+                                </div>
+                                <div>
+                                    <div className="text-[0.8rem] font-semibold text-white/90 leading-none">Astrova</div>
+                                    <div className="text-[0.58rem] text-white/30">Your Modern Astrologer</div>
                                 </div>
                             </div>
 
-                            <div className="relative flex items-center py-8 sm:py-12 md:py-16 w-full">
-                                {/* Glow underneath the image - Linkify style */}
-                                <div className="absolute top-[10%] left-1/2 w-3/4 -translate-x-1/2 h-1/4 md:h-1/3 inset-0 bg-gradient-to-r from-amber-500/15 to-orange-500/10 blur-[5rem] animate-image-glow" />
-                                <div className="absolute top-1/2 left-1/2 -z-10 w-full h-full -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-600/5 to-yellow-600/5 rounded-full blur-[150px]" />
-                                <div className="relative group w-full max-w-6xl mx-auto">
-                                    <div className="-m-2 rounded-lg p-2 ring-1 ring-inset ring-amber-500/20 lg:-m-4 lg:rounded-xl bg-opacity-50 backdrop-blur-3xl">
-                                        <div 
-                                            style={{
-                                                "--size": 80,
-                                                "--duration": 12,
-                                                "--anchor": 90,
-                                                "--border-width": 2,
-                                                "--color-from": "#f59e0b",
-                                                "--color-to": "#ea580c",
-                                                "--delay": "-9s"
-                                            } as React.CSSProperties}
-                                            className="absolute inset-[0] rounded-[inherit] [border:calc(var(--border-width)*1px)_solid_transparent] ![mask-clip:padding-box,border-box] ![mask-composite:intersect] [mask:linear-gradient(transparent,transparent),linear-gradient(white,white)] after:content-[''] after:absolute after:aspect-square after:w-[calc(var(--size)*1px)] after:[animation:border-beam_calc(var(--duration)*1s)_infinite_linear] after:[animation-delay:var(--delay)] after:[background:linear-gradient(to_left,var(--color-from),var(--color-to),transparent)] after:[offset-anchor:calc(var(--anchor)*1%)_50%] after:[offset-path:rect(0_auto_auto_0_round_calc(var(--size)*1px))]"
-                                        ></div>
-                                        <div className="relative rounded-lg overflow-hidden">
-                                            <img
-                                                src="/image1.png"
-                                                alt="Your Kundali Chart Will Appear Here"
-                                                className="w-full h-auto object-cover"
-                                                loading="lazy"
-                                            />
+                            {/* Center tabs */}
+                            <div className="flex gap-1 mx-auto rounded-lg p-[3px]"
+                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[0.72rem] font-medium"
+                                    style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)', color: 'rgba(245,158,11,0.9)' }}>
+                                    <span className="w-2 h-2 rounded-[2px] bg-current opacity-60" />
+                                    Charts
+                                </div>
+                                <div className="px-3.5 py-1.5 text-[0.72rem] font-medium text-white/35">♡ Matcher</div>
+                                <div className="px-3.5 py-1.5 text-[0.72rem] font-medium text-white/35">◎ Info</div>
+                            </div>
+
+                            {/* Right icons */}
+                            <div className="flex items-center gap-2 min-w-[130px] justify-end">
+                                <FauxIconBtn className="text-[0.75rem] font-semibold" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: 'rgba(245,158,11,0.7)' }}>AI</FauxIconBtn>
+                                <FauxIconBtn>◯</FauxIconBtn>
+                                <div className="w-[30px] h-[30px] rounded-full flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.4),rgba(245,158,11,0.3))', border: '1px solid rgba(255,255,255,0.15)' }} />
+                            </div>
+                        </div>
+
+                        {/* App body */}
+                        <div className="grid min-h-[540px]" style={{ gridTemplateColumns: '1fr 280px' }}>
+
+                            {/* Main panel */}
+                            <div className="flex flex-col gap-3.5 p-4"
+                                style={{ background: '#100c07', borderRight: '1px solid rgba(245,158,11,0.1)' }}>
+
+                                {/* Birth Details Card */}
+                                <div className="rounded-[10px] p-4"
+                                    style={{ background: '#1a1208', border: '1px solid rgba(245,158,11,0.18)' }}>
+
+                                    {/* Header */}
+                                    <div className="flex items-start gap-3 mb-3.5">
+                                        <div className="w-[34px] h-[34px] rounded-lg flex items-center justify-center text-base flex-shrink-0"
+                                            style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                                            📅
                                         </div>
-                                        <div className="absolute -bottom-4 inset-x-0 w-full h-1/2 bg-gradient-to-t from-[hsl(24,16%,6%)] z-40"></div>
-                                        <div className="absolute bottom-0 md:-bottom-8 inset-x-0 w-full h-1/4 bg-gradient-to-t from-[hsl(24,16%,6%)] z-50"></div>
+                                        <div className="flex-1">
+                                            <div className="text-[0.875rem] font-semibold text-white/90 mb-1">Birth Details</div>
+                                            <SkLine className="h-1.5 w-40" />
+                                        </div>
+                                        <div className="flex items-center gap-2 ml-auto">
+                                            <FauxChip className="gap-1.5" style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.25)', color: 'rgba(245,158,11,0.8)' }}>
+                                                <span className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: 'rgba(245,158,11,0.8)', boxShadow: '0 0 6px rgba(245,158,11,0.5)' }} />
+                                                Hazel
+                                            </FauxChip>
+                                            <FauxChip>✏</FauxChip>
+                                            <FauxChip>Save</FauxChip>
+                                            <FauxChip>Delete</FauxChip>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-[0.62rem] text-white/20 border-t border-white/[0.04] pt-1.5 mb-3.5">
+                                        Shortcut: Ctrl/Cmd + S to save · Esc to cancel delete
+                                    </div>
+
+                                    {/* Input grid */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {/* Date */}
+                                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                            <div className="flex items-center gap-1.5 mb-2">
+                                                <FauxInputIcon>📅</FauxInputIcon>
+                                                <span className="text-[0.72rem] font-semibold text-white/70">Date</span>
+                                                <div className="ml-auto px-2 text-[0.65rem] font-semibold rounded"
+                                                    style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: 'rgba(245,158,11,0.9)', height: '18px', display: 'flex', alignItems: 'center' }}>
+                                                    16/4/2004
+                                                </div>
+                                            </div>
+                                            <div className="text-[0.6rem] text-white/25 mb-1.5">Birth date</div>
+                                            <div className="flex gap-1.5">
+                                                <SkDropdown /><SkDropdown /><SkDropdown />
+                                            </div>
+                                        </div>
+
+                                        {/* Time */}
+                                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                            <div className="flex items-center gap-1.5 mb-2">
+                                                <FauxInputIcon>⏰</FauxInputIcon>
+                                                <span className="text-[0.72rem] font-semibold text-white/70">Time</span>
+                                                <div className="ml-auto px-2 text-[0.65rem] font-semibold rounded"
+                                                    style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: 'rgba(245,158,11,0.9)', height: '18px', display: 'flex', alignItems: 'center' }}>
+                                                    07:33:00
+                                                </div>
+                                            </div>
+                                            <div className="text-[0.6rem] text-white/25 mb-1.5">Birth time</div>
+                                            <div className="flex gap-1.5">
+                                                <SkDropdown /><SkDropdown /><SkDropdown />
+                                            </div>
+                                        </div>
+
+                                        {/* Location */}
+                                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                            <div className="flex items-center gap-1.5 mb-2">
+                                                <FauxInputIcon>📍</FauxInputIcon>
+                                                <span className="text-[0.72rem] font-semibold text-white/70">Location</span>
+                                                <div className="ml-auto px-2 text-[0.6rem] font-semibold rounded"
+                                                    style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: 'rgba(245,158,11,0.9)', height: '18px', display: 'flex', alignItems: 'center', minWidth: '100px' }}>
+                                                    New York, US
+                                                </div>
+                                            </div>
+                                            <div className="text-[0.6rem] text-white/25 mb-1.5">Birth place</div>
+                                            <div className="flex items-center gap-1.5 rounded-md px-2.5 mb-1.5" style={{ height: '28px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                                <div className="w-2.5 h-2.5 rounded-full border border-white/15 flex-shrink-0" />
+                                                <SkLine className="flex-1 h-1" />
+                                            </div>
+                                            <SkLine className="h-1 w-4/5" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Charts Row */}
+                                <div className="grid grid-cols-2 gap-3.5 flex-1">
+                                    <VedicChartCard label="D1 — Lagna Chart" chartId="d1" />
+                                    <VedicChartCard label="D9 — Navamsa Chart" chartId="d9" />
+                                </div>
+                            </div>
+
+                            {/* AI Sidebar */}
+                            <div className="flex flex-col" style={{ background: '#0d0a06' }}>
+                                {/* Header */}
+                                <div className="p-4 pb-3.5 flex flex-col gap-3 items-center" style={{ borderBottom: '1px solid rgba(245,158,11,0.1)' }}>
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-[22px] h-[22px] rounded-[5px] flex items-center justify-center text-[0.65rem]"
+                                                style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                                                ✦
+                                            </div>
+                                            <div>
+                                                <div className="text-[0.8rem] font-semibold text-white/80 leading-none">Astrova</div>
+                                                <div className="text-[0.62rem] flex items-center gap-1" style={{ color: 'rgba(245,158,11,0.6)' }}>
+                                                    <span className="w-[5px] h-[5px] rounded-full bg-amber-400/70" />
+                                                    Hazel
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 px-2 h-[22px] rounded-[5px] text-[0.68rem] font-semibold"
+                                            style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: 'rgba(245,158,11,0.8)' }}>
+                                            ✦ 76
+                                        </div>
+                                    </div>
+
+                                    {/* Avatar */}
+                                    <div className="flex flex-col items-center gap-2 w-full">
+                                        <div className="relative w-14 h-14 rounded-xl flex items-center justify-center text-2xl overflow-hidden"
+                                            style={{ background: 'linear-gradient(135deg,rgba(245,158,11,0.25),rgba(168,85,247,0.15))', border: '1px solid rgba(245,158,11,0.25)' }}>
+                                            ✦
+                                            <div className="absolute inset-0 sk-shimmer" />
+                                        </div>
+                                        <div className="text-[0.9rem] font-semibold text-white/90">Astrova</div>
+                                        <div className="text-[0.68rem] text-white/35 text-center leading-relaxed max-w-[180px]">
+                                            Your Modern Astrologer<br />Ask me about your birth chart, dashas, strengths, and more.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Topic buttons 2×4 */}
+                                <div className="p-3.5 grid grid-cols-2 gap-2 flex-1 content-start">
+                                    {['◎ Overview', '📋 Career', '♡ Love', '⚡ Health', '⏳ Dasha', '✦ Strengths', '🏠 Houses', '🔮 Remedies'].map((topic) => (
+                                        <div key={topic} className="relative h-9 rounded-lg flex items-center gap-1.5 px-2.5 text-[0.7rem] text-white/40 overflow-hidden cursor-default"
+                                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                            <div className="absolute inset-0 sk-shimmer" />
+                                            {topic}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Chat composer */}
+                                <div className="p-3.5 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div className="flex items-center gap-2 h-10 rounded-[10px] px-3"
+                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                                        <div className="relative flex-1 h-[7px] rounded overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', width: '70%' }}>
+                                            <div className="absolute inset-0 sk-shimmer" />
+                                        </div>
+                                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.7rem] text-white flex-shrink-0"
+                                            style={{ background: 'linear-gradient(135deg,#7c3aed,#d97706)', boxShadow: '0 0 10px rgba(168,85,247,0.3)' }}>
+                                            ↑
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Section divider */}
+                <SectionDivider />
+
+                {/* ── FEATURES BENTO ── */}
+                <section id="features" className="relative py-24 sm:py-32">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(13,10,20,0.5),transparent)]" />
+                    <Container>
+                        <div className="text-center mb-16">
+                            <div className={`${mono} text-[0.7rem] tracking-[0.2em] uppercase text-amber-400 flex items-center justify-center gap-3 mb-4`}>
+                                <span className="w-8 h-px bg-amber-500/35" />
+                                What's Inside
+                                <span className="w-8 h-px bg-amber-500/35" />
+                            </div>
+                            <h2 className={`${serif} text-3xl sm:text-4xl md:text-5xl font-semibold leading-[1.1]`}>
+                                The full spectrum of<br />
+                                <em className="italic" style={{ background: 'linear-gradient(90deg,#a855f7,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                    Vedic wisdom
+                                </em>
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* Birth Chart — span 2 */}
+                            <div className="group relative p-7 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-purple-500/20 transition-all duration-500 lg:col-span-2">
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/[0.03] group-hover:to-transparent transition-all duration-500" />
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 text-xl" style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>☽</div>
+                                    <h3 className={`${serif} text-xl font-semibold text-white/90 mb-2`}>Vedic Birth Chart (Kundali)</h3>
+                                    <p className="text-sm text-neutral-500 leading-relaxed">Precise D1 Lagna chart calculated from your exact birth time and location. All 12 houses, 9 planets, Rahu & Ketu — displayed in North Indian style with complete divisional charts (D9 Navamsa and more).</p>
+                                    <div className="mt-5 rounded-lg p-3 flex flex-col gap-1.5 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="absolute inset-0 sk-shimmer" />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(168,85,247,0.25)', width: '80%' }} />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(255,255,255,0.08)', width: '60%' }} />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(245,158,11,0.22)', width: '70%' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Couple Compatibility */}
+                            <div className="group relative p-7 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-rose-500/20 transition-all duration-500">
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 text-xl" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)' }}>♡</div>
+                                    <h3 className={`${serif} text-xl font-semibold text-white/90 mb-2`}>Couple Compatibility</h3>
+                                    <p className="text-sm text-neutral-500 leading-relaxed">Ashtakoot score, Guna Milan, and a narrative on your cosmic partnership — who you click with and why.</p>
+                                </div>
+                            </div>
+
+                            {/* Nakshatra */}
+                            <div className="group relative p-7 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-purple-500/20 transition-all duration-500">
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 text-xl" style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>◎</div>
+                                    <h3 className={`${serif} text-xl font-semibold text-white/90 mb-2`}>Nakshatra Analysis</h3>
+                                    <p className="text-sm text-neutral-500 leading-relaxed">Your Moon nakshatra, Janma Tara, and how your 27 birth stars shape your deepest instincts and nature.</p>
+                                </div>
+                            </div>
+
+                            {/* Dasha */}
+                            <div className="group relative p-7 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-amber-500/20 transition-all duration-500">
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 text-xl" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>⌛</div>
+                                    <h3 className={`${serif} text-xl font-semibold text-white/90 mb-2`}>Dasha Periods</h3>
+                                    <p className="text-sm text-neutral-500 leading-relaxed">Vimshottari Dasha timeline — know exactly which planetary period rules your life right now and what's next.</p>
+                                </div>
+                            </div>
+
+                            {/* AI Astrologer — span 2 */}
+                            <div className="group relative p-7 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-amber-500/20 transition-all duration-500 lg:col-span-2">
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/[0.03] group-hover:to-transparent transition-all duration-500" />
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 text-lg" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>✦</div>
+                                    <h3 className={`${serif} text-xl font-semibold text-white/90 mb-2`}>AI Astrologer — Always On</h3>
+                                    <p className="text-sm text-neutral-500 leading-relaxed">Ask your dedicated AI astrologer anything: personality traits, career timing, relationship dynamics, spiritual remedies. It knows your chart inside out and answers in plain language, not jargon.</p>
+                                    <div className="mt-5 rounded-lg p-3 flex flex-col gap-1.5 overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="absolute inset-0 sk-shimmer" />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(255,255,255,0.08)', width: '90%' }} />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(168,85,247,0.25)', width: '75%' }} />
+                                        <div className="h-1.5 rounded-sm" style={{ background: 'rgba(245,158,11,0.22)', width: '80%' }} />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </Container>
-                </Wrapper>
+                </section>
 
-                {/* how it works */}
-                <Wrapper className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20 relative">
+                {/* ── PRICING ── */}
+                <section id="pricing" className="relative py-24 sm:py-32">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.04),transparent_70%)]" />
                     <Container>
-                        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-12">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[hsl(32.1,94.6%,43.7%)] to-[hsl(32.1,94.6%,33%)] border border-amber-600/50 opacity-90">
-                                    <Settings className="w-3 h-3 text-white mr-1" />
-                                    <span className="text-xs font-medium text-white">Process</span>
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white via-white to-neutral-400 bg-clip-text text-transparent tracking-tight">
-                                    Get your kundali in minutes
-                                </h2>
+                        <div className="text-center mb-16">
+                            <div className={`${mono} text-[0.7rem] tracking-[0.2em] uppercase text-amber-400 flex items-center justify-center gap-3 mb-4`}>
+                                <span className="w-8 h-px bg-amber-500/35" />
+                                Pricing
+                                <span className="w-8 h-px bg-amber-500/35" />
                             </div>
-                            <p className="text-neutral-400 mt-4 text-sm max-w-md mx-auto leading-relaxed">
-                                Enter your birth details, generate your chart, and explore your insights.
-                            </p>
+                            <h2 className={`${serif} text-3xl sm:text-4xl md:text-5xl font-semibold leading-[1.1]`}>
+                                Start free,{' '}
+                                <em className="italic" style={{ background: 'linear-gradient(90deg,#a855f7,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                    go deeper
+                                </em>
+                            </h2>
                         </div>
-                    </Container>
-                    <Container>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 w-full gap-4 sm:gap-6">
-                            {perks.map((perk, index) => (
-                                <Card key={perk.title} className="group bg-[hsl(24,16%,8%)]/70 border border-amber-500/15 hover:border-amber-500/30 hover:bg-[hsl(24,18%,10%)] transition-all duration-300">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex flex-col items-start gap-3">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 group-hover:border-amber-500/35 transition-colors">
-                                                <perk.icon className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-mono text-neutral-600">0{index + 1}</span>
-                                                <CardTitle className="text-sm font-medium text-white">{perk.title}</CardTitle>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <CardDescription className="text-sm text-neutral-500 leading-relaxed">
-                                            {perk.info}
-                                        </CardDescription>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </Container>
-                </Wrapper>
 
-                {/* features */}
-                <Wrapper id="features" className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20 relative">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.03),transparent)] -z-10" />
-                    <Container>
-                        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-12">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[hsl(32.1,94.6%,43.7%)] to-[hsl(32.1,94.6%,33%)] border border-amber-600/50 opacity-90">
-                                    <Zap className="w-3 h-3 text-white mr-1" />
-                                    <span className="text-xs font-medium text-white">Features</span>
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white via-white to-neutral-400 bg-clip-text text-transparent tracking-tight">
-                                    Powerful features for you
-                                </h2>
-                            </div>
-                            <p className="text-neutral-400 mt-4 text-sm max-w-md mx-auto leading-relaxed">
-                                Everything you need for accurate kundali charts
-                            </p>
-                        </div>
-                    </Container>
-                    <Container>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 w-full gap-3 sm:gap-4 md:gap-6">
-                            {features.map((feature) => (
-                                <Card key={feature.title} className="group bg-[hsl(24,16%,8%)]/70 border border-amber-500/15 hover:border-amber-500/30 hover:bg-[hsl(24,18%,10%)] transition-all duration-300">
-                                    <CardHeader className="pb-2">
-                                        <div className="flex flex-col items-center text-center gap-3">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 group-hover:border-amber-500/35 transition-colors">
-                                                <feature.icon className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-                                            </div>
-                                            <CardTitle className="text-sm font-medium text-white group-hover:text-amber-100 transition-colors">{feature.title}</CardTitle>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="pt-0 text-center">
-                                        <CardDescription className="text-sm text-neutral-500 leading-relaxed line-clamp-2">
-                                            {feature.info}
-                                        </CardDescription>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </Container>
-                </Wrapper>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto">
+                            {pricingCards.map((card) => {
+                                const isPremium = card.title === 'Premium';
+                                return (
+                                    <div key={card.title}
+                                        className={cn(
+                                            "relative rounded-2xl p-6 sm:p-8 border transition-all duration-500 flex flex-col",
+                                            isPremium
+                                                ? "border-purple-500/35 bg-purple-500/5"
+                                                : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]"
+                                        )}
+                                        style={isPremium ? { boxShadow: '0 0 50px rgba(168,85,247,0.1)' } : {}}>
 
-                {/* pricing */}
-                <Wrapper id="pricing" className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20 relative">
-                    <Container>
-                        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-12">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[hsl(32.1,94.6%,43.7%)] to-[hsl(32.1,94.6%,33%)] border border-amber-600/50 opacity-90">
-                                    <DollarSign className="w-3 h-3 text-white mr-1" />
-                                    <span className="text-xs font-medium text-white">Pricing</span>
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white via-white to-neutral-400 bg-clip-text text-transparent tracking-tight">
-                                    Simple, transparent pricing
-                                </h2>
-                            </div>
-                            <p className="text-neutral-400 mt-4 text-sm max-w-md mx-auto leading-relaxed">
-                                Choose the best plan for your journey
-                            </p>
-                        </div>
-                    </Container>
-                    <Container className="flex items-center justify-center">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-4xl">
-                            {pricingCards.map((card) => (
-                                <Card key={card.title} className={cn(
-                                    "group bg-[hsl(24,16%,8%)]/80 relative overflow-visible border border-amber-500/20 hover:border-amber-500/35 hover:bg-[hsl(24,18%,10%)] transition-all duration-200 flex flex-col w-full",
-                                    card.title === "Premium" && "border-amber-500/35 bg-[hsl(24,18%,10%)]"
-                                )}>
-                                    {card.title === "Premium" && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                            <span className="text-[10px] font-medium bg-amber-500 text-black px-3 py-1 rounded-full">Popular</span>
+                                        {isPremium && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                                <span className={`${mono} text-[0.58rem] tracking-[0.1em] uppercase text-white px-4 py-1 rounded-full`}
+                                                    style={{ background: 'linear-gradient(90deg,#7c3aed,#d97706)' }}>
+                                                    POPULAR
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div className={cn("mb-6", isPremium && "pt-2")}>
+                                            <h3 className={`${mono} text-[0.68rem] tracking-[0.15em] uppercase text-neutral-500 mb-4`}>{card.title}</h3>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className={cn(`${serif} text-4xl sm:text-5xl font-semibold`,
+                                                    isPremium ? '' : 'text-white'
+                                                )}
+                                                    style={isPremium ? { background: 'linear-gradient(90deg,#a855f7,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' } : {}}>
+                                                    {card.price}
+                                                </span>
+                                                {card.duration && <span className="text-sm text-neutral-500">/ {card.duration}</span>}
+                                            </div>
+                                            <p className="text-sm text-neutral-500 mt-2">{card.description}</p>
                                         </div>
-                                    )}
-                                    <CardHeader className={cn("text-center pt-4 sm:pt-5", card.title === "Premium" && "pt-6 sm:pt-7")}>
-                                        <CardTitle className="text-xs font-medium text-neutral-500 uppercase tracking-wide">{card.title}</CardTitle>
-                                        <div className="mt-3">
-                                            <span className="text-3xl sm:text-4xl font-semibold text-white">{card.price}</span>
-                                            {card.duration && <span className="text-sm text-neutral-500">/{card.duration}</span>}
-                                        </div>
-                                        <CardDescription className="mt-2 text-sm text-neutral-500">{card.description}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-4 flex-1">
-                                        <div className="space-y-3">
-                                            {card.features.map((feature) => (
-                                                <div key={feature} className="flex items-center gap-3">
-                                                    <svg className="w-4 h-4 text-neutral-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                    <span className="text-sm text-neutral-400">{feature}</span>
+
+                                        <div className="flex-1 space-y-2.5 mb-8">
+                                            {card.features.map((f) => (
+                                                <div key={f} className="flex items-start gap-2.5">
+                                                    <span className="text-[0.5rem] mt-1 flex-shrink-0" style={{ color: isPremium ? '#a855f7' : 'rgba(255,255,255,0.2)' }}>✦</span>
+                                                    <span className="text-sm text-neutral-400">{f}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                    </CardContent>
-                                    <CardFooter className="pt-4">
-                                        <Button 
+
+                                        <Button
+                                            onClick={handleLogin}
                                             className={cn(
-                                                "w-full h-10 text-sm font-medium transition-all duration-200",
-                                                card.title === "Premium" 
-                                                    ? "bg-gradient-to-r from-amber-600 to-yellow-600 text-white hover:from-amber-500 hover:to-yellow-500" 
-                                                    : "bg-transparent border border-amber-500/30 text-amber-100 hover:bg-amber-500/10 hover:border-amber-500/45"
+                                                "w-full h-11 text-sm font-semibold rounded-lg transition-all border",
+                                                isPremium
+                                                    ? "text-white border-transparent"
+                                                    : "bg-transparent text-neutral-400 border-white/10 hover:bg-white/[0.06] hover:text-white"
                                             )}
+                                            style={isPremium ? { background: 'linear-gradient(135deg,#7c3aed,#d97706)', boxShadow: '0 0 25px rgba(168,85,247,0.3)' } : {}}
                                             aria-label={`${card.buttonText} ${card.title} plan`}
                                         >
                                             {card.buttonText}
                                         </Button>
-                                    </CardFooter>
-                                </Card>
-                            ))}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </Container>
-                </Wrapper>
+                </section>
 
-                {/* testimonials */}
-                <Wrapper id="testimonials" className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20 relative">
+                {/* ── TESTIMONIALS ── */}
+                <section id="testimonials" className="relative py-24 sm:py-32 overflow-hidden">
                     <Container>
-                        <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-12">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-[hsl(32.1,94.6%,43.7%)] to-[hsl(32.1,94.6%,33%)] border border-amber-600/50 opacity-90">
-                                    <MessageSquare className="w-3 h-3 text-white mr-1" />
-                                    <span className="text-xs font-medium text-white">Testimonials</span>
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-b from-white via-white to-neutral-400 bg-clip-text text-transparent tracking-tight">
-                                    What people are saying
-                                </h2>
+                        <div className="text-center mb-16">
+                            <div className={`${mono} text-[0.7rem] tracking-[0.2em] uppercase text-amber-400 flex items-center justify-center gap-3 mb-4`}>
+                                <span className="w-8 h-px bg-amber-500/35" />
+                                Testimonials
+                                <span className="w-8 h-px bg-amber-500/35" />
                             </div>
-                            <p className="text-neutral-400 mt-4 text-sm max-w-md mx-auto leading-relaxed">
-                                See how Astrova helps astrology enthusiasts
-                            </p>
-                        </div>
-                    </Container>
-                    <Container>
-                        <div className="w-full">
-                            <div className="relative flex h-full w-full flex-col items-center justify-between overflow-hidden py-4">
-                                <div className="flex items-start justify-start w-full mb-4">
-                                    <Marquee reverse pauseOnHover className="[--duration:30s] select-none">
-                                        {firstRow.map((review, idx) => (
-                                            <Card key={`${review.name}-${idx}`} className="w-72 sm:w-80 mx-2 bg-[hsl(24,16%,8%)]/70 border border-amber-500/15 hover:border-amber-500/30 hover:bg-[hsl(24,18%,10%)] transition-all duration-300">
-                                                <CardHeader className="pb-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                                                            <UserIcon className="w-4 h-4 text-amber-300" />
-                                                        </div>
-                                                        <div>
-                                                            <CardTitle className="text-sm font-medium text-white">{review.name}</CardTitle>
-                                                            <CardDescription className="text-xs text-neutral-500">{review.username}</CardDescription>
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-neutral-400 leading-relaxed">"{review.body}"</p>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </Marquee>
-                                </div>
-                                <div className="flex items-start justify-start w-full">
-                                    <Marquee pauseOnHover className="[--duration:30s] select-none">
-                                        {secondRow.map((review, idx) => (
-                                            <Card key={`${review.name}-${idx}`} className="w-72 sm:w-80 mx-2 bg-[hsl(24,16%,8%)]/70 border border-amber-500/15 hover:border-amber-500/30 hover:bg-[hsl(24,18%,10%)] transition-all duration-300">
-                                                <CardHeader className="pb-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                                                            <UserIcon className="w-4 h-4 text-amber-300" />
-                                                        </div>
-                                                        <div>
-                                                            <CardTitle className="text-sm font-medium text-white">{review.name}</CardTitle>
-                                                            <CardDescription className="text-xs text-neutral-500">{review.username}</CardDescription>
-                                                        </div>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-neutral-400 leading-relaxed">"{review.body}"</p>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </Marquee>
-                                </div>
-                                <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-[hsl(24,16%,6%)]"></div>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-[hsl(24,16%,6%)]"></div>
-                            </div>
-                        </div>
-                    </Container>
-                </Wrapper>
-
-                {/* CTA Section */}
-                <Wrapper className="flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 relative">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(245,158,11,0.06),transparent)] -z-10" />
-                    <Container>
-                        <div className="max-w-2xl mx-auto text-center">
-                            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight leading-tight">
-                                Ready to discover your<br />
-                                <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 bg-clip-text text-transparent">cosmic destiny?</span>
+                            <h2 className={`${serif} text-3xl sm:text-4xl md:text-5xl font-semibold`}>
+                                Loved by{' '}
+                                <em className="italic" style={{ background: 'linear-gradient(90deg,#a855f7,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                    seekers
+                                </em>
                             </h2>
-                            <p className="text-muted-foreground mt-4 sm:mt-6 text-base sm:text-lg max-w-lg mx-auto">
-                                Generate accurate kundali charts and unlock insights into your life's journey
+                        </div>
+                    </Container>
+
+                    <div className="relative">
+                        <div className="flex flex-col gap-4 py-4">
+                            <Marquee reverse pauseOnHover className="[--duration:35s] select-none">
+                                {firstRow.map((review, idx) => (
+                                    <ReviewCard key={`${review.name}-${idx}`} review={review} />
+                                ))}
+                            </Marquee>
+                            <Marquee pauseOnHover className="[--duration:35s] select-none">
+                                {secondRow.map((review, idx) => (
+                                    <ReviewCard key={`${review.name}-${idx}`} review={review} />
+                                ))}
+                            </Marquee>
+                        </div>
+                        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/5 bg-gradient-to-r from-[#06020a]" />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/5 bg-gradient-to-l from-[#06020a]" />
+                    </div>
+                </section>
+
+                {/* ── FINAL CTA ── */}
+                <section className="relative py-32 sm:py-40 overflow-hidden text-center">
+                    <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 50% 60% at 50% 50%, rgba(168,85,247,0.07) 0%, transparent 70%)' }} />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full blur-[120px]"
+                        style={{ background: 'rgba(168,85,247,0.04)' }} />
+
+                    <Container>
+                        <div className="relative max-w-2xl mx-auto">
+                            <div className="text-[2.5rem] mb-4" style={{ filter: 'drop-shadow(0 0 14px rgba(245,158,11,0.6))' }}>✦</div>
+
+                            <h2 className={`${serif} text-4xl sm:text-5xl md:text-6xl font-semibold leading-[1.0]`}>
+                                The stars have always<br />
+                                been{' '}
+                                <em className="italic" style={{ background: 'linear-gradient(90deg,#a855f7,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                    speaking
+                                </em>
+                            </h2>
+
+                            <p className="text-neutral-400 mt-6 text-base sm:text-lg max-w-[420px] mx-auto leading-relaxed">
+                                Your Vedic chart holds a map of who you are and what's coming. It takes 30 seconds to read it.
                             </p>
-                            <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-                                <Link to="/chart">
-                                    <Button size="lg" className="h-10 sm:h-11 px-6 sm:px-8" aria-label="Open chart generation page">
-                                        Get Started Free
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                </Link>
-                                <a href="mailto:support@astrova.app?subject=Astrova%20Sales%20Inquiry" className="inline-flex">
-                                    <Button variant="outline" size="lg" className="h-10 sm:h-11 px-6 sm:px-8" aria-label="Contact sales via email">
-                                        Contact Sales
-                                    </Button>
-                                </a>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
+                                <Button
+                                    onClick={handleLogin}
+                                    className="h-12 px-10 text-sm font-semibold text-white border-none rounded-lg transition-all"
+                                    style={{ background: 'linear-gradient(135deg,#7c3aed,#d97706)', boxShadow: '0 0 30px rgba(168,85,247,0.4)' }}
+                                    aria-label="Read your birth chart free"
+                                >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Read My Chart Free
+                                </Button>
+                                <Button
+                                    onClick={handleLogin}
+                                    variant="ghost"
+                                    className="h-12 px-8 text-sm font-medium text-neutral-400 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-all"
+                                    aria-label="Chat with AI Astrologer"
+                                >
+                                    Chat with AI Astrologer
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
                             </div>
                         </div>
                     </Container>
-                </Wrapper>
-            </section>
+                </section>
+            </main>
 
-            {/* Footer */}
             <Footer />
+
+            {/* Global keyframes */}
+            <style>{`
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes badgePulse {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.5; transform: scale(0.8); }
+                }
+                @keyframes scrollLine {
+                    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+                    50% { opacity: 0.8; transform: scaleY(0.6); }
+                }
+                @keyframes cosmicDrift {
+                    from { transform: translate(0, 0) scale(1); }
+                    to { transform: translate(25px, -35px) scale(1.08); }
+                }
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    60%, 100% { transform: translateX(100%); }
+                }
+                .sk-shimmer {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
+                    transform: translateX(-100%);
+                    animation: shimmer 2.6s ease-in-out infinite;
+                }
+            `}</style>
         </div>
     );
 };
 
-// Header component
+// ── Small helper components ──
+
+function FauxIconBtn({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+    return (
+        <div className={cn("relative w-[30px] h-[30px] rounded-[7px] flex items-center justify-center overflow-hidden flex-shrink-0", className)}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)', ...style }}>
+            <div className="sk-shimmer absolute inset-0" />
+            {children}
+        </div>
+    );
+}
+
+function FauxChip({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+    return (
+        <div className={cn("relative h-[26px] rounded-md flex items-center px-2.5 text-[0.68rem] overflow-hidden flex-shrink-0", className)}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)', ...style }}>
+            <div className="sk-shimmer absolute inset-0" />
+            {children}
+        </div>
+    );
+}
+
+function FauxInputIcon({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="w-[14px] h-[14px] rounded-[3px] flex items-center justify-center text-[0.6rem] flex-shrink-0"
+            style={{ background: 'rgba(245,158,11,0.15)' }}>
+            {children}
+        </div>
+    );
+}
+
+function SkLine({ className }: { className?: string }) {
+    return (
+        <div className={cn("relative rounded overflow-hidden", className)} style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <div className="sk-shimmer absolute inset-0" />
+        </div>
+    );
+}
+
+function SkDropdown() {
+    return (
+        <div className="relative flex-1 h-6 rounded-[5px] overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="sk-shimmer absolute inset-0" />
+        </div>
+    );
+}
+
+function VedicChartCard({ label, chartId }: { label: string; chartId: 'd1' | 'd9' }) {
+    return (
+        <div className="relative rounded-[10px] p-3 flex flex-col items-center gap-3 overflow-hidden min-h-[280px]"
+            style={{ background: '#1a1208', border: '1px solid rgba(245,158,11,0.18)' }}>
+            <div className="self-start text-[0.65rem] tracking-[0.1em] text-amber-500/50 uppercase" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{label}</div>
+            <div className="flex-1 flex items-center justify-center w-full">
+                {chartId === 'd1' ? <D1Chart /> : <D9Chart />}
+            </div>
+            {/* Shimmer sweep over chart */}
+            <div className="absolute inset-0 sk-shimmer pointer-events-none" style={{ animationDuration: '3s' }} />
+        </div>
+    );
+}
+
+function D1Chart() {
+    return (
+        <svg viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: '220px', height: 'auto' }}>
+            <rect x="2" y="2" width="216" height="216" rx="3" stroke="rgba(245,158,11,0.35)" strokeWidth="1.2" />
+            <polygon points="110,2 218,110 110,218 2,110" fill="none" stroke="rgba(245,158,11,0.25)" strokeWidth="1" />
+            <rect x="57" y="57" width="106" height="106" rx="1" fill="none" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="2" y1="2" x2="57" y2="57" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="218" y1="2" x2="163" y2="57" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="2" y1="218" x2="57" y2="163" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="218" y1="218" x2="163" y2="163" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            {/* Center house 1 */}
+            <text x="110" y="108" textAnchor="middle" fontSize="9" fill="rgba(168,85,247,0.9)" fontFamily="monospace" fontWeight="600">Asc</text>
+            <text x="110" y="120" textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.5)" fontFamily="monospace">Ma</text>
+            <text x="94" y="132" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.35)" fontFamily="monospace">Ve</text>
+            <text x="124" y="132" textAnchor="middle" fontSize="7" fill="rgba(100,220,100,0.8)" fontFamily="monospace">Gk</text>
+            <text x="110" y="150" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">2</text>
+            {/* Top house */}
+            <text x="88" y="38" textAnchor="middle" fontSize="9" fill="rgba(245,158,11,0.9)" fontFamily="monospace" fontWeight="600">Su°↑</text>
+            <text x="100" y="50" textAnchor="middle" fontSize="8" fill="rgba(168,85,247,0.8)" fontFamily="monospace">Ra•</text>
+            <text x="116" y="50" textAnchor="middle" fontSize="8" fill="rgba(100,220,100,0.9)" fontFamily="monospace">Me*</text>
+            <text x="110" y="62" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">1</text>
+            {/* Right house */}
+            <text x="185" y="100" textAnchor="middle" fontSize="9" fill="rgba(100,180,255,0.9)" fontFamily="monospace" fontWeight="600">Uk</text>
+            <text x="185" y="114" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">12</text>
+            {/* Left house */}
+            <text x="36" y="100" textAnchor="middle" fontSize="9" fill="rgba(100,180,255,0.7)" fontFamily="monospace" fontWeight="600">Ka</text>
+            <text x="36" y="114" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">4</text>
+            {/* Bottom house */}
+            <text x="110" y="185" textAnchor="middle" fontSize="9" fill="rgba(200,200,255,0.9)" fontFamily="monospace" fontWeight="600">Mo</text>
+            <text x="110" y="197" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">11</text>
+            {/* Bottom-left */}
+            <text x="54" y="170" textAnchor="middle" fontSize="9" fill="rgba(245,158,11,0.7)" fontFamily="monospace" fontWeight="600">Ju*</text>
+            <text x="54" y="182" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">5</text>
+            {/* Top-left */}
+            <text x="36" y="148" textAnchor="middle" fontSize="9" fill="rgba(100,220,200,0.9)" fontFamily="monospace" fontWeight="600">Mn</text>
+            <text x="36" y="132" textAnchor="middle" fontSize="9" fill="rgba(255,150,255,0.9)" fontFamily="monospace" fontWeight="600">Sa</text>
+            <text x="36" y="118" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">3</text>
+        </svg>
+    );
+}
+
+function D9Chart() {
+    return (
+        <svg viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: '220px', height: 'auto' }}>
+            <rect x="2" y="2" width="216" height="216" rx="3" stroke="rgba(245,158,11,0.35)" strokeWidth="1.2" />
+            <polygon points="110,2 218,110 110,218 2,110" fill="none" stroke="rgba(245,158,11,0.25)" strokeWidth="1" />
+            <rect x="57" y="57" width="106" height="106" rx="1" fill="none" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="2" y1="2" x2="57" y2="57" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="218" y1="2" x2="163" y2="57" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="2" y1="218" x2="57" y2="163" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            <line x1="218" y1="218" x2="163" y2="163" stroke="rgba(245,158,11,0.2)" strokeWidth="0.8" />
+            {/* Top */}
+            <text x="86" y="38" textAnchor="middle" fontSize="9" fill="rgba(255,80,80,0.9)" fontFamily="monospace" fontWeight="600">Ma</text>
+            <text x="132" y="38" textAnchor="middle" fontSize="9" fill="rgba(100,220,100,0.9)" fontFamily="monospace" fontWeight="600">Me</text>
+            <text x="110" y="62" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">4</text>
+            {/* Center */}
+            <text x="110" y="105" textAnchor="middle" fontSize="9" fill="rgba(168,85,247,0.9)" fontFamily="monospace" fontWeight="600">Asc</text>
+            <text x="98" y="118" textAnchor="middle" fontSize="8" fill="rgba(168,140,255,0.8)" fontFamily="monospace">Ve</text>
+            <text x="122" y="118" textAnchor="middle" fontSize="8" fill="rgba(200,200,255,0.8)" fontFamily="monospace">Mo</text>
+            <text x="110" y="148" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">3</text>
+            {/* Left */}
+            <text x="36" y="104" textAnchor="middle" fontSize="9" fill="rgba(245,158,11,0.9)" fontFamily="monospace" fontWeight="600">Ju</text>
+            <text x="36" y="118" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">5</text>
+            {/* Right */}
+            <text x="185" y="104" textAnchor="middle" fontSize="9" fill="rgba(245,158,11,0.9)" fontFamily="monospace" fontWeight="600">Su</text>
+            <text x="185" y="118" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">1</text>
+            {/* Bottom */}
+            <text x="80" y="185" textAnchor="middle" fontSize="9" fill="rgba(168,85,247,0.7)" fontFamily="monospace" fontWeight="600">Ra</text>
+            <text x="80" y="197" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">6</text>
+            {/* Bottom-right */}
+            <text x="185" y="175" textAnchor="middle" fontSize="9" fill="rgba(100,200,100,0.8)" fontFamily="monospace" fontWeight="600">Ke</text>
+            <text x="185" y="187" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">12</text>
+            <text x="36" y="148" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily="monospace" fontWeight="700">2</text>
+        </svg>
+    );
+}
+
+function SectionDivider() {
+    return (
+        <div className="w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.3), rgba(245,158,11,0.3), transparent)' }} />
+    );
+}
+
+function ReviewCard({ review }: { review: { name: string; username: string; body: string } }) {
+    return (
+        <div className="w-80 mx-2 p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-purple-500/15 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.2),rgba(245,158,11,0.15))', border: '1px solid rgba(168,85,247,0.2)' }}>
+                    <span className="text-xs font-semibold text-purple-300">{review.name[0]}</span>
+                </div>
+                <div>
+                    <div className="text-sm font-medium text-white/90">{review.name}</div>
+                    <div className="text-[11px] text-neutral-600">{review.username}</div>
+                </div>
+            </div>
+            <p className="text-sm text-neutral-400 leading-relaxed">{review.body}</p>
+        </div>
+    );
+}
+
+// ── HEADER ──
 function Header({ onLogin }: { onLogin: () => void }) {
     const [scrolled, setScrolled] = React.useState(false);
 
     React.useEffect(() => {
-        const handleScroll = () => {
-            const isScrolled = window.scrollY > 20;
-            setScrolled(isScrolled);
-        };
-
-        window.addEventListener('scroll', handleScroll);
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
-        <header className={`sticky top-0 z-50 w-full transition-all duration-500 ease-in-out ${
-            scrolled 
-                ? 'bg-[linear-gradient(180deg,rgba(20,13,7,0.96),rgba(13,9,5,0.94))] backdrop-blur-xl shadow-lg opacity-100 border-b border-amber-500/20' 
-                : 'bg-transparent opacity-100'
-        }`}>
+        <header className={cn(
+            "fixed top-0 z-50 w-full transition-all duration-500",
+            scrolled
+                ? "backdrop-blur-xl border-b border-white/[0.04]"
+                : "bg-transparent"
+        )}
+            style={scrolled ? { background: 'rgba(6,2,10,0.8)' } : {}}>
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
-                <div className="flex h-14 items-center justify-between">
-                    {/* Logo/Title */}
-                    <Link to="/" className="flex items-center gap-2">
-                        <img 
-                            src="/astrova_logo.png" 
-                            alt="Astrova Logo" 
-                            className="w-7 h-7 transition-opacity duration-500"
-                        />
-                        <span className={`text-sm font-semibold transition-all duration-500 ${
-                            scrolled ? 'text-white opacity-100' : 'text-white opacity-90'
-                        }`}>Astrova</span>
+                <div className="flex h-16 items-center justify-between">
+                    <Link to="/" className="flex items-center gap-2.5">
+                        <img src="/astrova_logo.png" alt="Astrova" className="w-7 h-7" />
+                        <span className="text-sm font-semibold text-white/90 tracking-tight">Astrova</span>
                     </Link>
 
-                    {/* Navigation Links */}
-                    <nav className="hidden md:flex items-center gap-6" aria-label="Homepage sections">
-                        <a href="#features" className={`text-sm transition-all duration-500 ${
-                            scrolled ? 'text-neutral-400 hover:text-amber-200 opacity-100' : 'text-neutral-300 hover:text-amber-200 opacity-80'
-                        }`}>
-                            Features
-                        </a>
-                        <a href="#pricing" className={`text-sm transition-all duration-500 ${
-                            scrolled ? 'text-neutral-400 hover:text-amber-200 opacity-100' : 'text-neutral-300 hover:text-amber-200 opacity-80'
-                        }`}>
-                            Pricing
-                        </a>
-                        <a href="#testimonials" className={`text-sm transition-all duration-500 ${
-                            scrolled ? 'text-neutral-400 hover:text-amber-200 opacity-100' : 'text-neutral-300 hover:text-amber-200 opacity-80'
-                        }`}>
-                            Testimonials
-                        </a>
+                    <nav className="hidden md:flex items-center gap-8" aria-label="Homepage sections">
+                        {[
+                            { label: 'Birth Chart', href: '#features' },
+                            { label: 'Compatibility', href: '#features' },
+                            { label: 'AI Astrologer', href: '#features' },
+                            { label: 'Pricing', href: '#pricing' },
+                        ].map((item) => (
+                            <a key={item.label} href={item.href}
+                                className="text-[13px] text-neutral-500 hover:text-neutral-200 transition-colors duration-300">
+                                {item.label}
+                            </a>
+                        ))}
                     </nav>
 
-                    {/* CTA Buttons */}
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={onLogin} aria-label="Log in" className={`transition-all duration-500 h-8 px-3 text-sm ${
-                            scrolled
-                                ? 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-100'
-                                : 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-90'
-                        }`}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onLogin}
+                            aria-label="Log in"
+                            className="text-[13px] text-neutral-400 hover:text-white h-9 px-4"
+                        >
                             Log in
                         </Button>
-                        <Button size="sm" onClick={onLogin} aria-label="Get started" className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white h-8 px-4 text-sm font-medium rounded-lg transition-all duration-500 opacity-100">
-                            Get Started
+                        <Button
+                            size="sm"
+                            onClick={onLogin}
+                            aria-label="Get your chart"
+                            className="h-9 px-5 text-[13px] font-semibold text-white border-none rounded-lg transition-all"
+                            style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc' }}
+                        >
+                            Get Your Chart →
                         </Button>
                     </div>
                 </div>
@@ -442,109 +880,31 @@ function Header({ onLogin }: { onLogin: () => void }) {
     );
 }
 
-// Footer component (exact copy from homepage)
+// ── FOOTER ──
 function Footer() {
-    const [newsletterEmail, setNewsletterEmail] = React.useState('');
-    const [newsletterNotice, setNewsletterNotice] = React.useState<string | null>(null);
-
-    const handleNewsletterSubmit = (event: React.FormEvent) => {
-        event.preventDefault();
-        const email = newsletterEmail.trim();
-        if (!email || !email.includes('@')) {
-            setNewsletterNotice('Please enter a valid email address.');
-            window.setTimeout(() => setNewsletterNotice(null), 2200);
-            return;
-        }
-
-        window.location.href = `mailto:support@astrova.app?subject=Newsletter%20Signup&body=Please%20add%20${encodeURIComponent(email)}%20to%20Astrova%20newsletter.`;
-        setNewsletterEmail('');
-        setNewsletterNotice('Thanks! Your mail app opened for confirmation.');
-        window.setTimeout(() => setNewsletterNotice(null), 2600);
-    };
-
     return (
-        <footer className="border-t border-amber-500/15 bg-[hsl(24,16%,5%)]">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-                {/* Top section with logo and newsletter */}
-                <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-12">
-                    <div className="max-w-sm">
-                        <Link to="/" className="flex items-center gap-2.5 mb-4">
-                            <img src="/astrova_logo.png" alt="Astrova" className="w-8 h-8" />
-                            <span className="text-base font-semibold text-white">Astrova</span>
-                        </Link>
-                        <p className="text-sm text-neutral-400 leading-relaxed">
-                            Your Modern Astrologer. Precise Vedic calculations, AI-powered readings, Shadbala analysis, Vimshottari Dasha tracking, and Ashtakoot matching — all free.
-                        </p>
-                    </div>
-                    <div className="flex flex-col items-start md:items-end gap-3">
-                        <span className="text-xs text-neutral-500 font-medium uppercase tracking-wider">Stay Updated</span>
-                        <form className="flex gap-2" onSubmit={handleNewsletterSubmit}>
-                            <input type="email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} placeholder="your@email.com" aria-label="Newsletter email" className="bg-[hsl(24,18%,9%)] border border-amber-500/20 rounded-lg px-4 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500/40 w-56" />
-                            <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-sm px-4 py-2 rounded-lg font-medium" aria-label="Subscribe to newsletter">Subscribe</Button>
-                        </form>
-                        {newsletterNotice && <p className="text-[11px] text-neutral-400">{newsletterNotice}</p>}
-                    </div>
-                </div>
-
-                {/* Links grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-                    <div>
-                        <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-wider">Product</h3>
-                        <ul className="space-y-2.5">
-                            <li><a href="#features" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Features</a></li>
-                            <li><a href="#pricing" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Pricing</a></li>
-                            <li><Link to="/chart" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Birth Chart</Link></li>
-                            <li><Link to="/match" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Matching</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-wider">Features</h3>
-                        <ul className="space-y-2.5">
-                            <li><Link to="/chart" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">AI Astrologer</Link></li>
-                            <li><Link to="/chart" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Shadbala Analysis</Link></li>
-                            <li><Link to="/chart" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Dasha Predictions</Link></li>
-                            <li><Link to="/chart" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Yoga Detection</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-wider">Company</h3>
-                        <ul className="space-y-2.5">
-                            <li><a href="#features" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">About</a></li>
-                            <li><a href="https://astrova.app" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors" target="_blank" rel="noreferrer">Blog</a></li>
-                            <li><a href="mailto:support@astrova.app" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Contact</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-wider">Legal</h3>
-                        <ul className="space-y-2.5">
-                            <li><a href="mailto:support@astrova.app?subject=Privacy%20Policy" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Privacy Policy</a></li>
-                            <li><a href="mailto:support@astrova.app?subject=Terms%20of%20Service" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Terms of Service</a></li>
-                            <li><a href="mailto:support@astrova.app?subject=Cookie%20Policy" className="text-sm text-neutral-400 hover:text-amber-300 transition-colors">Cookie Policy</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Bottom bar */}
-                <div className="pt-8 border-t border-amber-500/15 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <p className="text-sm text-neutral-500">
-                            © {new Date().getFullYear()} Astrova. All rights reserved.
-                        </p>
-                        <span className="text-neutral-700">·</span>
-                        <span className="text-xs text-neutral-600">Made with precision</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Open Astrova on X" className="w-8 h-8 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 flex items-center justify-center text-neutral-400 hover:text-amber-100 hover:border-amber-500/35 transition-all">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-                        </a>
-                        <a href="https://github.com" target="_blank" rel="noreferrer" aria-label="Open Astrova on GitHub" className="w-8 h-8 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 flex items-center justify-center text-neutral-400 hover:text-amber-100 hover:border-amber-500/35 transition-all">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        </a>
-                        <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Open Astrova on Instagram" className="w-8 h-8 rounded-lg bg-[hsl(24,18%,9%)] border border-amber-500/20 flex items-center justify-center text-neutral-400 hover:text-amber-100 hover:border-amber-500/35 transition-all">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                        </a>
-                    </div>
-                </div>
+        <footer className="border-t border-white/[0.04]" style={{ background: '#050208' }}>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-4">
+                <Link to="/" className="flex items-center gap-2.5">
+                    <img src="/astrova_logo.png" alt="Astrova" className="w-6 h-6" />
+                    <span className="text-[0.875rem] font-semibold tracking-[0.08em] uppercase text-white/35" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Astrova</span>
+                </Link>
+                <ul className="flex gap-6 list-none">
+                    {[
+                        { label: 'Privacy', href: 'mailto:support@astrova.app?subject=Privacy%20Policy' },
+                        { label: 'Terms', href: 'mailto:support@astrova.app?subject=Terms%20of%20Service' },
+                        { label: 'Blog', href: 'https://astrova.app', external: true },
+                        { label: 'Twitter', href: 'https://x.com', external: true },
+                    ].map((link) => (
+                        <li key={link.label}>
+                            <a href={link.href} className="text-[0.75rem] text-neutral-700 hover:text-neutral-400 transition-colors"
+                                {...(link.external ? { target: '_blank', rel: 'noreferrer' } : {})}>
+                                {link.label}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+                <p className="text-[0.75rem] text-neutral-700">© 2026 Astrova · Magnova AI</p>
             </div>
         </footer>
     );

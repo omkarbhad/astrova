@@ -97,17 +97,41 @@ export function StarsBackground() {
 export function CosmicOrbs() {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {/* Main amber orb - responsive */}
-      <div className="absolute top-1/4 left-1/4 w-32 sm:w-48 md:w-72 lg:w-96 h-32 sm:h-48 md:h-72 lg:h-96 bg-amber-600/15 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px] lg:blur-[120px] animate-pulse" />
-      
-      {/* Gold accent orb - responsive */}
-      <div className="absolute top-1/2 right-1/4 w-32 sm:w-48 md:w-72 lg:w-96 h-32 sm:h-48 md:h-72 lg:h-96 bg-yellow-600/12 rounded-full blur-[60px] sm:blur-[80px] md:blur-[100px] lg:blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
-      
-      {/* Secondary amber orb - responsive */}
-      <div className="absolute bottom-1/4 left-1/3 w-24 sm:w-36 md:w-48 lg:w-72 h-24 sm:h-36 md:h-48 lg:h-72 bg-amber-500/10 rounded-full blur-[50px] sm:blur-[60px] md:blur-[80px] lg:blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
-      
-      {/* Accent glow - responsive */}
-      <div className="absolute top-1/3 right-1/3 w-16 sm:w-24 md:w-32 lg:w-48 h-16 sm:h-24 md:h-32 lg:h-48 bg-amber-400/8 rounded-full blur-[40px] sm:blur-[50px] md:blur-[60px] lg:blur-[80px] animate-pulse" style={{ animationDelay: "1.5s" }} />
+      {/* Purple orb — top-right */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: '600px', height: '600px',
+          background: 'radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 70%)',
+          filter: 'blur(100px)',
+          top: '-150px', right: '-100px',
+          animation: 'cosmicDrift 14s ease-in-out infinite alternate',
+        }}
+      />
+      {/* Amber orb — bottom-left */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: '450px', height: '450px',
+          background: 'radial-gradient(circle, rgba(245,158,11,0.09) 0%, transparent 70%)',
+          filter: 'blur(100px)',
+          bottom: '20%', left: '-80px',
+          animation: 'cosmicDrift 14s ease-in-out infinite alternate',
+          animationDelay: '-5s',
+        }}
+      />
+      {/* Rose accent orb — mid-right */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: '300px', height: '300px',
+          background: 'radial-gradient(circle, rgba(244,63,94,0.07) 0%, transparent 70%)',
+          filter: 'blur(100px)',
+          top: '60%', right: '18%',
+          animation: 'cosmicDrift 14s ease-in-out infinite alternate',
+          animationDelay: '-9s',
+        }}
+      />
     </div>
   );
 }
