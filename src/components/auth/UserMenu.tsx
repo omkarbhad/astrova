@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function UserMenu() {
-  const { isLoaded, isSignedIn, astrovaUser, signOut } = useAuth();
+  const { isLoaded, isSignedIn, astrovaUser, signOut, signInWithGoogle } = useAuth();
   const { credits: liveCredits } = useCredits();
   const [open, setOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -38,7 +38,10 @@ export function UserMenu() {
   if (!isSignedIn) {
     return (
       <button
-        onClick={() => window.location.href = 'https://auth.magnova.ai/astrova?redirect=' + encodeURIComponent(window.location.href)}
+        onClick={async () => {
+          const result = await signInWithGoogle();
+          if (!result.error) nav('/chart');
+        }}
         className="px-3 py-1.5 rounded-full text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
       >
         Sign In

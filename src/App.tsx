@@ -3,9 +3,8 @@ import HomePage from './components/landing/HomePage';
 import ChartPage from './pages/ChartPage';
 import AdminPage from './pages/AdminPage';
 
-// Auth is centralized at auth.magnova.ai
-// AuthGuard on protected routes redirects there automatically
-// /login redirects to /chart (auth.magnova.ai handles login)
+// Auth: Firebase Google sign-in (popup) directly on Astrova
+// /login redirects to /chart
 
 function App() {
   return (

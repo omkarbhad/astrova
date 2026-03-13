@@ -1,18 +1,27 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, UserIcon, Settings, Zap, DollarSign, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Container } from './global/container';
 import { Wrapper } from './global/wrapper';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Marquee from './ui/marquee';
 import { StarsBackground, CosmicOrbs } from './ui/stars-background';
 import { features, perks, pricingCards, reviews } from './constants';
 
 const HomePage = () => {
+    const { isSignedIn, signInWithGoogle } = useAuth();
+    const navigate = useNavigate();
     const firstRow = reviews.slice(0, reviews.length / 2);
     const secondRow = reviews.slice(reviews.length / 2);
+
+    const handleLogin = async () => {
+        if (isSignedIn) { navigate('/chart'); return; }
+        const result = await signInWithGoogle();
+        if (!result.error) navigate('/chart');
+    };
 
     return (
         <div className="min-h-screen bg-[hsl(24,16%,6%)]">
@@ -20,7 +29,7 @@ const HomePage = () => {
                 Skip to content
             </a>
             {/* Header */}
-            <Header />
+            <Header onLogin={handleLogin} />
             
             <section id="main-content" className="w-full relative flex items-center justify-center flex-col px-4 sm:px-6 md:px-8 py-8 sm:py-10 lg:py-12 min-h-screen">
                 {/* Cosmic Background */}
@@ -53,17 +62,13 @@ const HomePage = () => {
                                     Generate accurate kundali birth charts and unlock insights into your life's journey.
                                 </p>
                                 <div className="flex flex-row items-center justify-center mt-6 sm:mt-8 gap-4">
-                                    <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">
-                                        <Button className="h-10 px-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-medium hover:from-amber-500 hover:to-yellow-500 transition-colors" aria-label="Create account and get started">
-                                            Get Started
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </a>
-                                    <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart">
-                                        <Button className="h-10 px-6 bg-transparent border border-amber-500/30 text-amber-100 font-medium hover:bg-amber-500/10 hover:border-amber-500/45 transition-all" aria-label="Log into Astrova">
-                                            Login
-                                        </Button>
-                                    </a>
+                                    <Button onClick={handleLogin} className="h-10 px-6 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-medium hover:from-amber-500 hover:to-yellow-500 transition-colors" aria-label="Create account and get started">
+                                        Get Started
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                    <Button onClick={handleLogin} className="h-10 px-6 bg-transparent border border-amber-500/30 text-amber-100 font-medium hover:bg-amber-500/10 hover:border-amber-500/45 transition-all" aria-label="Log into Astrova">
+                                        Login
+                                    </Button>
                                 </div>
                             </div>
 
@@ -365,8 +370,8 @@ const HomePage = () => {
     );
 };
 
-// Header component (exact copy from homepage)
-function Header() {
+// Header component
+function Header({ onLogin }: { onLogin: () => void }) {
     const [scrolled, setScrolled] = React.useState(false);
 
     React.useEffect(() => {
@@ -420,20 +425,16 @@ function Header() {
 
                     {/* CTA Buttons */}
                     <div className="flex items-center gap-3">
-                        <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart" aria-label="Go to login page">
-                            <Button variant="ghost" size="sm" className={`transition-all duration-500 h-8 px-3 text-sm ${
-                                scrolled
-                                    ? 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-100'
-                                    : 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-90'
-                            }`}>
-                                Log in
-                            </Button>
-                        </a>
-                        <a href="https://auth.magnova.ai/astrova?redirect=https://astrova.magnova.ai/chart" aria-label="Go to registration page">
-                            <Button size="sm" className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white h-8 px-4 text-sm font-medium rounded-lg transition-all duration-500 opacity-100">
-                                Get Started
-                            </Button>
-                        </a>
+                        <Button variant="ghost" size="sm" onClick={onLogin} aria-label="Log in" className={`transition-all duration-500 h-8 px-3 text-sm ${
+                            scrolled
+                                ? 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-100'
+                                : 'text-neutral-300 hover:text-amber-200 hover:bg-amber-500/10 opacity-90'
+                        }`}>
+                            Log in
+                        </Button>
+                        <Button size="sm" onClick={onLogin} aria-label="Get started" className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white h-8 px-4 text-sm font-medium rounded-lg transition-all duration-500 opacity-100">
+                            Get Started
+                        </Button>
                     </div>
                 </div>
             </div>
